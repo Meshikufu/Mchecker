@@ -23,6 +23,7 @@ import pyperclip, pyautogui, sqlite3, queue, tempfile
 
 #os.chdir('C:/Programming/Python Projects/Mchecker')
 
+#todo4 this one below doesnt hide message in console
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 print("")
 pygame.mixer.init()

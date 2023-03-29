@@ -1,0 +1,3 @@
+chainsaw_man_chapter=125
+one_punch_man_chapter=181
+meiou_sama_chapter=10

@@ -150,10 +150,10 @@ class gui:
 
 		self.top_frame = ttk.Frame(self.main_frame_buttons)
 		self.top_frame.pack(side=RIGHT)
-		#
+		#todo2		make sidebar that will count from sleep_duration
 		#self.progress_bar_frame = ttk.Frame(self.master)
-		#self.progress_bar_frame.pack()
-#
+		#self.progress_bar_frame.pack(side=RIGHT, pady=5)
+
 		#self.progress_bar = ttk.Progressbar(self.progress_bar_frame, orient="horizontal", length=300, mode="indeterminate")
 		#self.progress_bar.pack(side=TOP, pady=5)
 		#
@@ -236,6 +236,8 @@ with open('data.txt', 'r') as file:
 				value = value.strip()
 				exec(f"{key} = {value}")
 
+#todo		make manga_dict use api, or use both name and value of upper "with function"
+#todo3		make easier way to add manga, instead of writing whole new dictionary section and adding it to data.txt
 
 class urlScalping():
 	def __init__(self):
@@ -314,6 +316,7 @@ class urlScalping():
 						manga_is_out.clear()
 
 				sleep_duration = 20 * 60
+				#todo2 make scrollbar here
 				print(f"{current_time}  ===  checking again in {int(sleep_duration/60)} minutes")
 				gui.add_log_message("waiting 20 minutes until next check...")
 				gui.add_log_message("")

@@ -17,7 +17,7 @@ import speech_recognition as sr
 from gtts import gTTS
 import webbrowser
 import keyboard
-import pyperclip, pyautogui, sqlite3, queue, tempfile
+import pyperclip, pyautogui, sqlite3, queue, tempfile, re
 
 
 
@@ -28,6 +28,11 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 print("")
 pygame.mixer.init()
 
+
+
+#todo5 add controller class that will contains reusable variables
+sleep_duration = 20
+current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 
 def tts(text):
@@ -105,21 +110,6 @@ def hotkey_listener():
     # start the listener loop
     keyboard.wait()
 
-class Mathtest():
-    def mmath(self):
-        big = 23
-        small = 3
-        if big >= small:
-            gui.add_log_message("　    　  lﾆヽ")
-            gui.add_log_message("　    　 |= | ")
-            gui.add_log_message("　    　 |_ |")
-            gui.add_log_message("　　/⌒|~ |⌒i-、")
-            gui.add_log_message("　 /|　|　|　| ｜")
-            gui.add_log_message("　｜(　(　(　(　｜")
-            gui.add_log_message("　｜　　　　　 ｜")
-            gui.add_log_message("　 ＼　　　　　/")
-            gui.add_log_message("　　 ＼　　　 |")
-
 class buttons_actions():
     def hide_app(self):
         root.withdraw()
@@ -136,11 +126,10 @@ class buttons_actions():
 
         return manga_names, urls
 
-class gui:
+class gui():
     def __init__(self, master):
         self.master = master
 
-        self.mt = Mathtest()
         self.ba = buttons_actions()
 
         self.main_frame_buttons = ttk.Frame(self.master)
@@ -151,27 +140,77 @@ class gui:
 
         self.top_frame = ttk.Frame(self.main_frame_buttons)
         self.top_frame.pack(side=RIGHT)
-        #todo2		make sidebar that will count from sleep_duration
-        #self.progress_bar_frame = ttk.Frame(self.master)
-        #self.progress_bar_frame.pack(side=RIGHT, pady=5)
 
-        #self.progress_bar = ttk.Progressbar(self.progress_bar_frame, orient="horizontal", length=300, mode="indeterminate")
-        #self.progress_bar.pack(side=TOP, pady=5)
-        #
-        self.b1 = ttk.Button(self.top_frame, text="Button 1", bootstyle=SUCCESS, command=self.mt.mmath)
+        #########################################################################################################
+        def append_clipboard_to_file():
+            clipboard_content = pyperclip.paste()
+            # Extract the chapter number from the URL
+            chapter_num = re.search(r'chapter-(\d+)', clipboard_content).group(1)
+            # Add 1 to the chapter number and create the new URL
+            new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
+            with open("data.txt", "a") as f:
+                f.write(new_url + "\n")
+
+
+        def start_sleep_bar():
+            tts("test")
+            print("test")
+            # Set the total number of seconds to wait
+            total_secs = 20
+            # Set the number of steps in the progress bar (e.g. 100 steps for 100%)
+            num_steps = 100
+            # Calculate the number of seconds for each step
+            secs_per_step = total_secs / num_steps
+            # Set the initial progress bar value to 0
+            self.sleep_bar['value'] = 0
+            # Update the progress bar every second until it reaches 100%
+            for i in range(num_steps):
+                self.sleep_bar.step(1)
+                self.sleep_bar.update()
+                time.sleep(secs_per_step)
+
+        self.b1 = ttk.Button(self.top_frame, text="Add url", bootstyle=SUCCESS, command=start_sleep_bar)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
         self.b1.pack(side=LEFT, padx=5, pady=5)
+        #########################################################################################################
 
         self.b3 = ttk.Button(self.top_frame, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
         self.b3.pack(side=RIGHT, padx=5, pady=5)
 
+        self.frame_for_chatbox = ttk.Frame(self.master)
+        self.frame_for_chatbox.pack(side=BOTTOM)
+
         # Create the middle frame for the chat box
-        self.middle_frame = ttk.Frame(self.master)
-        self.middle_frame.pack(side=TOP, fill=ttk.BOTH, expand=True)
+        self.middle_frame = ttk.Frame(self.frame_for_chatbox)
+        self.middle_frame.pack(side=LEFT, fill=ttk.BOTH, expand=True)
 
-        self.gui = ttk.Text(self.middle_frame, height=15, width=70)
-        self.gui.pack(side=TOP, fill=ttk.BOTH, expand=True)
+        self.gui = ttk.Text(self.middle_frame, height=0, width=70)
+        self.gui.pack(side=LEFT, fill=ttk.BOTH, expand=True)
 
+        self.sleep_bar = ttk.Progressbar(self.middle_frame, bootstyle='success', orient=VERTICAL, maximum=100, mode='determinate', length=200, value=0)
+        self.sleep_bar.pack(side=RIGHT, fill=X, pady=0, expand=True)
+
+
+
+        #########################################################################################################
         self.update_manga_buttons()
+
+    def start_sleep_bar2(self):
+        #tts("test")
+        print(f"{current_time} === progress bar start")
+        # Set the total number of seconds to wait
+        total_secs = 20
+        # Set the number of steps in the progress bar (e.g. 100 steps for 100%)
+        num_steps = 100
+        # Calculate the number of seconds for each step
+        secs_per_step = sleep_duration / num_steps
+        # Set the initial progress bar value to 0
+        self.sleep_bar['value'] = 0
+        # Update the progress bar every second until it reaches 100%
+        for i in range(num_steps):
+            self.sleep_bar.step(1)
+            self.sleep_bar.update()
+            time.sleep(secs_per_step)
+
 
     def update_manga_buttons(self):
         manga_names, urls = self.ba.get_last_chapters()
@@ -189,7 +228,7 @@ class gui:
 
         # Schedule another call to update the manga buttons in 5 seconds
         self.master.after(2000, self.update_manga_buttons)
-
+        #########################################################################################################
     def add_log_message(self, msg):
         self.gui.insert(ttk.END, msg + '\n')
         self.gui.see(ttk.END)
@@ -232,41 +271,41 @@ def icon_tray():
 
 class urlScalping():
     def __init__(self):
+        #initialize manga dictionary with data from data.txt
+        self.manga_dict = self.get_manga_dict()
+
+    def get_manga_dict(self):
         with open('data.txt') as f:
             data = f.read().splitlines()
-
-        self.manga_dict = {}
-
+        manga_dict = {}
         for line in data:
-            # get key
             start = line.find("read/") + 5
             end = line.find("-", start)
             end = line.find("-", end+1)
             key = line[start:end].replace("-", " ")
-    
-            # get value
             start = line.rfind("chapter-") + len("chapter-")
             value = line[start:]
-
-            self.manga_dict[key.lower()] = {
+            manga_dict[key.lower()] = {
                 'url': line,
                 'last_chapter_name': key,
                 'chapter_number': int(value)
             }
-
+        return manga_dict
+    
     def manga_checker(self):
-        manga_is_out = {}
         while True:
+            #pull fresh data from data.txt
+            self.manga_dict = self.get_manga_dict()
+            manga_is_out = {}
             for key in self.manga_dict:
                 url = self.manga_dict[key]['url'].format(self.manga_dict[key]['chapter_number'])
                 response = requests.get(url)
                 soup = BeautifulSoup(response.content, 'html.parser')
                 scalping = soup.find_all('div', {'class': 'c4-small'}) + soup.find_all('span', {'class': 'hrr-name'}) + soup.find_all('div', {'class': 'd-block'})#fix this + soup.find_all('span', {'class': 'hrr-name'})
-
                 current_time = datetime.datetime.now().strftime('%H:%M:%S')
-                print(key)
+
                 if "Oops! We can't find this page." in str(scalping):
-                    log_message = f"{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
+                    log_message = f"{current_time} === {key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
                     log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
                     print(log_message)
                     gui.add_log_message(log_message)
@@ -318,17 +357,6 @@ class urlScalping():
                             file.write(key + "\n")
                         manga_is_out.clear()
 
-                sleep_duration = 20 * 60
-                
-                ##print(f"{current_time}  ===  checking again in {int(sleep_duration/60)} minutes")
-                ##gui.add_log_message("waiting 20 minutes until next check...")
-                ##gui.add_log_message("")
-                ##time.sleep(1)
-                ##for i in tqdm(range(sleep_duration), desc=f"", bar_format='{l_bar}{bar}|'):
-                ##    time.sleep(1)
-                ##print("        ")
-                #time.sleep(duration)
-                # Save updated chapter numbers to data.txt
                 with open("data.txt", 'w') as file:
                     for key in self.manga_dict:
                         # Extract the URL prefix by removing the part after "chapter-"
@@ -337,8 +365,9 @@ class urlScalping():
                         file.write(f"{url_prefix}{self.manga_dict[key]['chapter_number']}\n")
                         self.manga_dict[key]['url'] = f"{url_prefix}{self.manga_dict[key]['chapter_number']}"
 
-                #todo2 make scrollbar here
-                time.sleep(sleep_duration)
+                print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes")
+                gui.start_sleep_bar2()
+
 
     def manga_checker_test(self):
         conn = sqlite3.connect('manga.db')

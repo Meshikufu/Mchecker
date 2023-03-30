@@ -151,25 +151,7 @@ class gui():
             with open("data.txt", "a") as f:
                 f.write(new_url + "\n")
 
-
-        def start_sleep_bar():
-            tts("test")
-            print("test")
-            # Set the total number of seconds to wait
-            total_secs = 20
-            # Set the number of steps in the progress bar (e.g. 100 steps for 100%)
-            num_steps = 100
-            # Calculate the number of seconds for each step
-            secs_per_step = total_secs / num_steps
-            # Set the initial progress bar value to 0
-            self.sleep_bar['value'] = 0
-            # Update the progress bar every second until it reaches 100%
-            for i in range(num_steps):
-                self.sleep_bar.step(1)
-                self.sleep_bar.update()
-                time.sleep(secs_per_step)
-
-        self.b1 = ttk.Button(self.top_frame, text="Add url", bootstyle=SUCCESS, command=start_sleep_bar)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
+        self.b1 = ttk.Button(self.top_frame, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
         self.b1.pack(side=LEFT, padx=5, pady=5)
         #########################################################################################################
 

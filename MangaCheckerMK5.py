@@ -253,9 +253,8 @@ def icon_tray():
 
 class urlScalping():
 	def __init__(self):
-		#initialize manga dictionary with data from data.txt
+		# initialize manga dictionary with data from data.txt
 		self.manga_dict = self.get_manga_dict()
-
 	def get_manga_dict(self):
 		with open('data.txt') as f:
 			data = f.read().splitlines()
@@ -263,17 +262,25 @@ class urlScalping():
 		for line in data:
 			start = line.find("read/") + 5
 			end = line.find("-", start)
-			end = line.find("-", end+1)
-			key = line[start:end].replace("-", " ")
-			start = line.rfind("chapter-") + len("chapter-")
-			value = line[start:]
+			if end != -1 and end+3 < len(line) and line[end+1:end+3].isdigit():
+				#end = line.find("-", end+1)
+				key = line[start:end].replace("-", " ")
+				start = line.rfind("chapter-") + len("chapter-")
+				value = line[start:]
+				#print("debug if")
+			else:
+				end = line.find("-", end+1)
+				key = line[start:end].replace("-", " ")
+				start = line.rfind("chapter-") + len("chapter-")
+				value = line[start:]
+				#print("debug else") 
 			manga_dict[key.lower()] = {
 				'url': line,
 				'last_chapter_name': key,
 				'chapter_number': int(value)
 			}
 		return manga_dict
-	
+
 	def manga_checker(self):
 		while True:
 			#pull fresh data from data.txt
@@ -287,7 +294,7 @@ class urlScalping():
 				current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 				if "Oops! We can't find this page." in str(scalping):
-					log_message = f"{current_time} === {key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
+					log_message = f"#{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
 					log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
 					print(log_message)
 					gui.add_log_message(log_message)
@@ -296,7 +303,7 @@ class urlScalping():
 				elif "Comments".lower() in str(scalping).lower():
 					if key not in manga_is_out:
 						manga_is_out[key] = self.manga_dict[key]['chapter_number']
-					log_message = f"{key} Chapter number {self.manga_dict[key]['chapter_number']} IS OUT"
+					log_message = f"#{key} Chapter number {self.manga_dict[key]['chapter_number']} IS OUT"
 					log_messagetts = f"{key}, IS OUT"
 					print(log_message)
 					gui.add_log_message(log_message)
@@ -346,7 +353,10 @@ class urlScalping():
 						# Write the URL with the updated chapter number to the file
 						file.write(f"{url_prefix}{self.manga_dict[key]['chapter_number']}\n")
 						self.manga_dict[key]['url'] = f"{url_prefix}{self.manga_dict[key]['chapter_number']}"
-
+				
+				#log_message_before_sleep = f"====="{current_time}"====="
+				gui.add_log_message(f"###> {current_time} <###")
+				gui.add_log_message("")
 				print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes")
 				gui.start_sleep_bar2()
 

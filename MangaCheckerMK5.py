@@ -31,7 +31,7 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 20
+sleep_duration = 20 * 60
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 

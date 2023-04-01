@@ -30,7 +30,7 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 15# * 60
+sleep_duration = 15 * 60
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 
@@ -128,13 +128,13 @@ class buttons_actions():
 class ttkgui():
 	def __init__(self, master):
 		self.master = master
-		menu = ttk.Menu(root)
-		root.config(menu=menu)
+		#menu = ttk.Menu(root)
+		#root.config(menu=menu)
 
 		self.ba = buttons_actions()
 
 		self.top_frame_buttonsMain = ttk.Frame(self.master)#, bootstyle="secondary")
-		self.top_frame_buttonsMain.pack(side=TOP, fill=X, expand=YES)
+		self.top_frame_buttonsMain.pack(side=TOP, fill=X)#, expand=YES)
 
 		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
 		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
@@ -154,6 +154,7 @@ class ttkgui():
 			self.create_menu()
 			print(f"{clipboard_content} is added")
 			chatMain.add_log_message(f"{clipboard_content} is added!")
+			chatMain.add_log_message("")
 			tts("added!")
 
 		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
@@ -216,6 +217,7 @@ class ttkgui():
 		self.create_menu()
 		print(f"{selected_option} is deleted.")
 		chatMain.add_log_message(f"{selected_option} is deleted.")
+		chatMain.add_log_message("")
 		tts("Deleted!")
 ########################################
 	def start_sleep_bar(self):

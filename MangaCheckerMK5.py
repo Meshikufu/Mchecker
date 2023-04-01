@@ -30,7 +30,7 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 15
+sleep_duration = 15# * 60
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 
@@ -151,37 +151,19 @@ class ttkgui():
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
+			self.create_menu()
+			print(f"{clipboard_content} is added")
+			chatMain.add_log_message(f"{clipboard_content} is added!")
+			tts("added!")
 
 		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
 		self.b1.pack(side=LEFT, padx=5, pady=5)
 		#########################################################################################################
 		self.us = urlScalping()
-		#option = self.us.manga_dict[key]['last_chapter_name']
-
-		#for key in self.us.manga_dict:
-		#	option = self.us.manga_dict[key]['last_chapter_name']
-		#	menu.add_radiobutton(label=option, value=key, variable=self.option_var, command=self.on_option_select)
 
 		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=SUCCESS)
 		self.menub.pack(side=LEFT, padx=5, pady=5)
 		self.create_menu()
-
-#		# Read data from file
-#		with open('data.txt', 'r') as f:
-#			self.data = [line.strip() for line in f.readlines()]
-#
-#		# create menu
-#		self.menu = ttk.Menu(self.menub)
-#
-#		# add options
-#		self.option_var = ttk.StringVar()
-#		for option in self.data:
-#			self.menu.add_radiobutton(label=option, value=option, variable=self.option_var, command=self.on_option_select)
-#
-#		# associate menu with menubutton
-#		self.menub['menu'] = self.menu
-
-
 
 		self.b3 = ttk.Button(self.right_subframe_buttonsMain, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
 		self.b3.pack(side=RIGHT, padx=5, pady=5)
@@ -201,12 +183,9 @@ class ttkgui():
 		self.sleep_bar = ttk.Progressbar(self.right_subframe_chatMain, bootstyle='success-striped', orient=VERTICAL, maximum=100, mode='determinate', length=200, value=0)
 		self.sleep_bar.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
 
-
-
-		#########################################################################################################
 		self.update_manga_buttons()
-############################
-	#todo menu button doesnt refresh evey time you click on it, it does it only once at start
+
+##################################################################################################################
 	def create_menu(self):
 		# Read data from file
 		with open('data.txt', 'r') as f:
@@ -222,6 +201,8 @@ class ttkgui():
 
 		# associate menu with menubutton
 		self.menub['menu'] = self.menu
+		
+
 
 	def on_option_select(self):
 		selected_option = self.option_var.get()
@@ -232,12 +213,10 @@ class ttkgui():
 			for line in lines:
 				if line.strip() != selected_option:  # exclude selected option
 					f.write(line)
-
-		# update menu with new data
-		with open('data.txt', 'r') as f:
-			self.data = [line.strip() for line in f.readlines()]
-		for option in self.data:
-			self.menu.add_radiobutton(label=option, value=option, variable=self.option_var, command=self.on_option_select)
+		self.create_menu()
+		print(f"{selected_option} is deleted.")
+		chatMain.add_log_message(f"{selected_option} is deleted.")
+		tts("Deleted!")
 ########################################
 	def start_sleep_bar(self):
 		#tts("test")

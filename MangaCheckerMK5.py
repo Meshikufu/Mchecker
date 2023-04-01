@@ -30,7 +30,7 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 20 * 60
+sleep_duration = 15# * 60
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 
@@ -108,7 +108,7 @@ def hotkey_listener():
 
 	# start the listener loop
 	keyboard.wait()
-
+###########################################
 class buttons_actions():
 	def hide_app(self):
 		root.withdraw()
@@ -128,16 +128,18 @@ class buttons_actions():
 class ttkgui():
 	def __init__(self, master):
 		self.master = master
+		menu = ttk.Menu(root)
+		root.config(menu=menu)
 
 		self.ba = buttons_actions()
 
-		self.top_frame_buttonsMain = ttk.Frame(self.master)
-		self.top_frame_buttonsMain.pack(side=TOP)
+		self.top_frame_buttonsMain = ttk.Frame(self.master)#, bootstyle="secondary")
+		self.top_frame_buttonsMain.pack(side=TOP, fill=X, expand=YES)
 
-		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)
-		self.left_subframe_buttonsMain.pack(side=LEFT)
+		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
+		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
 
-		self.right_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)
+		self.right_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="warning")
 		self.right_subframe_buttonsMain.pack(side=RIGHT)
 
 		#########################################################################################################
@@ -149,10 +151,19 @@ class ttkgui():
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
+			self.create_menu()
+			print(f"{clipboard_content} is added")
+			chatMain.add_log_message(f"{clipboard_content} is added!")
+			tts("added!")
 
 		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
 		self.b1.pack(side=LEFT, padx=5, pady=5)
 		#########################################################################################################
+		self.us = urlScalping()
+
+		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=SUCCESS)
+		self.menub.pack(side=LEFT, padx=5, pady=5)
+		self.create_menu()
 
 		self.b3 = ttk.Button(self.right_subframe_buttonsMain, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
 		self.b3.pack(side=RIGHT, padx=5, pady=5)
@@ -172,11 +183,41 @@ class ttkgui():
 		self.sleep_bar = ttk.Progressbar(self.right_subframe_chatMain, bootstyle='success-striped', orient=VERTICAL, maximum=100, mode='determinate', length=200, value=0)
 		self.sleep_bar.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
 
-
-
-		#########################################################################################################
 		self.update_manga_buttons()
 
+##################################################################################################################
+	def create_menu(self):
+		# Read data from file
+		with open('data.txt', 'r') as f:
+			self.data = [line.strip() for line in f.readlines()]
+
+		# create menu
+		self.menu = ttk.Menu(self.menub)
+
+		# add options
+		self.option_var = ttk.StringVar()
+		for option in self.data:
+			self.menu.add_radiobutton(label=option, value=option, variable=self.option_var, command=self.on_option_select)
+
+		# associate menu with menubutton
+		self.menub['menu'] = self.menu
+		
+
+
+	def on_option_select(self):
+		selected_option = self.option_var.get()
+		self.menu.delete(0, tk.END)  # clear menu
+		with open('data.txt', 'r') as f:
+			lines = f.readlines()
+		with open('data.txt', 'w') as f:
+			for line in lines:
+				if line.strip() != selected_option:  # exclude selected option
+					f.write(line)
+		self.create_menu()
+		print(f"{selected_option} is deleted.")
+		chatMain.add_log_message(f"{selected_option} is deleted.")
+		tts("Deleted!")
+########################################
 	def start_sleep_bar(self):
 		#tts("test")
 		#print(f"{current_time} === progress bar start")
@@ -205,7 +246,7 @@ class ttkgui():
 			name = manga_names[i]
 			url = urls[i]
 			button = ttk.Button(self.left_subframe_buttonsMain, text=name, bootstyle=(DARK, OUTLINE), command=lambda url=url: self.ba.openLastChapterLink(url))
-			button.pack(side=LEFT, padx=5, pady=5)
+			button.pack(side=RIGHT, padx=5, pady=5)
 
 		# Schedule another call to update the manga buttons in 5 seconds
 		self.master.after(2000, self.update_manga_buttons)

@@ -10,6 +10,7 @@ import pystray
 import PIL.Image
 from tqdm import tqdm
 import ttkbootstrap as ttk
+from ttkbootstrap import Style
 from ttkbootstrap.constants import *
 import tkinter as tk
 import pygame
@@ -18,7 +19,8 @@ from gtts import gTTS
 import webbrowser
 import keyboard
 import pyperclip, pyautogui, sqlite3, queue, tempfile, re
-
+from tkinter import Tk, PhotoImage
+import json
 
 #os.chdir('C:/Programming/Python Projects/Mchecker')
 
@@ -128,13 +130,20 @@ class buttons_actions():
 class ttkgui():
 	def __init__(self, master):
 		self.master = master
+		#root.overrideredirect(True)
 		#menu = ttk.Menu(root)
 		#root.config(menu=menu)
-
+		root.title("Mchecker")
+		#icon = PhotoImage(file='cat.gif')
+		#root.wm_iconphoto(True, icon)
+		
 		self.ba = buttons_actions()
 
 		self.top_frame_buttonsMain = ttk.Frame(self.master)#, bootstyle="secondary")
 		self.top_frame_buttonsMain.pack(side=TOP, fill=X)#, expand=YES)
+
+		self.leftleft_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain, padding=0)
+		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH, expand=True)
 
 		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
 		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
@@ -151,6 +160,7 @@ class ttkgui():
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
+				
 			self.create_menu()
 			print(f"{clipboard_content} is added")
 			chatMain.add_log_message(f"{clipboard_content} is added!")
@@ -162,7 +172,7 @@ class ttkgui():
 		#########################################################################################################
 		self.us = urlScalping()
 
-		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=SUCCESS)
+		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=DANGER)
 		self.menub.pack(side=LEFT, padx=5, pady=5)
 		self.create_menu()
 
@@ -185,8 +195,29 @@ class ttkgui():
 		self.sleep_bar.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
 
 		self.update_manga_buttons()
+		#self.menu_list()
+
+		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMain, text="Open URL", bootstyle=(DARK, OUTLINE))
+		self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
+		self.create_menu_open_url()
 
 ##################################################################################################################
+	def create_menu_open_url(self):
+		self.open_manga_list.config(menu="")
+
+		# read the data from the JSON file into a Python dictionary
+		with open('data.json', 'r') as f:
+			data = json.load(f)
+
+		# create the menu
+		menu = tk.Menu(self.open_manga_list, tearoff=False)
+		for title in data.keys():
+			url = data[title]['url']
+			menu.add_command(label=title, command=lambda u=url: webbrowser.open_new_tab(u[:-2] + str(int(u[-2:])-1)))
+
+		# attach the menu to the Menubutton
+		self.open_manga_list.config(menu=menu)
+
 	def create_menu(self):
 		# Read data from file
 		with open('data.txt', 'r') as f:
@@ -221,6 +252,7 @@ class ttkgui():
 		tts("Deleted!")
 ########################################
 	def start_sleep_bar(self):
+		self.create_menu_open_url()
 		#tts("test")
 		#print(f"{current_time} === progress bar start")
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
@@ -234,7 +266,8 @@ class ttkgui():
 			self.sleep_bar.step(1)
 			self.sleep_bar.update()
 			time.sleep(secs_per_step)
-
+		self.create_menu()
+		self.create_menu_open_url()		
 
 	def update_manga_buttons(self):
 		manga_names, urls = self.ba.get_last_chapters()
@@ -365,6 +398,9 @@ class urlScalping():
 					debug = 5
 
 			
+
+			#MIN_NUM_NAMES = 2
+
 			#print(debug)
 			if debug == 4:
 				tts("mangareader is downn")
@@ -378,17 +414,34 @@ class urlScalping():
 				chatMain.add_log_message("")
 				time.sleep(60)
 
-			elif debug < 3:        
+			
+			elif debug < 3:
+				print(manga_is_out)
+				print([self.manga_dict])
 				if manga_is_out:
 					with open("lastchapter.txt", 'w') as file:
 						for key, value in manga_is_out.items():
 							file.write(self.manga_dict[key]['url'].format(value) + "\n")
-					#manga_is_out.clear()
 
 					with open("lastchaptername.txt", 'w') as file:
 						for key in manga_is_out.keys():
 							file.write(key + "\n")
-						manga_is_out.clear()
+
+					with open("lastchaptername.json", 'r') as file:
+						manga_names = json.load(file)
+
+					# Add the new manga name to the list if it is unique
+					new_manga_name = list(manga_is_out.keys())[0]
+					if new_manga_name not in manga_names:
+						manga_names.append(new_manga_name)
+
+					# Keep only the last two names in the list
+					manga_names = manga_names[-2:]
+
+					with open("lastchaptername.json", 'w') as file:
+						json.dump(manga_names, file)
+
+					manga_is_out.clear()
 
 				with open("data.txt", 'w') as file:
 					for key in self.manga_dict:
@@ -397,6 +450,9 @@ class urlScalping():
 						# Write the URL with the updated chapter number to the file
 						file.write(f"{url_prefix}{self.manga_dict[key]['chapter_number']}\n")
 						self.manga_dict[key]['url'] = f"{url_prefix}{self.manga_dict[key]['chapter_number']}"
+
+				with open("data.json", 'w') as file:
+					json.dump(self.manga_dict, file)
 				
 				#log_message_before_sleep = f"====="{current_time}"====="
 				chatMain.add_log_message(f"###> {current_time} <###")

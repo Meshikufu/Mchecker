@@ -160,6 +160,7 @@ class ttkgui():
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
+				
 			self.create_menu()
 			print(f"{clipboard_content} is added")
 			chatMain.add_log_message(f"{clipboard_content} is added!")
@@ -194,13 +195,19 @@ class ttkgui():
 		self.sleep_bar.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
 
 		self.update_manga_buttons()
+		#self.menu_list()
+
+		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMain, text="Open URL", bootstyle=(DARK, OUTLINE))
+		self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
+		self.create_menu_open_url()
+
+##################################################################################################################
+	def create_menu_open_url(self):
+		self.open_manga_list.config(menu="")
 
 		# read the data from the JSON file into a Python dictionary
 		with open('data.json', 'r') as f:
 			data = json.load(f)
-
-		# create the Menubutton
-		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMain, text="List", bootstyle=(DARK, OUTLINE))
 
 		# create the menu
 		menu = tk.Menu(self.open_manga_list, tearoff=False)
@@ -211,10 +218,6 @@ class ttkgui():
 		# attach the menu to the Menubutton
 		self.open_manga_list.config(menu=menu)
 
-		# pack the Menubutton
-		self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
-
-##################################################################################################################
 	def create_menu(self):
 		# Read data from file
 		with open('data.txt', 'r') as f:
@@ -249,6 +252,7 @@ class ttkgui():
 		tts("Deleted!")
 ########################################
 	def start_sleep_bar(self):
+		self.create_menu_open_url()
 		#tts("test")
 		#print(f"{current_time} === progress bar start")
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
@@ -262,8 +266,8 @@ class ttkgui():
 			self.sleep_bar.step(1)
 			self.sleep_bar.update()
 			time.sleep(secs_per_step)
-		self.create_menu()	
-
+		self.create_menu()
+		self.create_menu_open_url()		
 
 	def update_manga_buttons(self):
 		manga_names, urls = self.ba.get_last_chapters()

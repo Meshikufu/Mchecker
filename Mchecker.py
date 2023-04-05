@@ -135,6 +135,7 @@ class ttkgui():
 		#menu = ttk.Menu(root)
 		#root.config(menu=menu)
 		root.title("Mchecker")
+		root.geometry("+700+500")
 		#icon = PhotoImage(file='cat.gif')
 		#root.wm_iconphoto(True, icon)
 		
@@ -144,7 +145,7 @@ class ttkgui():
 		self.top_frame_buttonsMain.pack(side=TOP, fill=X)#, expand=YES)
 
 		self.leftleft_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain, padding=0)
-		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH, expand=True)
+		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH)
 
 		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
 		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
@@ -281,7 +282,7 @@ class ttkgui():
 			name = manga_names[i]
 			url = urls[i]
 			button = ttk.Button(self.left_subframe_buttonsMain, text=name, style=(DARK, OUTLINE), command=lambda url=url: (self.ba.openLastChapterLink(url), self.ba.hide_app()))
-			button.pack(side=RIGHT, padx=5, pady=5)
+			button.pack(side=LEFT, padx=5, pady=5)
 		# Schedule another call to update the manga buttons in 5 seconds
 		self.master.after(2000, self.update_manga_buttons)
 		#########################################################################################################

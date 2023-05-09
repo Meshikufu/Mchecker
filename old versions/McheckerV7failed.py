@@ -135,6 +135,7 @@ class ttkgui():
 		#menu = ttk.Menu(root)
 		#root.config(menu=menu)
 		root.title("Mchecker")
+		root.geometry("+700+500")
 		#icon = PhotoImage(file='cat.gif')
 		#root.wm_iconphoto(True, icon)
 		
@@ -144,7 +145,7 @@ class ttkgui():
 		self.top_frame_buttonsMain.pack(side=TOP, fill=X)#, expand=YES)
 
 		self.leftleft_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain, padding=0)
-		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH, expand=True)
+		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH)
 
 		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
 		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
@@ -161,30 +162,12 @@ class ttkgui():
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
-
-			my_scalper = urlScalping()
-			my_scalper.update_data_json()
-
+				
 			self.create_menu()
 			print(f"{clipboard_content} is added")
 			chatMain.add_log_message(f"{clipboard_content} is added!")
 			chatMain.add_log_message("")
 			tts("added!")
-
-			#refresh open url menu
-			self.open_manga_list.config(menu="")
-
-			# read the data from the JSON file into a Python dictionary
-			with open('data.json', 'r') as f:
-				data = json.load(f)
-
-			# create the menu
-			menu = tk.Menu(self.open_manga_list, tearoff=False)
-			for title in data.keys():
-				url = data[title]['url']
-				menu.add_command(label=title, command=lambda u=url: (webbrowser.open_new_tab(u[:-2] + str(int(u[-2:])-1)), self.ba.hide_app()))
-			# attach the menu to the Menubutton
-			self.open_manga_list.config(menu=menu)
 
 		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
 		self.b1.pack(side=LEFT, padx=5, pady=5)
@@ -264,31 +247,10 @@ class ttkgui():
 				if line.strip() != selected_option:  # exclude selected option
 					f.write(line)
 		self.create_menu()
-
-		my_scalper = urlScalping()
-		my_scalper.update_data_json()
-
 		print(f"{selected_option} is deleted.")
 		chatMain.add_log_message(f"{selected_option} is deleted.")
 		chatMain.add_log_message("")
 		tts("Deleted!")
-
-
-		#refresh open url menu
-		self.open_manga_list.config(menu="")
-
-		# read the data from the JSON file into a Python dictionary
-		with open('data.json', 'r') as f:
-			data = json.load(f)
-
-		# create the menu
-		menu = tk.Menu(self.open_manga_list, tearoff=False)
-		for title in data.keys():
-			url = data[title]['url']
-			menu.add_command(label=title, command=lambda u=url: (webbrowser.open_new_tab(u[:-2] + str(int(u[-2:])-1)), self.ba.hide_app()))
-		# attach the menu to the Menubutton
-		self.open_manga_list.config(menu=menu)
-
 ########################################
 	def start_sleep_bar(self):
 		self.create_menu_open_url()
@@ -320,7 +282,7 @@ class ttkgui():
 			name = manga_names[i]
 			url = urls[i]
 			button = ttk.Button(self.left_subframe_buttonsMain, text=name, style=(DARK, OUTLINE), command=lambda url=url: (self.ba.openLastChapterLink(url), self.ba.hide_app()))
-			button.pack(side=RIGHT, padx=5, pady=5)
+			button.pack(side=LEFT, padx=5, pady=5)
 		# Schedule another call to update the manga buttons in 5 seconds
 		self.master.after(2000, self.update_manga_buttons)
 		#########################################################################################################
@@ -363,10 +325,54 @@ def icon_tray():
 		pystray.MenuItem("Exit", on_clicked)
 	)       
 	icon.run() 
+########################################################################################################################
+# key = url 
+#									ADD KEY = MANGA NAME,	INSTEAD OF CHAPTER_NAME - URL = (URL)
+def get_manga_dictionary():
+	with open('data1.json') as f:
+		data = json.load(f)
+	manga_dictionary = {}
+	for url, value in data.items():
+		start = url.find("read/") + 5
+		end = url.find("-", start)
+		# single word manga
+		if end != -1 and end+3 < len(url) and url[end+1:end+3].isdigit():
+			chapter_name = url[start:end].replace("-", " ")
+			start = url.rfind("chapter-") + len("chapter-")
+			chapter_number = int(url[start:])
+		# two word manga
+		else:
+			end = url.find("-", end+1)
+			chapter_name = url[start:end].replace("-", " ")
+			start = url.rfind("chapter-") + len("chapter-")
+			chapter_number = int(url[start:])
+		if not isinstance(value.get('last_out'), int):
+			manga_dictionary[url] = {
+				'chapter_name': chapter_name,
+				'chapter_number': int(chapter_number),
+				'last_out': None,
+				'extra': None
+			}
+		else:
+			manga_dictionary[url] = {
+				'chapter_name': chapter_name,
+				'chapter_number': int(chapter_number),
+				'last_out': value.get('last_out'),
+				'extra': None
+		}
+	return manga_dictionary
 
-#clear = 1
+manga_dict1 = get_manga_dictionary()
+#print(manga_dict1)
+#print(get_manga_dictionary)
 
 
+def dump_data_json():
+	with open("data1.json", 'w') as file:
+		json.dump(manga_dict1, file, indent=4)
+
+dump_data_json()
+########################################################################################################################
 class urlScalping():
 	def __init__(self):
 		# initialize manga dictionary with data from data.txt
@@ -397,56 +403,112 @@ class urlScalping():
 			}
 		return manga_dict
 
-	def update_data_json(self):
-		with open("data.json", 'w') as file:
-			json.dump(self.manga_dict, file)
-
+	#print([self.manga_dict])
 	def manga_checker(self):
 		while True:
 			#pull fresh data from data.txt
 			self.manga_dict = self.get_manga_dict()
+			############################################################
+			self.manga_dict1 = get_manga_dictionary()
+			#print(self.manga_dict1)
+			############################################################
 			manga_is_out = {}
-			for key in self.manga_dict:
-				url = self.manga_dict[key]['url'].format(self.manga_dict[key]['chapter_number'])
+			# for key in self.manga_dict:
+			# 	url = self.manga_dict[key]['url'].format(self.manga_dict[key]['chapter_number'])
+			# 	response = requests.get(url)
+			# 	soup = BeautifulSoup(response.content, 'html.parser')
+			# 	scalping = soup.find_all('div', {'class': 'c4-small'}) + soup.find_all('span', {'class': 'hrr-name'}) + soup.find_all('div', {'class': 'd-block'}) + soup.find_all('span', {'class': 'inline-block'})
+			# 	current_time = datetime.datetime.now().strftime('%H:%M:%S')
+
+
+			# 	if "Oops! We can't find this page." in str(scalping):
+			# 		log_message = f"#{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
+			# 		log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
+			# 		print(log_message)
+			# 		chatMain.add_log_message(log_message)
+			# 		#tts(log_messagetts)
+			# 		debug = 1
+			# 	elif "Comments".lower() in str(scalping).lower():
+			# 		if key not in manga_is_out:
+			# 			manga_is_out[key] = self.manga_dict[key]['chapter_number']
+			# 		log_message = f"#{key} Chapter number {self.manga_dict[key]['chapter_number']} IS OUT"
+			# 		log_messagetts = f"{key}, IS OUT"
+			# 		print(log_message)
+			# 		chatMain.add_log_message(log_message)
+			# 		tts(log_messagetts)
+			# 		self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
+			# 		time.sleep(3)
+			# 		debug = 2
+			# 	elif "Bad gateway".lower() in str(scalping):
+			# 		debug = 4
+			# 	else:
+			# 		log_message = f"{key} Chapter number {self.manga_dict1[key]['chapter_number']} scalping ERROR"
+			# 		log_messagetts = f"{key}, Chapter number {self.manga_dict1[key]['chapter_number']}, scalping ERROR"
+			# 		print(log_message)
+			# 		chatMain.add_log_message(log_message)
+			# 		tts(log_messagetts)
+			# 		debug = 5
+				# new data1.json system
+
+			print('manga_dict1 STAGE 1')
+			print(self.manga_dict1)
+			for key in self.manga_dict1:
+				url = key.format(self.manga_dict1[key])
 				response = requests.get(url)
 				soup = BeautifulSoup(response.content, 'html.parser')
 				scalping = soup.find_all('div', {'class': 'c4-small'}) + soup.find_all('span', {'class': 'hrr-name'}) + soup.find_all('div', {'class': 'd-block'}) + soup.find_all('span', {'class': 'inline-block'})
 				current_time = datetime.datetime.now().strftime('%H:%M:%S')
 				
-				#if clear == 1:
 				if "Oops! We can't find this page." in str(scalping):
-					log_message = f"#{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
-					log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
+					log_message = f"#{self.manga_dict1[key]['chapter_name']} chapter number {self.manga_dict1[key]} isn't out yet"
+					log_messagetts = f"{self.manga_dict1[key]['chapter_name']}, chapter number {self.manga_dict1[key]}, isn't out yet"
 					print(log_message)
 					chatMain.add_log_message(log_message)
 					#tts(log_messagetts)
 					debug = 1
 				elif "Comments".lower() in str(scalping).lower():
 					if key not in manga_is_out:
-						manga_is_out[key] = self.manga_dict[key]['chapter_number']
-					log_message = f"#{key} Chapter number {self.manga_dict[key]['chapter_number']} IS OUT"
-					log_messagetts = f"{key}, IS OUT"
+						print("0")
+						self.manga_dict1[key] += 1  # increment the current chapter number by 1
+						
+						## extract the number from the URL
+						#start = key.rfind("chapter-") + len("chapter-")
+						#number_str = key[start:]
+#
+						## convert the number to an integer, increment it by one, and convert it back to a string
+						#number = int(number_str) + 1
+						#new_number_str = str(number)
+#
+						## construct the new URL by replacing the old number with the new one
+						#new_url = key[:start] + new_number_str + key[start+len(number_str):]
+#
+						## update the dictionary with the new URL
+						#self.manga_dict1[key]['url'] = new_url
+
+					print("self.manga_dict1")
+					print(self.manga_dict1)
+					manga_is_out[key] = self.manga_dict1[key]['chapter_name']
+					#print(manga_is_out)
+					log_message = f"#{self.manga_dict1[key]['chapter_name']} Chapter number {self.manga_dict1[key]} IS OUT"
+					log_messagetts = f"{self.manga_dict1[key]['chapter_name']}, IS OUT"
 					print(log_message)
 					chatMain.add_log_message(log_message)
 					tts(log_messagetts)
-					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
-					time.sleep(3)
+					time.sleep(2)
 					debug = 2
 				elif "Bad gateway".lower() in str(scalping):
 					debug = 4
 
 				else:
-					log_message = f"{key} Chapter number {self.manga_dict[key]['chapter_number']} scalping ERROR"
-					log_messagetts = f"{key}, Chapter number {self.manga_dict[key]['chapter_number']}, scalping ERROR"
+					log_message = f"{self.manga_dict1[key]['chapter_name']} Chapter number {self.manga_dict1[key]} scalping ERROR"
+					log_messagetts = f"{self.manga_dict1[key]['chapter_name']}, Chapter number {self.manga_dict1[key]}, scalping ERROR"
 					print(log_message)
 					chatMain.add_log_message(log_message)
-					#tts(log_messagetts)
+					tts(log_messagetts)
 					debug = 5
+				print('manga_dict1 STAGE 2')
+				print(self.manga_dict1)
 
-				#elif clear == 2:
-				#	print("clear is:")
-				#	print(clear)
-				#	debug = 1
 			
 
 			#MIN_NUM_NAMES = 2
@@ -466,9 +528,36 @@ class urlScalping():
 
 			
 			elif debug < 3:
-				print(manga_is_out)
-				print([self.manga_dict])
+				#print(manga_is_out)
+				#print([self.manga_dict])
+				print('manga_dict1')
+				print(self.manga_dict1)
 				if manga_is_out:
+					print('manga_is_out STAGE 3')
+					print(manga_is_out)
+
+				
+
+
+
+					# i need to update key = url after "chapter-" int(number) to int from manga_is_out
+					# also update chapter_number to manga_is_out int
+					# then if url was added dictionary would extract data from it and make items out of url, it has to be writted down, probaby as dump
+					# need to add marker to "'last_out': None," change None to 4, then self.manga_dict1 [key]['last_out] -= 1, and then Change all self.manga_dict1 [key]['last_out] == 1 change to None, like this it will leave only two manga buttons in gui
+
+
+					#with open("datatest.json, w") as file:
+					#	json.dump(manga_is_out, file)
+
+
+
+
+
+
+
+
+
+
 					with open("lastchapter.txt", 'w') as file:
 						for key, value in manga_is_out.items():
 							file.write(self.manga_dict[key]['url'].format(value) + "\n")
@@ -504,6 +593,8 @@ class urlScalping():
 				with open("data.json", 'w') as file:
 					json.dump(self.manga_dict, file)
 				
+				#dump_data_json(self)
+
 				#log_message_before_sleep = f"====="{current_time}"====="
 				chatMain.add_log_message(f"###> {current_time} <###")
 				chatMain.add_log_message("")

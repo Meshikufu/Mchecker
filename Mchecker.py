@@ -43,7 +43,7 @@ sleep_duration2 = 15 * 2
 
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-from modules.GoogelTTS import tts
+from modules.GoogleTTS import tts
 
 
 def on_hotkey():

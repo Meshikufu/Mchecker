@@ -21,6 +21,11 @@ import keyboard
 import pyperclip, pyautogui, sqlite3, queue, tempfile, re
 from tkinter import Tk, PhotoImage
 import json
+#gmail stuff below
+import ssl
+from simplegmail import Gmail
+from simplegmail.query import construct_query
+
 
 
 #os.chdir('C:/Programming/PythonProjects/Mchecker')
@@ -33,68 +38,12 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 15 * 60
+sleep_duration = 15 * 20# * 60
+sleep_duration2 = 15 * 2
+
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-
-def tts(text):
-	# Create a folder for audio files
-	os.makedirs("ttsvoice", exist_ok=True)
-
-	# split the text into sentences
-	sentences = text.split(". ")
-	# create a queue to store the sentences
-	sentence_queue = queue.Queue()
-	# enqueue the sentences
-	for sentence in sentences:
-		sentence_queue.put(sentence)
-	# create a queue to store the file paths
-	file_queue = queue.Queue()
-	# create a thread to dequeue and create the audio files
-	def create_files():
-		while not sentence_queue.empty():
-			sentence = sentence_queue.get()
-			# create a text to speech object with the desired text
-			speech = gTTS(text=sentence, lang='en')
-			# save the speech as a file in the ttsvoice folder
-			with tempfile.NamedTemporaryFile(suffix='.mp3', dir="ttsvoice", delete=False) as fp:
-				speech.write_to_fp(fp)
-				filename = fp.name
-				print(f" Created file: {filename}")
-				# enqueue the file path
-				file_queue.put(filename)
-	# create and start the thread to create the audio files
-	create_files_thread = threading.Thread(target=create_files)
-	create_files_thread.start()
-	# create and start the thread to play the audio files
-	def play_files():
-		while True:
-			if not file_queue.empty():
-				# dequeue the file path
-				filename = file_queue.get()
-				# load the audio file using pygame mixer
-				sound = pygame.mixer.Sound(filename)
-				# play the audio file
-				sound.play()
-				# wait until the audio finishes playing
-				pygame.time.wait(int(sound.get_length() * 1000))
-				# delete the audio file
-				os.remove(filename)
-				print(f" Deleted file: {filename}")
-			else:
-				# wait for a short time if there are no files in the queue
-				pygame.time.wait(10)
-				# check if the file creation thread has finished and there are no more files in the queue
-				if create_files_thread.is_alive() == False and file_queue.empty() == True:
-					break
-		# Delete all the audio files in the ttsvoice folder
-		for file in os.listdir("ttsvoice"):
-			if file.endswith(".mp3"):
-				os.remove(os.path.join("ttsvoice", file))
-		print("All audio files deleted.")
-	# create and start the thread to play the audio files
-	play_files_thread = threading.Thread(target=play_files)
-	play_files_thread.start()
+from modules.GoogelTTS import tts
 
 
 def on_hotkey():
@@ -135,6 +84,7 @@ class ttkgui():
 		#menu = ttk.Menu(root)
 		#root.config(menu=menu)
 		root.title("Mchecker")
+		root.geometry("+700+500")
 		#icon = PhotoImage(file='cat.gif')
 		#root.wm_iconphoto(True, icon)
 		
@@ -195,6 +145,10 @@ class ttkgui():
 		self.menub.pack(side=LEFT, padx=5, pady=5)
 		self.create_menu()
 
+#		self.br = ttk.Button(self.right_subframe_buttonsMain, text="refresh", bootstyle=DANGER, commaand=self.create_menu_refresh())
+#		self.br.pack(side=LEFT, padx=5, pady=5)
+#
+#
 		self.b3 = ttk.Button(self.right_subframe_buttonsMain, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
 		self.b3.pack(side=RIGHT, padx=5, pady=5)
 
@@ -213,6 +167,9 @@ class ttkgui():
 		self.sleep_bar = ttk.Progressbar(self.right_subframe_chatMain, bootstyle='success-striped', orient=VERTICAL, maximum=100, mode='determinate', length=200, value=0)
 		self.sleep_bar.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
 
+		self.sleep_bar2 = ttk.Progressbar(self.right_subframe_chatMain, bootstyle='danger-striped', orient=VERTICAL, maximum=100, mode='determinate', length=200, value=0)
+		self.sleep_bar2.pack(side=RIGHT, expand=YES, padx=1, pady=1, fill=ttk.BOTH)
+
 		self.update_manga_buttons()
 		#self.menu_list()
 
@@ -221,7 +178,23 @@ class ttkgui():
 		self.create_menu_open_url()
 
 ##################################################################################################################
+	#todo doesnt work
+#	def create_menu_refresh(self):
+#		tts("eek")
+#
+#		# read data from file
+#		with open('data.txt', 'r') as f:
+#			self.data = [line.strip() for line in f.readlines()]
+#
+#		# clear old menu
+#		self.menu.delete(0, tk.END)
+#
+#		# add new options to menu
+#		for option in self.data:
+#			self.menu.add_radiobutton(label=option, value=option, variable=self.option_var, command=self.on_option_select)
+
 	def create_menu_open_url(self):
+		#refresh open url menu
 		self.open_manga_list.config(menu="")
 
 		# read the data from the JSON file into a Python dictionary
@@ -273,7 +246,7 @@ class ttkgui():
 		chatMain.add_log_message("")
 		tts("Deleted!")
 
-
+		###############################
 		#refresh open url menu
 		self.open_manga_list.config(menu="")
 
@@ -288,6 +261,12 @@ class ttkgui():
 			menu.add_command(label=title, command=lambda u=url: (webbrowser.open_new_tab(u[:-2] + str(int(u[-2:])-1)), self.ba.hide_app()))
 		# attach the menu to the Menubutton
 		self.open_manga_list.config(menu=menu)
+
+
+
+	def on_option_select_refresh(self):
+		print("BAAAAAAAAAAAAAAAAAAAAAM")
+		#todo del menu refresh and fix single diget in it
 
 ########################################
 	def start_sleep_bar(self):
@@ -306,7 +285,23 @@ class ttkgui():
 			self.sleep_bar.update()
 			time.sleep(secs_per_step)
 		self.create_menu()
-		self.create_menu_open_url()		
+		self.create_menu_open_url()
+
+	def start_sleep_bar2(self):
+		self.create_menu_open_url()
+		#tts("test")
+		#print(f"{current_time} === progress bar start")
+		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
+		num_steps = 100
+		# Calculate the number of seconds for each step
+		secs_per_step = sleep_duration2 / num_steps
+		# Set the initial progress bar value to 0
+		self.sleep_bar2['value'] = 0
+		# Update the progress bar every second until it reaches 100%
+		for i in range(num_steps):
+			self.sleep_bar2.step(1)
+			self.sleep_bar2.update()
+			time.sleep(secs_per_step)			
 
 	def update_manga_buttons(self):
 		manga_names, urls = self.ba.get_last_chapters()
@@ -418,7 +413,7 @@ class urlScalping():
 					log_message = f"#{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
 					log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
 					print(log_message)
-					chatMain.add_log_message(log_message)
+					#chatMain.add_log_message(log_message)
 					#tts(log_messagetts)
 					debug = 1
 				elif "Comments".lower() in str(scalping).lower():
@@ -505,67 +500,138 @@ class urlScalping():
 					json.dump(self.manga_dict, file)
 				
 				#log_message_before_sleep = f"====="{current_time}"====="
-				chatMain.add_log_message(f"###> {current_time} <###")
-				chatMain.add_log_message("")
+				#chatMain.add_log_message(f"###> {current_time} <###")
+				#chatMain.add_log_message("")
+
+				print("manga_is_out")
+				print(manga_is_out)
+
+
+				#master = tk.Tk()
+				#gui = ttkgui(master)
+				#gui.self.create_menu()
+
+
+
+				#if debug == 2:
+					#ttkgui = ttkgui()
+					#ttkgui.refresh_del()
+					#print("manga_is_out")
+					#print(manga_is_out)
+
 				print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes")
 				chatMain.start_sleep_bar()
 
 
-	def manga_checker_test(self):
-		conn = sqlite3.connect('manga.db')
-		cursor = conn.cursor()
+class GmailChecker():
+	def __init__(self):
+		self.gmail = Gmail()
+		self.construct_query = construct_query
 
-		cursor.execute('''
-			CREATE TABLE IF NOT EXISTS manga (
-				title TEXT PRIMARY KEY
-			);
-		''')
-		conn.commit()
+		from variables.TwtichVariables import subject_list
 
+		self.subject_list = subject_list
+		#self.subject_list = ["test1", "test2"]
+		#self.snippet_list = ["test"]
+
+		# For even more control use queries:
+		self.query_params = {
+			"labels": ["Twitch"],
+			"subject": self.subject_list,
+			"newer_than": (12, "hour"), # number of hours it goes in past
+			"unread": True
+		}
+
+	def extract_first_word(self, subject):
+		words = subject.split()
+		if words:
+			return words[0]
+		return None
+
+	def append_to_file(self, file_path, data):
+		append = True
+
+		# Check the last modification time of the file
+		if os.path.exists(file_path):
+			last_modified = os.path.getmtime(file_path)
+			current_time = time.time()
+			time_diff = current_time - last_modified
+			time_diff_minutes = time_diff / 60.0
+
+			# If the last modification was within the last 15 minutes, append to the file
+			if time_diff_minutes < 30: # minutes after it will delete everything 
+				append = True
+			else:
+				append = False
+
+		# Read the existing lines from the file
+		lines = []
+		if append and os.path.exists(file_path):
+			with open(file_path, "r") as file:
+				lines = file.readlines()
+
+		# Append the new data to the lines
+		lines.append(data + "\n")
+
+		# If the number of lines exceeds the maximum, remove the first line
+		max_lines = 4 # max lines in .txt files
+		if len(lines) > max_lines:
+			lines = lines[1:]
+
+		# Write the updated lines to the file
+		with open(file_path, "w") as file:
+			file.writelines(lines)
+
+	def twitch_live_announcer(self):
 		while True:
-			url = "https://mangareader.to/home"
-			response = requests.get(url)
-			soup = BeautifulSoup(response.content, 'html.parser')
-			section_block = soup.find('section', {'class': 'block_area_home'})
-			latest_chap_div = section_block.find('div', {'id': 'latest-chap'})
-			a_tags = latest_chap_div.find_all('a', href=True, title=True)
+			try:
+				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params))
+			except ssl.SSLEOFError as e:
+				print("SSL EOF Error occurred. Retrying...")
+				time.sleep(10)  # Wait for some time before retrying
+				continue
 
-			new_titles = []
-			for a_tag in a_tags:
-				title = a_tag.text
-				cursor.execute('SELECT * FROM manga WHERE title = ?', (title,))
-				row = cursor.fetchone()
-				if row is None:
-					new_titles.append(title)
-					cursor.execute('INSERT INTO manga VALUES (?)', (title,))
-					conn.commit()
+			for message in self.messages:
+				print("Subject:", message.subject)
+				print("Snippet:", message.snippet)
+				print("-" * 20)
+				print()
 
-			if len(new_titles) > 0:
-				print(' New titles added to the database:')
-#				for title in new_titles:
-#					if len(title) < 20:
-#						print(title)
-#
-#
-#			# Print out titles with length < 20
-#			cursor.execute('SELECT title FROM manga')
-#			rows = cursor.fetchall()
-#			for row in rows:
-#				if len(row[0]) < 20:
-#					print(row[0])
-			time.sleep(300)
+				# Mark the message as read
+				message.mark_as_read()
+
+				# Extract the first word from the subject as the stream username
+				stream_username = self.extract_first_word(message.subject)
+				if stream_username:
+					# Construct the Twitch stream link
+					stream_link = f"https://www.twitch.tv/{stream_username}"
+					print("Stream Link:", stream_link)
+
+					# Append or overwrite the stream link to lastchapter.txt file
+					self.append_to_file("lastchapter.txt", stream_link)
+
+					# Append or overwrite the stream username to lastchaptername.txt file
+					self.append_to_file("lastchaptername.txt", stream_username)
+
+				tts(message.subject)
+				chatMain.add_log_message(message.subject)
+				chatMain.add_log_message("")
+
+				time.sleep(10)
+
+			chatMain.start_sleep_bar2()
 
 
 def start_threads():
-	t1 = threading.Thread(target=urlScalping().manga_checker)
+	t1 = threading.Thread(target=icon_tray)
 	t1.daemon = True
 	t1.start()
 
-	t2 = threading.Thread(target=icon_tray)
+	t2 = threading.Thread(target=urlScalping().manga_checker)
 	t2.daemon = True
 	t2.start()
 
-	t3 = threading.Thread(target=urlScalping().manga_checker_test)
+	t3 = threading.Thread(target=GmailChecker().twitch_live_announcer)
 	t3.daemon = True
 	t3.start()
 

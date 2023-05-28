@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+client_secret.json
+gmail_token.json
+variables/TwtichVariables.py

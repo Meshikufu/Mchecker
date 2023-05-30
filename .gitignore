@@ -364,3 +364,5 @@ FodyWeavers.xsd
 client_secret.json
 gmail_token.json
 variables/TwtichVariables.py
+lastchaptername.txt
+lastchapter.txt

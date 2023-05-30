@@ -43,7 +43,7 @@ sleep_duration2 = 15 * 2
 
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-from modules.GoogelTTS import tts
+from modules.GoogleTTS import tts
 
 
 def on_hotkey():
@@ -77,8 +77,12 @@ class buttons_actions():
 
 		return manga_names, urls
 
+
+############################################################################################################
+############################################################################################################
 class ttkgui():
-	def __init__(self, master):
+	def __init__(self, master, tray):
+		self.tray = tray
 		self.master = master
 		#root.overrideredirect(True)
 		#menu = ttk.Menu(root)
@@ -139,7 +143,7 @@ class ttkgui():
 		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
 		self.b1.pack(side=LEFT, padx=5, pady=5)
 		#########################################################################################################
-		self.us = urlScalping()
+		self.us = urlScalping(tray)
 
 		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=DANGER)
 		self.menub.pack(side=LEFT, padx=5, pady=5)
@@ -324,46 +328,56 @@ class ttkgui():
 		self.chatMain.see(ttk.END)
 
 
-def icon_tray():
-	image = PIL.Image.open('power.png')
-	win = win32gui.GetForegroundWindow()
-	console = win32console.GetConsoleWindow()
-	win32gui.ShowWindow(console ,0)
-	win32api.SetConsoleCtrlHandler(lambda x: True, True)  
+############################################################################################################
+############################################################################################################
+class IconTray:
+	def __init__(self):
+		self.image = PIL.Image.open('web.png')
+		self.current_icon = 'web'
+		
+		self.console = win32console.GetConsoleWindow()
+		win32gui.ShowWindow(self.console, 0)
+		win32api.SetConsoleCtrlHandler(lambda x: True, True)
+		
+		self.icon = pystray.Icon("web", self.image)
+		self.icon.menu = pystray.Menu(
+			pystray.MenuItem('1', self.action, default=True, visible=False),
+			pystray.MenuItem("open app", self.on_clicked),
+			pystray.MenuItem("hide app", self.on_clicked),
+			pystray.MenuItem("open console", self.on_clicked),
+			pystray.MenuItem("hide console", self.on_clicked),
+			pystray.MenuItem("Exit", self.on_clicked)
+		)
 	
-	def on_clicked(icon, item):
+	def on_clicked(self, icon, item):
 		current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		if str(item) == "open console":
-			win32gui.ShowWindow(console, win32con.SW_SHOW)
+			win32gui.ShowWindow(self.console, win32con.SW_SHOW)
 		elif str(item) == "hide console":
-			win32gui.ShowWindow(console ,0)
-			win32api.SetConsoleCtrlHandler(lambda x: True, True)     
+			win32gui.ShowWindow(self.console, 0)
+			win32api.SetConsoleCtrlHandler(lambda x: True, True)
 		elif str(item) == "open app":
 			root.deiconify()
 		elif str(item) == "hide app":
-			root.withdraw()      
+			root.withdraw()
 		elif str(item) == "Exit":
 			root.destroy()
 
-	def action():
+	def change_icon(self, new_icon_path):
+		self.icon.icon = PIL.Image.open(new_icon_path)
+		self.current_icon = new_icon_path
+		self.icon.update_menu()
+
+	def action(self, icon, item):
+		self.change_icon('web.png')
 		root.deiconify()
 
-	icon = pystray.Icon("power", image)
-	icon.menu = pystray.Menu(
-		pystray.MenuItem('1', action, default=True, visible=False),
-		pystray.MenuItem("open app", on_clicked),
-		pystray.MenuItem("hide app", on_clicked),
-		pystray.MenuItem("open console", on_clicked),
-		pystray.MenuItem("hide console", on_clicked),
-		pystray.MenuItem("Exit", on_clicked)
-	)       
-	icon.run() 
 
-#clear = 1
-
-
+############################################################################################################
+############################################################################################################
 class urlScalping():
-	def __init__(self):
+	def __init__(self, tray):
+		self.tray = tray
 		# initialize manga dictionary with data from data.txt
 		self.manga_dict = self.get_manga_dict()
 	def get_manga_dict(self):
@@ -425,6 +439,7 @@ class urlScalping():
 					chatMain.add_log_message(log_message)
 					tts(log_messagetts)
 					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
+					self.tray.change_icon('alert.png')
 					time.sleep(3)
 					debug = 2
 				elif "Bad gateway".lower() in str(scalping):
@@ -454,7 +469,7 @@ class urlScalping():
 				time.sleep(60)
 
 			if debug == 5:
-				tts("error")
+				#tts("error")
 				print("	debug = 5 ==error==")
 				chatMain.add_log_message("")
 				time.sleep(60)
@@ -523,8 +538,11 @@ class urlScalping():
 				chatMain.start_sleep_bar()
 
 
+############################################################################################################
+############################################################################################################
 class GmailChecker():
-	def __init__(self):
+	def __init__(self, tray):
+		self.tray = tray
 		self.gmail = Gmail()
 		self.construct_query = construct_query
 
@@ -610,31 +628,42 @@ class GmailChecker():
 					# Append or overwrite the stream link to lastchapter.txt file
 					self.append_to_file("lastchapter.txt", stream_link)
 
+					stream_username = stream_username.replace("_", " ")
+
 					# Append or overwrite the stream username to lastchaptername.txt file
 					self.append_to_file("lastchaptername.txt", stream_username)
+					# Change the icon to alert icon
+					self.tray.change_icon('alert.png')
 
+
+				message.subject = message.subject.replace("_", " ")
 				tts(message.subject)
 				chatMain.add_log_message(message.subject)
 				chatMain.add_log_message("")
 
 				time.sleep(10)
-
 			chatMain.start_sleep_bar2()
 
 
 def start_threads():
-	t1 = threading.Thread(target=icon_tray)
+	tray = IconTray()  # Create an instance of IconTray
+
+	def icon_tray_thread():
+		tray.icon.run()
+
+	t1 = threading.Thread(target=icon_tray_thread)
 	t1.daemon = True
 	t1.start()
 
-	t2 = threading.Thread(target=urlScalping().manga_checker)
+	url_scalping = urlScalping(tray)
+	t2 = threading.Thread(target=url_scalping.manga_checker)
 	t2.daemon = True
 	t2.start()
 
-	t3 = threading.Thread(target=GmailChecker().twitch_live_announcer)
+	gmail_checker = GmailChecker(tray)  # Pass the tray instance to GmailChecker
+	t3 = threading.Thread(target=gmail_checker.twitch_live_announcer)
 	t3.daemon = True
 	t3.start()
-
 
 def start_threads_tts():
 	t7 = threading.Thread(target=hotkey_listener)
@@ -643,7 +672,8 @@ def start_threads_tts():
 
 if __name__ == "__main__":
 	root = ttk.Window()
-	chatMain = ttkgui(root)
+	tray = IconTray()
+	chatMain = ttkgui(root, tray)
 	start_threads()
 	start_threads_tts()
 	root.mainloop()

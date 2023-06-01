@@ -116,7 +116,7 @@ class ttkgui():
 			with open("data.txt", "a") as f:
 				f.write(new_url + "\n")
 
-			my_scalper = urlScalping()
+			my_scalper = urlScalping(tray)
 			my_scalper.update_data_json()
 
 			self.create_menu()
@@ -242,7 +242,7 @@ class ttkgui():
 					f.write(line)
 		self.create_menu()
 
-		my_scalper = urlScalping()
+		my_scalper = urlScalping(tray)
 		my_scalper.update_data_json()
 
 		print(f"{selected_option} is deleted.")
@@ -426,7 +426,7 @@ class urlScalping():
 				if "Oops! We can't find this page." in str(scalping):
 					log_message = f"#{key} chapter number {self.manga_dict[key]['chapter_number']} isn't out yet"
 					log_messagetts = f"{key}, chapter number {self.manga_dict[key]['chapter_number']}, isn't out yet"
-					print(log_message)
+					#print(log_message) #log
 					#chatMain.add_log_message(log_message)
 					#tts(log_messagetts)
 					debug = 1
@@ -476,8 +476,8 @@ class urlScalping():
 
 			
 			elif debug < 3:
-				print(manga_is_out)
-				print([self.manga_dict])
+				#print(manga_is_out)
+				#print([self.manga_dict])
 				if manga_is_out:
 					with open("lastchapter.txt", 'w') as file:
 						for key, value in manga_is_out.items():
@@ -518,8 +518,8 @@ class urlScalping():
 				#chatMain.add_log_message(f"###> {current_time} <###")
 				#chatMain.add_log_message("")
 
-				print("manga_is_out")
-				print(manga_is_out)
+				#print("manga_is_out") #log
+				#print(manga_is_out) #log
 
 
 				#master = tk.Tk()
@@ -534,7 +534,7 @@ class urlScalping():
 					#print("manga_is_out")
 					#print(manga_is_out)
 
-				print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes")
+				#print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes") #log
 				chatMain.start_sleep_bar()
 
 

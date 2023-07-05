@@ -8,23 +8,26 @@ import win32gui, win32con, win32api, win32console
 import sys, os
 import pystray
 import PIL.Image
-from tqdm import tqdm
 import ttkbootstrap as ttk
 from ttkbootstrap import Style
 from ttkbootstrap.constants import *
 import tkinter as tk
 import pygame
-import speech_recognition as sr
-from gtts import gTTS
 import webbrowser
 import keyboard
-import pyperclip, pyautogui, sqlite3, queue, tempfile, re
+import pyperclip, re, sqlite3
+#from gtts import gTTS
+#import pyautogui, queue, tempfile
 from tkinter import Tk, PhotoImage
 import json
 #gmail stuff below
 import ssl
 from simplegmail import Gmail
 from simplegmail.query import construct_query
+import http.client
+import subprocess, yt_whisper
+import socket
+
 
 
 
@@ -38,9 +41,11 @@ pygame.mixer.init()
 
 
 #todo5 add controller class that will contains reusable variables
-sleep_duration = 15 * 20# * 60
-sleep_duration2 = 15 * 2
+sleep_duration = 15 * 40# * 60			#manga
+sleep_duration2 = 15 * 2				#twitch
+MAX_LINES = 4  # Define the maximum number of lines in gui (name of last scapped thing)
 
+clipboardtext = pyperclip.paste()
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 from modules.GoogleTTS import tts
@@ -69,10 +74,10 @@ class buttons_actions():
 		webbrowser.open(url)
 
 	def get_last_chapters(self):
-		with open("lastchaptername.txt", 'r') as file:
+		with open("temp/lastName.txt", 'r') as file:
 			manga_names = [line.strip() for line in file.readlines()]
 
-		with open("lastchapter.txt", 'r') as file:
+		with open("temp/lastLink.txt", 'r') as file:
 			urls = file.read().split("\n")
 
 		return manga_names, urls
@@ -84,36 +89,121 @@ class ttkgui():
 	def __init__(self, master, tray):
 		self.tray = tray
 		self.master = master
-		#root.overrideredirect(True)
-		#menu = ttk.Menu(root)
-		#root.config(menu=menu)
 		root.title("Mchecker")
 		root.geometry("+700+500")
-		#icon = PhotoImage(file='cat.gif')
-		#root.wm_iconphoto(True, icon)
+		# Remove the top bar
+		root.overrideredirect(True)
+		# Make the window stay on top of other windows
+		root.attributes('-topmost', True)
+
+
+		# Function to handle window dragging
+		def start_drag(event):
+			root.x = event.x
+			root.y = event.y
+
+		def stop_drag(event):
+			root.x = None
+			root.y = None
+
+		def drag(event):
+			deltax = event.x - root.x
+			deltay = event.y - root.y
+			x = root.winfo_x() + deltax
+			y = root.winfo_y() + deltay
+			root.geometry(f"+{x}+{y}")
+
+		root.bind("<ButtonPress-1>", start_drag)
+		root.bind("<ButtonRelease-1>", stop_drag)
+		root.bind("<B1-Motion>", drag)
 		
 		self.ba = buttons_actions()
 
 		self.top_frame_buttonsMain = ttk.Frame(self.master)#, bootstyle="secondary")
 		self.top_frame_buttonsMain.pack(side=TOP, fill=X)#, expand=YES)
 
-		self.leftleft_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain, padding=0)
-		self.leftleft_subframe_buttonsMain.pack(side=LEFT, fill=ttk.BOTH, expand=True)
+		###
+		self.top_frame_buttonsMainUp = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="secondary")
+		self.top_frame_buttonsMainUp.pack(side=TOP, fill=X)#, expand=YES)
 
-		self.left_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="info")
-		self.left_subframe_buttonsMain.pack(side=LEFT, fill=tk.X, expand=True)
+		self.leftleft_subframe_buttonsMainUp = ttk.Frame(self.top_frame_buttonsMainUp, padding=0)
+		self.leftleft_subframe_buttonsMainUp.pack(side=LEFT, fill=ttk.BOTH, expand=True)
 
-		self.right_subframe_buttonsMain = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="warning")
-		self.right_subframe_buttonsMain.pack(side=RIGHT)
+		self.left_subframe_buttonsMainUp = ttk.Frame(self.top_frame_buttonsMainUp)#, bootstyle="info")
+		self.left_subframe_buttonsMainUp.pack(side=LEFT, fill=tk.X, expand=True)
+
+		self.right_subframe_buttonsMainUp = ttk.Frame(self.top_frame_buttonsMainUp)#, bootstyle="warning")
+		self.right_subframe_buttonsMainUp.pack(side=RIGHT)
+
+		###
+		self.top_frame_buttonsMainDown = ttk.Frame(self.top_frame_buttonsMain)#, bootstyle="secondary")
+		self.top_frame_buttonsMainDown.pack(side=BOTTOM, fill=X)#, expand=YES)
+
+		self.leftleft_subframe_buttonsMainDown = ttk.Frame(self.top_frame_buttonsMainDown, padding=0)
+		self.leftleft_subframe_buttonsMainDown.pack(side=LEFT, fill=ttk.BOTH, expand=True)
+
+		self.right_subframe_buttonsMainDown = ttk.Frame(self.top_frame_buttonsMainDown)#, bootstyle="warning")
+		self.right_subframe_buttonsMainDown.pack(side=RIGHT)
+
+		self.left_subframe_buttonsMainDown = ttk.Frame(self.top_frame_buttonsMainDown)#, bootstyle="info")
+		self.left_subframe_buttonsMainDown.pack(side=RIGHT, fill=tk.X, expand=True)
 
 		#########################################################################################################
+		def yt_whisper_setup(url, model, task, language):
+			desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+			command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
+			subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
+			#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
+
+		def YT_whisper_medium():
+			copytext = pyperclip.paste()
+			if "https://www.youtube.com/watch" in copytext:
+				yt_whisper_setup(copytext, "medium", "translate", "Japanese")
+				root.withdraw()
+			else:
+				print("Not a YouTube URL.")
+
+		self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
+		self.subs.pack(side=LEFT, padx=5, pady=5)
+		#########################################################################################################
+		#def YT_whisper_large():
+		#	copytext = pyperclip.paste()
+		#	if "https://www.youtube.com/watch" in copytext:
+		#		yt_whisper_setup(copytext, "large", "translate", "Japanese")
+		#		root.withdraw()
+		#	else:
+		#		print("Not a YouTube UR_l.")
+		#
+		#self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="yt_wisperL", bootstyle=DANGER, command=YT_whisper_large)
+		#self.subs.pack(side=LEFT, padx=5, pady=5)
+		##########################################################################################################
+		import ctypes		
+		def launch_translation():
+			copytext = pyperclip.paste()
+			if "youtube.com/watch" in copytext or "twitch.tv/" in copytext:
+				translation_command = f'python translator.py {copytext} --model medium --task translate --language Japanese'
+				cmd_command = f'cd /d "C:\\Users\\Kufu\\stream-translator" & {translation_command}'
+				subprocess.Popen(f'start cmd /K "{cmd_command}"', shell=True)
+
+				hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+				if hwnd != 0:
+					ctypes.windll.user32.ShowWindow(hwnd, 0)  # Hide the console window
+				root.withdraw()
+			else:
+				print("Not a Stream URL.")
+
+
+		self.streamTranslator = ttk.Button(self.right_subframe_buttonsMainUp, text="translation.py", bootstyle=DANGER, command=launch_translation)
+		self.streamTranslator.pack(side=LEFT, padx=5, pady=5)
+		##########################################################################################################
+
 		def append_clipboard_to_file():
 			clipboard_content = pyperclip.paste()
 			# Extract the chapter number from the URL
 			chapter_num = re.search(r'chapter-(\d+)', clipboard_content).group(1)
 			# Add 1 to the chapter number and create the new URL
 			new_url = re.sub(r'chapter-\d+', f'chapter-{int(chapter_num)+1}', clipboard_content)
-			with open("data.txt", "a") as f:
+			with open("temp/Mdata.txt", "a") as f:
 				f.write(new_url + "\n")
 
 			my_scalper = urlScalping(tray)
@@ -129,7 +219,7 @@ class ttkgui():
 			self.open_manga_list.config(menu="")
 
 			# read the data from the JSON file into a Python dictionary
-			with open('data.json', 'r') as f:
+			with open('temp/Mdata.json', 'r') as f:
 				data = json.load(f)
 
 			# create the menu
@@ -140,21 +230,27 @@ class ttkgui():
 			# attach the menu to the Menubutton
 			self.open_manga_list.config(menu=menu)
 
-		self.b1 = ttk.Button(self.right_subframe_buttonsMain, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
+		self.b1 = ttk.Button(self.right_subframe_buttonsMainUp, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
 		self.b1.pack(side=LEFT, padx=5, pady=5)
 		#########################################################################################################
 		self.us = urlScalping(tray)
 
-		self.menub = ttk.Menubutton(self.right_subframe_buttonsMain, text="Delete", bootstyle=DANGER)
+		self.menub = ttk.Menubutton(self.right_subframe_buttonsMainUp, text="Delete", bootstyle=DANGER)
 		self.menub.pack(side=LEFT, padx=5, pady=5)
 		self.create_menu()
 
-#		self.br = ttk.Button(self.right_subframe_buttonsMain, text="refresh", bootstyle=DANGER, commaand=self.create_menu_refresh())
+#		self.br = ttk.Button(self.right_subframe_buttonsMainDown, text="refresh", bootstyle=DANGER, commaand=self.create_menu_refresh())
 #		self.br.pack(side=LEFT, padx=5, pady=5)
 #
 #
-		self.b3 = ttk.Button(self.right_subframe_buttonsMain, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
-		self.b3.pack(side=RIGHT, padx=5, pady=5)
+		def exit_app():
+			root.destroy()
+
+		self.exit = ttk.Button(self.leftleft_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
+		self.exit.pack(side=LEFT, padx=5, pady=5)
+
+		self.hide = ttk.Button(self.right_subframe_buttonsMainDown, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
+		self.hide.pack(side=RIGHT, padx=5, pady=5)
 
 		self.bottom_frame_chatMain = ttk.Frame(self.master, padding=0)
 		self.bottom_frame_chatMain.pack(side=BOTTOM, fill=ttk.BOTH, expand=True)
@@ -177,7 +273,7 @@ class ttkgui():
 		self.update_manga_buttons()
 		#self.menu_list()
 
-		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMain, text="Open URL", bootstyle=(DARK, OUTLINE))
+		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMainUp, text="Open URL", bootstyle=(DARK, OUTLINE))
 		self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
 		self.create_menu_open_url()
 
@@ -187,7 +283,7 @@ class ttkgui():
 #		tts("eek")
 #
 #		# read data from file
-#		with open('data.txt', 'r') as f:
+#		with open('temp/Mdata.txt', 'r') as f:
 #			self.data = [line.strip() for line in f.readlines()]
 #
 #		# clear old menu
@@ -202,7 +298,7 @@ class ttkgui():
 		self.open_manga_list.config(menu="")
 
 		# read the data from the JSON file into a Python dictionary
-		with open('data.json', 'r') as f:
+		with open('temp/Mdata.json', 'r') as f:
 			data = json.load(f)
 
 		# create the menu
@@ -213,9 +309,31 @@ class ttkgui():
 		# attach the menu to the Menubutton
 		self.open_manga_list.config(menu=menu)
 
+
+#	def create_menu_open_url(self):
+#		# Destroy the existing menu
+#		if hasattr(self, "menu"):
+#			self.menu.destroy()
+#
+#		# Read the data from the JSON file into a Python dictionary
+#		with open('temp/Mdata.json', 'r') as f:
+#			data = json.load(f)
+#
+#		# Create the menu
+#		menu = tk.Menu(self.open_manga_list, tearoff=False)
+#		for title in Mdata.keys():
+#			url = data[title]['url']
+#			menu.add_command(label=title, command=lambda u=url: (webbrowser.open_new_tab(u[:-2] + str(int(u[-2:])-1)), self.ba.hide_app()))
+#
+#		# Attach the menu to the Menubutton
+#		self.open_manga_list.config(menu=menu)
+#
+#		# Store the menu reference
+#		self.menu = menu	
+
 	def create_menu(self):
 		# Read data from file
-		with open('data.txt', 'r') as f:
+		with open('temp/Mdata.txt', 'r') as f:
 			self.data = [line.strip() for line in f.readlines()]
 
 		# create menu
@@ -234,9 +352,9 @@ class ttkgui():
 	def on_option_select(self):
 		selected_option = self.option_var.get()
 		self.menu.delete(0, tk.END)  # clear menu
-		with open('data.txt', 'r') as f:
+		with open('temp/Mdata.txt', 'r') as f:
 			lines = f.readlines()
-		with open('data.txt', 'w') as f:
+		with open('temp/Mdata.txt', 'w') as f:
 			for line in lines:
 				if line.strip() != selected_option:  # exclude selected option
 					f.write(line)
@@ -255,7 +373,7 @@ class ttkgui():
 		self.open_manga_list.config(menu="")
 
 		# read the data from the JSON file into a Python dictionary
-		with open('data.json', 'r') as f:
+		with open('temp/Mdata.json', 'r') as f:
 			data = json.load(f)
 
 		# create the menu
@@ -305,20 +423,20 @@ class ttkgui():
 		for i in range(num_steps):
 			self.sleep_bar2.step(1)
 			self.sleep_bar2.update()
-			time.sleep(secs_per_step)			
+			time.sleep(secs_per_step)
 
 	def update_manga_buttons(self):
 		manga_names, urls = self.ba.get_last_chapters()
 
 		# Remove existing buttons
-		for child in self.left_subframe_buttonsMain.winfo_children():
+		for child in self.left_subframe_buttonsMainDown.winfo_children():
 			child.destroy()
 
 		# Create buttons for each manga and add them to the window
 		for i in range(len(manga_names)):
 			name = manga_names[i]
 			url = urls[i]
-			button = ttk.Button(self.left_subframe_buttonsMain, text=name, style=(DARK, OUTLINE), command=lambda url=url: (self.ba.openLastChapterLink(url), self.ba.hide_app()))
+			button = ttk.Button(self.left_subframe_buttonsMainDown, text=name, style=(DARK, OUTLINE), command=lambda url=url: (self.ba.openLastChapterLink(url), self.ba.hide_app()))
 			button.pack(side=RIGHT, padx=5, pady=5)
 		# Schedule another call to update the manga buttons in 5 seconds
 		self.master.after(2000, self.update_manga_buttons)
@@ -332,7 +450,7 @@ class ttkgui():
 ############################################################################################################
 class IconTray:
 	def __init__(self):
-		self.image = PIL.Image.open('web.png')
+		self.image = PIL.Image.open('pic/web.png')
 		self.current_icon = 'web'
 		
 		self.console = win32console.GetConsoleWindow()
@@ -369,7 +487,7 @@ class IconTray:
 		self.icon.update_menu()
 
 	def action(self, icon, item):
-		self.change_icon('web.png')
+		self.change_icon('pic/web.png')
 		root.deiconify()
 
 
@@ -378,10 +496,10 @@ class IconTray:
 class urlScalping():
 	def __init__(self, tray):
 		self.tray = tray
-		# initialize manga dictionary with data from data.txt
+		# initialize manga dictionary with data from Mdata.txt
 		self.manga_dict = self.get_manga_dict()
 	def get_manga_dict(self):
-		with open('data.txt') as f:
+		with open('temp/Mdata.txt') as f:
 			data = f.read().splitlines()
 		manga_dict = {}
 		for line in data:
@@ -407,12 +525,12 @@ class urlScalping():
 		return manga_dict
 
 	def update_data_json(self):
-		with open("data.json", 'w') as file:
+		with open("temp/Mdata.json", 'w') as file:
 			json.dump(self.manga_dict, file)
 
 	def manga_checker(self):
 		while True:
-			#pull fresh data from data.txt
+			#pull fresh data from Mdata.txt
 			self.manga_dict = self.get_manga_dict()
 			manga_is_out = {}
 			for key in self.manga_dict:
@@ -437,9 +555,10 @@ class urlScalping():
 					log_messagetts = f"{key}, IS OUT"
 					print(log_message)
 					chatMain.add_log_message(log_message)
+					chatMain.add_log_message("")
 					tts(log_messagetts)
 					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
-					self.tray.change_icon('alert.png')
+					self.tray.change_icon('pic/alert.png')
 					time.sleep(3)
 					debug = 2
 				elif "Bad gateway".lower() in str(scalping):
@@ -449,7 +568,7 @@ class urlScalping():
 					log_message = f"{key} Chapter number {self.manga_dict[key]['chapter_number']} scalping ERROR"
 					log_messagetts = f"{key}, Chapter number {self.manga_dict[key]['chapter_number']}, scalping ERROR"
 					print(log_message)
-					chatMain.add_log_message(log_message)
+					#chatMain.add_log_message(log_message)
 					#tts(log_messagetts)
 					debug = 5
 
@@ -471,39 +590,44 @@ class urlScalping():
 			if debug == 5:
 				#tts("error")
 				print("	debug = 5 ==error==")
-				chatMain.add_log_message("")
+				#chatMain.add_log_message("")
 				time.sleep(60)
 
 			
 			elif debug < 3:
-				#print(manga_is_out)
-				#print([self.manga_dict])
 				if manga_is_out:
-					with open("lastchapter.txt", 'w') as file:
+					# Write the URLs to the "temp/lastLink.txt" file
+					with open("temp/lastLink.txt", 'r') as file:
+						lines = file.readlines()
+						
+					# Check if the number of lines exceeds the maximum
+					if len(lines) >= MAX_LINES:
+						# Remove the first line
+						#chatMain.add_log_message("remove first mana line")
+						lines.pop(0)
+						
+					with open("temp/lastLink.txt", 'w') as file:
 						for key, value in manga_is_out.items():
-							file.write(self.manga_dict[key]['url'].format(value) + "\n")
-
-					with open("lastchaptername.txt", 'w') as file:
+							lines.append(self.manga_dict[key]['url'].format(value) + "\n")
+						file.writelines(lines)
+					
+					# Write the keys to the "lastName.txt" file
+					with open("temp/lastName.txt", 'r') as file:
+						keys = file.readlines()
+						
+					# Check if the number of lines exceeds the maximum
+					if len(keys) >= MAX_LINES:
+						# Remove the first line
+						keys.pop(0)
+						
+					with open("temp/lastName.txt", 'w') as file:
 						for key in manga_is_out.keys():
-							file.write(key + "\n")
-
-					with open("lastchaptername.json", 'r') as file:
-						manga_names = json.load(file)
-
-					# Add the new manga name to the list if it is unique
-					new_manga_name = list(manga_is_out.keys())[0]
-					if new_manga_name not in manga_names:
-						manga_names.append(new_manga_name)
-
-					# Keep only the last two names in the list
-					manga_names = manga_names[-2:]
-
-					with open("lastchaptername.json", 'w') as file:
-						json.dump(manga_names, file)
+							keys.append(key + "\n")
+						file.writelines(keys)
 
 					manga_is_out.clear()
 
-				with open("data.txt", 'w') as file:
+				with open("temp/Mdata.txt", 'w') as file:
 					for key in self.manga_dict:
 						# Extract the URL prefix by removing the part after "chapter-"
 						url_prefix = self.manga_dict[key]['url'][:self.manga_dict[key]['url'].rfind("chapter-")+len("chapter-")]
@@ -511,7 +635,7 @@ class urlScalping():
 						file.write(f"{url_prefix}{self.manga_dict[key]['chapter_number']}\n")
 						self.manga_dict[key]['url'] = f"{url_prefix}{self.manga_dict[key]['chapter_number']}"
 
-				with open("data.json", 'w') as file:
+				with open("temp/Mdata.json", 'w') as file:
 					json.dump(self.manga_dict, file)
 				
 				#log_message_before_sleep = f"====="{current_time}"====="
@@ -547,18 +671,24 @@ class GmailChecker():
 		self.construct_query = construct_query
 
 		from variables.TwtichVariables import subject_list
+		from variables.TwtichVariables import snippet_list
 
 		self.subject_list = subject_list
-		#self.subject_list = ["test1", "test2"]
-		#self.snippet_list = ["test"]
+		self.snippet_list = snippet_list
 
-		# For even more control use queries:
 		self.query_params = {
 			"labels": ["Twitch"],
-			"subject": self.subject_list,
-			"newer_than": (12, "hour"), # number of hours it goes in past
+			"exact_phrase": self.subject_list + self.snippet_list,
+			"newer_than": (21, "hour"), # number of hours it goes in past
 			"unread": True
 		}
+
+		self.query_params_clear = {
+			"labels": ["Twitch"],
+			"newer_than": (2, "day"), # number of days it goes in past
+			"unread": True
+		}
+		
 
 	def extract_first_word(self, subject):
 		words = subject.split()
@@ -577,7 +707,7 @@ class GmailChecker():
 			time_diff_minutes = time_diff / 60.0
 
 			# If the last modification was within the last 15 minutes, append to the file
-			if time_diff_minutes < 30: # minutes after it will delete everything 
+			if time_diff_minutes < (12 * 60): # minutes after it will delete everything 
 				append = True
 			else:
 				append = False
@@ -592,8 +722,7 @@ class GmailChecker():
 		lines.append(data + "\n")
 
 		# If the number of lines exceeds the maximum, remove the first line
-		max_lines = 4 # max lines in .txt files
-		if len(lines) > max_lines:
+		if len(lines) > MAX_LINES:
 			lines = lines[1:]
 
 		# Write the updated lines to the file
@@ -608,6 +737,19 @@ class GmailChecker():
 				print("SSL EOF Error occurred. Retrying...")
 				time.sleep(10)  # Wait for some time before retrying
 				continue
+			except http.client.RemoteDisconnected as remote_disconnected_error:
+				print("Remote Disconnected Error occurred. Retrying...")
+				time.sleep(10)  # Wait for some time before retrying
+				continue
+			except socket.gaierror as gai_error:
+				print("getaddrinfo failed. Retrying...")
+				time.sleep(10)  # Wait for some time before retrying
+				continue
+			except Exception as e:
+				if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
+					print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+					time.sleep(10)
+					continue
 
 			for message in self.messages:
 				print("Subject:", message.subject)
@@ -625,23 +767,53 @@ class GmailChecker():
 					stream_link = f"https://www.twitch.tv/{stream_username}"
 					print("Stream Link:", stream_link)
 
-					# Append or overwrite the stream link to lastchapter.txt file
-					self.append_to_file("lastchapter.txt", stream_link)
+					if stream_link in open("temp/lastLink.txt").read():
+						pass  # Skip execution if stream_link is already present in the file
+					else:
+						# Append the stream_link to lastLink.txt file
+						self.append_to_file("temp/lastLink.txt", stream_link)
 
-					stream_username = stream_username.replace("_", " ")
+						#stream_username = stream_username.replace("_", " ")
 
-					# Append or overwrite the stream username to lastchaptername.txt file
-					self.append_to_file("lastchaptername.txt", stream_username)
+						# Append the stream_username to lastName.txt file
+						self.append_to_file("temp/lastName.txt", stream_username)
+
 					# Change the icon to alert icon
-					self.tray.change_icon('alert.png')
-
-
+					self.tray.change_icon('pic/alert.png')
+					
 				message.subject = message.subject.replace("_", " ")
 				tts(message.subject)
 				chatMain.add_log_message(message.subject)
 				chatMain.add_log_message("")
 
 				time.sleep(10)
+
+			execution_percentage = 3  # Adjust the percentage as desired
+			import random
+			if random.randint(1, 100) <= execution_percentage:
+				try:
+					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
+				except ssl.SSLEOFError as e:
+					print("SSL EOF Error occurred. Retrying...")
+					time.sleep(10)  # Wait for some time before retrying
+					continue
+				except http.client.RemoteDisconnected as remote_disconnected_error:
+					print("Remote Disconnected Error occurred. Retrying...")
+					time.sleep(10)  # Wait for some time before retrying
+					continue
+				except socket.gaierror as gai_error:
+					print("getaddrinfo failed. Retrying...")
+					time.sleep(10)  # Wait for some time before retrying
+					continue
+				except Exception as e:
+					if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
+						print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+						time.sleep(10)
+						continue
+				for message in self.messages:
+					# Mark the message as read or perform other actions as needed
+					message.mark_as_read()
+
 			chatMain.start_sleep_bar2()
 
 

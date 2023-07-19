@@ -1,2 +1,2 @@
-subject_list = ["vienna", "saruei", "vedal987", "anny", "not_anny", "nyanners", "vei", "Arteezy", "filian", "LordAethelstan"]
-snippet_list = ["vedal", "neuro", "neuro-sama", "anime expo", "collab", "drunk", "drink", "twitch con", "twitchcon"]
+subject_list = ["test"]
+snippet_list = ["test2"]

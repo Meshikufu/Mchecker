@@ -29,6 +29,7 @@ def tts(text):
 				speech.write_to_fp(fp)
 				filename = fp.name
 				print(f" Created file: {filename}")
+				print("")
 				# enqueue the file path
 				file_queue.put(filename)
 	# create and start the thread to create the audio files
@@ -49,6 +50,7 @@ def tts(text):
 				# delete the audio file
 				os.remove(filename)
 				print(f" Deleted file: {filename}")
+				print("")
 			else:
 				# wait for a short time if there are no files in the queue
 				pygame.time.wait(10)

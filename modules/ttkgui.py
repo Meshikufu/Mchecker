@@ -8,27 +8,7 @@ import tkinter as tk
 import pyperclip, re, sqlite3
 from tkinter import Tk, PhotoImage
 
-
-
-
-
-#os.chdir('C:/Programming/PythonProjects/Mchecker')
-
-#todo4 this one below doesnt hide message in console
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
-print("")
-pygame.mixer.init()
-
-clipboardtext = pyperclip.paste()
-current_time = datetime.datetime.now().strftime('%H:%M:%S')
-
 from modules.GoogleTTS import tts
-from modules.Schatboxsendmessage import Schatboxsendmessage
-from modules.GmailChecker import GmailChecker
-from modules.IconTray import IconTray
-from modules.urlScalping import urlScalping
-from modules.socketserverM import socketServer
-
 
 import modules.constrolPanel
 sleep_duration = modules.constrolPanel.sleep_duration
@@ -36,21 +16,6 @@ sleep_duration2 = modules.constrolPanel.sleep_duration2
 MAX_LINES = modules.constrolPanel.MAX_LINES
 
 
-
-def on_hotkey():
-	# get the text from the clipboard
-	copytext = pyperclip.paste()
-
-	# convert the text to speech
-	tts(copytext)
-
-
-def hotkey_listener():
-	# register the hotkey
-	keyboard.add_hotkey('alt+t', on_hotkey)
-
-	# start the listener loop
-	keyboard.wait()
 ###########################################
 class buttons_actions():
 	def hide_app(self):
@@ -73,7 +38,8 @@ class buttons_actions():
 ############################################################################################################
 ############################################################################################################
 class ttkgui():
-	def __init__(self, master, tray, chatMain):
+	def __init__(self, master, tray, chatMain, url_scalping):
+		urlScalping = url_scalping
 		self.chatMain = chatMain
 		self.tray = tray
 		self.master = master
@@ -319,7 +285,8 @@ class ttkgui():
 		# associate menu with menubutton
 		self.menub['menu'] = self.menu
 
-	def on_option_select(self): # delete button fuction
+	def on_option_select(self, url_scalping): # delete button fuction
+		urlScalping = url_scalping
 		selected_option = self.option_var.get()
 		self.menu.delete(0, tk.END)  # clear menu
 		with open('temp/Mdata.txt', 'r') as f:
@@ -330,7 +297,7 @@ class ttkgui():
 					f.write(line)
 		self.create_menu()
 
-		my_scalper = urlScalping(tray, chatMain)
+		my_scalper = urlScalping(chatMain)
 		my_scalper.update_data_json()
 
 		print(f"{selected_option} is deleted.")
@@ -409,47 +376,7 @@ class ttkgui():
 	def add_log_message(self, msg): # function to pass text into chat box
 		self.chatMain.insert(ttk.END, msg + '\n')
 		self.chatMain.see(ttk.END)
-
-#########################################################################################################
-#########################################################################################################
-#from modules.ttkgui import ttkgui
-
-
-
-def start_threads():
-	tray = IconTray(root)  # Icon in tray
-
-	def icon_tray_thread():
-		tray.icon.run()
-
-	t1 = threading.Thread(target=icon_tray_thread)
-	t1.daemon = True
-	t1.start()
-
-	url_scalping = urlScalping(tray, chatMain)  # mandagex scalping
-	t3 = threading.Thread(target=url_scalping.manga_checker)
-	t3.daemon = True
-	t3.start()
-
-	gmail_checker = GmailChecker(tray, chatMain)  # Gmail API 
-	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	t4.daemon = True
-	t4.start()
-
-	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain,))
-	tSocketServer.daemon = True
-	tSocketServer.start()
-
-def start_threads_tts():
-	t7 = threading.Thread(target=hotkey_listener)
-	t7.daemon = True
-	t7.start()
-
 someValue = True
 if __name__ == "__main__":
 	root = ttk.Window()
-	tray = IconTray(root)
-	chatMain = ttkgui(root, tray, someValue) 
-	start_threads()
-	start_threads_tts()
-	root.mainloop()
+	chatMain = ttkgui(root, someValue) 

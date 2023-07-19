@@ -1,5 +1,5 @@
 import socket
-from modules.Schatboxsendmessage import Schatboxsendmessage
+from modules.SocketClient import Schat
 
 def socketServer(tray, chatMain):
 	chatMain = chatMain

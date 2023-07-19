@@ -1,7 +1,7 @@
 import socket
 import time
 
-def Schatboxsendmessage(message):
+def Schat(message):
 	HOST = socket.gethostname()
 	PORT = 1235
 	try:

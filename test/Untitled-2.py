@@ -1,5 +1,5 @@
 import time
-from modules.Schatboxsendmessage import Schatboxsendmessage
+from modules.SocketClient import Schat
 import socket
 
 HOST = socket.gethostname()
@@ -41,7 +41,7 @@ def second2():
         message = str(counter)
         message2 = str(counter2)
         message3 = str(counter3)
-        #Schatboxsendmessage(message)
+        #Schat(message)
 
 
 

@@ -23,7 +23,7 @@ clipboardtext = pyperclip.paste()
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 from modules.GoogleTTS import tts
-from modules.Schatboxsendmessage import Schatboxsendmessage
+from modules.SocketClient import Schat
 from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
@@ -202,8 +202,10 @@ class ttkgui():
 
 			self.create_menu()
 			print(f"{clipboard_content} is added")
-			chatMain.add_log_message(f"{clipboard_content} is added!")
-			chatMain.add_log_message("")
+			message = (f"{clipboard_content} is added")
+			Schat(message)
+			#chatMain.add_log_message(f"{clipboard_content} is added!")
+			#chatMain.add_log_message("")
 			tts("added!")
 
 			#refresh open url menu

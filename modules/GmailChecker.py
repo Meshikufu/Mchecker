@@ -7,8 +7,8 @@ import http.client
 import socket
 
 from modules.GoogleTTS import tts
-from modules.Schatboxsendmessage import Schatboxsendmessage
-from modules.Schatboxsendmessage import Schat2
+from modules.SocketClient import Schat
+from modules.SocketClient import Schat2
 
 import modules.controlPanel
 sleep_duration2 = modules.controlPanel.sleep_duration2

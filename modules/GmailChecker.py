@@ -10,9 +10,9 @@ from modules.GoogleTTS import tts
 from modules.Schatboxsendmessage import Schatboxsendmessage
 from modules.Schatboxsendmessage import Schat2
 
-import modules.constrolPanel
-sleep_duration2 = modules.constrolPanel.sleep_duration2
-MAX_LINES = modules.constrolPanel.MAX_LINES
+import modules.controlPanel
+sleep_duration2 = modules.controlPanel.sleep_duration2
+MAX_LINES = modules.controlPanel.MAX_LINES
 
 class GmailChecker():
 	def __init__(self, tray, chatMain):

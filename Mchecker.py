@@ -30,10 +30,10 @@ from modules.urlScalping import urlScalping
 from modules.socketserverM import socketServer
 
 
-import modules.constrolPanel
-sleep_duration = modules.constrolPanel.sleep_duration
-sleep_duration2 = modules.constrolPanel.sleep_duration2
-MAX_LINES = modules.constrolPanel.MAX_LINES
+import modules.controlPanel
+sleep_duration = modules.controlPanel.sleep_duration
+sleep_duration2 = modules.controlPanel.sleep_duration2
+MAX_LINES = modules.controlPanel.MAX_LINES
 
 
 

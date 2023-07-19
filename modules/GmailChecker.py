@@ -8,6 +8,7 @@ import socket
 
 from modules.GoogleTTS import tts
 from modules.Schatboxsendmessage import Schatboxsendmessage
+from modules.Schatboxsendmessage import Schat2
 
 import modules.constrolPanel
 sleep_duration2 = modules.constrolPanel.sleep_duration2
@@ -79,17 +80,6 @@ class GmailChecker():
 		with open(file_path, "w") as file:
 			file.writelines(lines)
 
-	#def sleepbar():
-	#	HOST = socket.gethostname()
-	#	PORT = 1235
-	#	try:
-	#		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
-	#		s.connect((HOST, PORT))
-	#		s.sendall(b'start_sleep_bar2')
-	#		s.close()
-
-
-
 	def twitch_live_announcer(self):
 		HOST = socket.gethostname()
 		PORT = 1235
@@ -102,14 +92,6 @@ class GmailChecker():
 		# unread_eraser logic
 
 		while True:
-			#try:
-			#	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			#	s.connect((HOST, PORT))
-			#	s.close()
-			#except ConnectionRefusedError:
-			#	print(f"Connection refused. Couldn't send message: {message}")
-			#	time.sleep(15)
-
 			try:
 				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params))
 			except ssl.SSLEOFError as e:
@@ -164,18 +146,14 @@ class GmailChecker():
 				if "#ad" in message.snippet:
 					tts(f"{message.subject} . Sellout stream")
 
-					s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-					s.connect((HOST, PORT))
-					s.send(f"{message.subject} #Sellout stream".subject.encode("utf-8"))
-					s.close()
+					message2 = (f"{message.subject} #Sellout stream")
+					Schat2(message2)
 
 				else:
 					tts(message.subject)
 
-					s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-					s.connect((HOST, PORT))
-					s.send(message.subject.encode("utf-8"))
-					s.close()
+					message2 = (message.subject)
+					Schat2(message2)
 
 				time.sleep(10)
 

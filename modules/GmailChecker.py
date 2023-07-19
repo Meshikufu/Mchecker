@@ -21,8 +21,8 @@ class GmailChecker():
 		self.gmail = Gmail()
 		self.construct_query = construct_query
 
-		from save.TwtichVariables import subject_list
-		from save.TwtichVariables import snippet_list
+		from save.twitchfilter import subject_list
+		from save.twitchfilter import snippet_list
 
 		self.subject_list = subject_list
 		self.snippet_list = snippet_list

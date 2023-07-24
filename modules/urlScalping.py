@@ -93,7 +93,17 @@ class urlScalping():
 					self.chatMain.add_log_message("")
 					tts(log_messagetts)
 					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
-					self.tray.change_icon('pic/alert.png')
+
+
+
+
+					import threading
+					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+					dynamic_icon.start()
+					#self.tray.change_icon('pic/alert.png')
+
+
+
 					time.sleep(3)
 					debug = 2
 				elif "Bad gateway".lower() in str(scalping):

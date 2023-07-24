@@ -4,7 +4,7 @@ import ssl
 from simplegmail import Gmail
 from simplegmail.query import construct_query
 import http.client
-import socket
+import socket, threading
 
 from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
@@ -14,12 +14,22 @@ import modules.controlPanel
 sleep_duration2 = modules.controlPanel.sleep_duration2
 MAX_LINES = modules.controlPanel.MAX_LINES
 
+from save.twitchfilter import negatives_list
+from save.twitchfilter import positives_list
+from save.twitchfilter import positives_list_drinking
+from save.twitchfilter import positives_list_collab
+from save.twitchfilter import positives_list_irl
+
+
 class GmailChecker():
 	def __init__(self, tray, chatMain):
 		self.chatMain = chatMain
 		self.tray = tray
 		self.gmail = Gmail()
 		self.construct_query = construct_query
+
+		self.icon_idle = True
+		self.trigger_thread = None
 
 		from save.twitchfilter import subject_list
 		from save.twitchfilter import snippet_list
@@ -29,7 +39,7 @@ class GmailChecker():
 
 		self.query_params = {
 			"labels": ["Twitch"],
-			"exact_phrase": subject_list + snippet_list,
+			"exact_phrase": subject_list + snippet_list + positives_list,
 			"newer_than": (21, "hour"),
 			"unread": True
 		}
@@ -139,23 +149,56 @@ class GmailChecker():
 						# Append the stream_username to lastName.txt file
 						self.append_to_file("temp/lastName.txt", stream_username)
 
-					# Change the icon to alert icon
-					self.tray.change_icon('pic/alert.png')
-					
+						
+
+				### filter logic
+				change_icon = True
+
+				snippet_lower = message.snippet.lower()
+
 				message.subject = message.subject.replace("_", " ")
-				if "#ad" in message.snippet:
-					tts(f"{message.subject} . Sellout stream")
+				message2 = f"{message.subject},"
 
-					message2 = (f"{message.subject} #Sellout stream")
-					Schat2(message2)
+				matched_keywords_filter = []
 
-				else:
-					tts(message.subject)
+				# Check if any keyword from negatives_list is present in snippet_lower
+				if any(keyword.lower() in snippet_lower for keyword in negatives_list):
+					matched_keywords_filter.append("Potentially shit ")
+					change_icon = False
+					print("change_icon = False")
 
-					message2 = (message.subject)
-					Schat2(message2)
+				# Check if any keyword from positives_list is present in snippet_lower
+				for keyword in positives_list:
+					if keyword.lower() in snippet_lower:
+						matched_keywords_filter.append(keyword.capitalize() + ".")
 
-				time.sleep(10)
+				# Join the matched keywords with space separators and append to message2
+				if matched_keywords_filter:
+					message2 += " ".join(matched_keywords_filter)
+					message2 = message2[:-1]
+					message2 += " stream"
+
+				tts(message2)
+				message2 = message2.replace(".", " ")
+				Schat2(message2)
+				if change_icon == False: 
+					time.sleep(10)
+
+				if change_icon == True:
+					print(f"current threads are:", threading.enumerate())
+					active_threads = threading.enumerate()
+					if "(dynamic_icon_alert)" in active_threads:
+					#for thread in active_threads:
+					#	if isinstance(thread, threading.Thread) and thread._target == "(dynamic_icon_alert)":
+						print("Function name: (dynamic_icon_alert)")
+							#break  # If the thread is found, no need to create a new one
+					else:
+						dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+						dynamic_icon.start()
+
+					time.sleep(10)
+
+
 
 			# unread_eraser logic
 			unread_eraser = unread_eraser - gmail_progressbar_duration
@@ -185,5 +228,8 @@ class GmailChecker():
 					# Mark the message as read or perform other actions as needed
 					message.mark_as_read()
 
-
+			print(threading.active_count())
+			print(threading.enumerate())
 			self.chatMain.start_sleep_bar2()
+			
+			

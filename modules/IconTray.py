@@ -4,6 +4,7 @@ import win32gui, win32con, win32api, win32console
 import sys, os
 import pystray
 import PIL.Image
+import threading
 
 
 class IconTray():
@@ -11,6 +12,9 @@ class IconTray():
 		self.root = root
 		self.image = PIL.Image.open('pic/web.png')
 		self.current_icon = 'web'
+		self.icon_idle = True
+
+		self.icon_idle = False
 		
 		self.console = win32console.GetConsoleWindow()
 		win32gui.ShowWindow(self.console, 0)
@@ -48,3 +52,26 @@ class IconTray():
 	def action(self, icon, item):
 		self.change_icon('pic/web.png')
 		self.root.deiconify()
+		self.icon_idle = True
+		time.sleep(0.3)
+
+	def dynamic_icon_alert(self):
+		if self.icon_idle == False:
+			self.icon_idle = True
+			self.change_icon('pic/web.png')
+			time.sleep(0.35)
+		self.icon_idle = False
+		while True:
+			if self.icon_idle == True:
+				self.change_icon('pic/web.png')
+				break
+			self.change_icon('pic/alert.png')
+			time.sleep(0.3)
+			if self.icon_idle == True:
+				self.change_icon('pic/web.png')
+				break
+			self.change_icon('pic/alert2.png')
+			time.sleep(0.3)
+					#print("dynamic_icon_alert THREAD")
+		
+		#print("dynamic_icon_alert is already running.")

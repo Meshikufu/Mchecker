@@ -78,7 +78,7 @@ class ttkgui():
 		self.tray = tray
 		self.master = master
 		root.title("Mchecker")
-		root.geometry("+700+500")
+		root.geometry("+1200+700")
 		# Remove the top bar
 		root.overrideredirect(True)
 		# Make the window stay on top of other windows
@@ -441,6 +441,7 @@ def start_threads():
 	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain,))
 	tSocketServer.daemon = True
 	tSocketServer.start()
+
 
 def start_threads_tts():
 	t7 = threading.Thread(target=hotkey_listener)

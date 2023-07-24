@@ -12,7 +12,9 @@ class IconTray():
 		self.root = root
 		self.image = PIL.Image.open('pic/web.png')
 		self.current_icon = 'web'
-		self.icon_idle = True
+
+		self.icon_list_alarm = ['pic/alert.png', 'pic/alert2.png']
+		self.icon_list_idle = ['pic/web.png']
 
 		self.icon_idle = False
 		
@@ -50,28 +52,45 @@ class IconTray():
 		self.icon.update_menu()
 
 	def action(self, icon, item):
-		self.change_icon('pic/web.png')
 		self.root.deiconify()
 		self.icon_idle = True
-		time.sleep(0.3)
+		self.change_icon(self.icon_list_idle[0])
+
 
 	def dynamic_icon_alert(self):
 		if self.icon_idle == False:
 			self.icon_idle = True
-			self.change_icon('pic/web.png')
+			#self.change_icon('pic/web.png')
 			time.sleep(0.35)
 		self.icon_idle = False
 		while True:
 			if self.icon_idle == True:
-				self.change_icon('pic/web.png')
+				#self.change_icon('pic/web.png')
 				break
 			self.change_icon('pic/alert.png')
 			time.sleep(0.3)
 			if self.icon_idle == True:
-				self.change_icon('pic/web.png')
+				#self.change_icon('pic/web.png')
 				break
 			self.change_icon('pic/alert2.png')
 			time.sleep(0.3)
-					#print("dynamic_icon_alert THREAD")
-		
-		#print("dynamic_icon_alert is already running.")
+
+# todo why this shit not working???
+#	def dynamic_icon_alert(self):
+#		if self.icon_idle == False:
+#			self.icon_idle = True
+#			#self.change_icon(self.icon_list_alarm[0])
+#			#print("first pass")
+#			time.sleep(0.35)
+#		self.icon_idle = False
+#		self.icon_list_alarm = ['pic/alert.png', 'pic/alert2.png']
+#		while True:
+#			for alarm in self.icon_list_alarm:
+#				if self.icon_idle == True:
+#					#self.change_icon(self.icon_list_idle[0])
+#					break
+#				self.change_icon(alarm)
+#				time.sleep(0.3)
+
+
+

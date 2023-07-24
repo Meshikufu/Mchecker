@@ -40,7 +40,7 @@ class GmailChecker():
 		self.query_params = {
 			"labels": ["Twitch"],
 			"exact_phrase": subject_list + snippet_list + positives_list,
-			"newer_than": (21, "hour"),
+			"newer_than": (22, "hour"),
 			"unread": True
 		}
 
@@ -157,7 +157,7 @@ class GmailChecker():
 				snippet_lower = message.snippet.lower()
 
 				message.subject = message.subject.replace("_", " ")
-				message2 = f"{message.subject},"
+				message2 = f"{message.subject}"
 
 				matched_keywords_filter = []
 
@@ -185,16 +185,10 @@ class GmailChecker():
 					time.sleep(10)
 
 				if change_icon == True:
-					print(f"current threads are:", threading.enumerate())
-					active_threads = threading.enumerate()
-					if "(dynamic_icon_alert)" in active_threads:
-					#for thread in active_threads:
-					#	if isinstance(thread, threading.Thread) and thread._target == "(dynamic_icon_alert)":
-						print("Function name: (dynamic_icon_alert)")
-							#break  # If the thread is found, no need to create a new one
-					else:
-						dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
-						dynamic_icon.start()
+					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+					dynamic_icon.start()
+					print(threading.active_count())
+					print(threading.enumerate())
 
 					time.sleep(10)
 
@@ -228,8 +222,8 @@ class GmailChecker():
 					# Mark the message as read or perform other actions as needed
 					message.mark_as_read()
 
-			print(threading.active_count())
-			print(threading.enumerate())
+			#print(threading.active_count())
+			#print(threading.enumerate())
 			self.chatMain.start_sleep_bar2()
 			
 			

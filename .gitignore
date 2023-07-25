@@ -364,5 +364,9 @@ FodyWeavers.xsd
 client_secret.json
 gmail_token.json
 variables/TwtichVariables.py
-lastchaptername.txt
-lastchapter.txt
+temp/lastName.txt
+temp/lastLink.txt
+temp/Mdata.json
+temp/Mdata.txt
+save/twitchfilter.py
+save/myip.py

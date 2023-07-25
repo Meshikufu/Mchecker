@@ -6,7 +6,7 @@ from simplegmail.query import construct_query
 import http.client
 import socket, threading
 
-from modules.GoogleTTS import tts
+#from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
 from modules.SocketClient import Schat2
 
@@ -22,7 +22,8 @@ from save.twitchfilter import positives_list_irl
 
 
 class GmailChecker():
-	def __init__(self, tray, chatMain):
+	def __init__(self, tray, chatMain, TTS):
+		self.TTS = TTS
 		self.chatMain = chatMain
 		self.tray = tray
 		self.gmail = Gmail()
@@ -157,7 +158,7 @@ class GmailChecker():
 				snippet_lower = message.snippet.lower()
 
 				message.subject = message.subject.replace("_", " ")
-				message2 = f"{message.subject}"
+				message2 = f"{message.subject}."
 
 				matched_keywords_filter = []
 
@@ -178,19 +179,22 @@ class GmailChecker():
 					message2 = message2[:-1]
 					message2 += " stream"
 
-				tts(message2)
-				message2 = message2.replace(".", " ")
+				#self.TTS.tts(message2)
+				TTSgmail = threading.Thread(target=self.TTS.tts, args=(message2,))
+				TTSgmail.start()
+				print(message2)
+				message2 = message2.replace(".", "    #")
 				Schat2(message2)
 				if change_icon == False: 
-					time.sleep(10)
+					time.sleep(1)
 
 				if change_icon == True:
 					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
 					dynamic_icon.start()
-					print(threading.active_count())
-					print(threading.enumerate())
-
-					time.sleep(10)
+					#print(threading.active_count())
+					#print(threading.enumerate())
+#
+					time.sleep(1)
 
 
 

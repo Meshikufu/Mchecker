@@ -13,10 +13,11 @@ class IconTray():
 		self.image = PIL.Image.open('pic/web.png')
 		self.current_icon = 'web'
 
+
 		self.icon_list_alarm = ['pic/alert.png', 'pic/alert2.png']
 		self.icon_list_idle = ['pic/web.png']
 
-		self.icon_idle = False
+		self.icon_idle = True
 		
 		self.console = win32console.GetConsoleWindow()
 		win32gui.ShowWindow(self.console, 0)
@@ -55,27 +56,56 @@ class IconTray():
 		self.root.deiconify()
 		self.icon_idle = True
 		self.change_icon(self.icon_list_idle[0])
-
-
+	
 	def dynamic_icon_alert(self):
-		if self.icon_idle == False:
-			self.icon_idle = True
-			#self.change_icon('pic/web.png')
-			time.sleep(0.35)
-		self.icon_idle = False
-		while True:
-			if self.icon_idle == True:
-				#self.change_icon('pic/web.png')
-				break
-			self.change_icon('pic/alert.png')
-			time.sleep(0.3)
-			if self.icon_idle == True:
-				#self.change_icon('pic/web.png')
-				break
-			self.change_icon('pic/alert2.png')
-			time.sleep(0.3)
+		if self.icon_idle == True:
+			self.icon_idle = False
+			while not self.icon_idle:
+				for alarm in self.icon_list_alarm:
+					if self.icon_idle == True:
+						break
+					self.change_icon(alarm)
+					time.sleep(0.3)
 
-# todo why this shit not working???
+
+
+
+
+
+
+
+
+#	def dynamic_icon_alert_function(self):
+#		#if self.icon_idle == False:
+#		#	self.icon_idle = True
+#		#	time.sleep(0.35)
+#		self.icon_idle = False
+#
+#		method = 2
+#
+#		if method == 1:
+#			while True:
+#				if self.icon_idle == True:
+#					break
+#				self.change_icon('pic/alert.png')
+#				time.sleep(0.3)
+#				if self.icon_idle == True:
+#					break
+#				self.change_icon('pic/alert2.png')
+#				time.sleep(0.3)
+#
+#		if method == 2:
+#			while not self.icon_idle:
+#				for alarm in self.icon_list_alarm:
+#					if self.icon_idle == True:
+#						break
+#					self.change_icon(alarm)
+#					time.sleep(0.3)
+
+
+					
+
+#todo why this shit not working???
 #	def dynamic_icon_alert(self):
 #		if self.icon_idle == False:
 #			self.icon_idle = True

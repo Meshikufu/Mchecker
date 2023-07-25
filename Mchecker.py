@@ -22,12 +22,13 @@ pygame.mixer.init()
 clipboardtext = pyperclip.paste()
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-from modules.GoogleTTS import tts
+from modules.GoogleTTS import TTS
 from modules.SocketClient import Schat
 from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
 from modules.socketserverM import socketServer
+from modules.socketserverM import socketServerAndroid
 
 
 import modules.controlPanel
@@ -38,11 +39,12 @@ MAX_LINES = modules.controlPanel.MAX_LINES
 
 
 def on_hotkey():
+
 	# get the text from the clipboard
 	copytext = pyperclip.paste()
 
 	# convert the text to speech
-	tts(copytext)
+	TTS.tts(copytext)
 
 
 def hotkey_listener():
@@ -73,7 +75,8 @@ class buttons_actions():
 ############################################################################################################
 ############################################################################################################
 class ttkgui():
-	def __init__(self, master, tray, chatMain):
+	def __init__(self, master, tray, chatMain, TTS):
+		self.TTS = TTS
 		self.chatMain = chatMain
 		self.tray = tray
 		self.master = master
@@ -206,7 +209,7 @@ class ttkgui():
 			Schat(message)
 			#chatMain.add_log_message(f"{clipboard_content} is added!")
 			#chatMain.add_log_message("")
-			tts("added!")
+			self.TTS.tts("added!")
 
 			#refresh open url menu
 			self.open_manga_list.config(menu="")
@@ -227,7 +230,7 @@ class ttkgui():
 		self.b1.pack(side=LEFT, padx=5, pady=5)
 
 		####
-		self.us = urlScalping(tray, chatMain)
+		self.us = urlScalping(tray, chatMain, TTS)
 
 		self.menub = ttk.Menubutton(self.right_subframe_buttonsMainUp, text="Delete", bootstyle=DANGER)
 		self.menub.pack(side=LEFT, padx=5, pady=5)
@@ -338,7 +341,7 @@ class ttkgui():
 		print(f"{selected_option} is deleted.")
 		chatMain.add_log_message(f"{selected_option} is deleted.")
 		chatMain.add_log_message("")
-		tts("Deleted!")
+		self.TTS.tts("Deleted!")
 
 		####
 		#refresh open url menu
@@ -428,12 +431,12 @@ def start_threads():
 	t1.daemon = True
 	t1.start()
 
-	url_scalping = urlScalping(tray, chatMain)  # mandagex scalping
+	url_scalping = urlScalping(tray, chatMain, TTS)  # mandagex scalping
 	t3 = threading.Thread(target=url_scalping.manga_checker)
 	t3.daemon = True
 	t3.start()
 
-	gmail_checker = GmailChecker(tray, chatMain)  # Gmail API 
+	gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
 	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
 	t4.daemon = True
 	t4.start()
@@ -441,6 +444,10 @@ def start_threads():
 	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain,))
 	tSocketServer.daemon = True
 	tSocketServer.start()
+
+	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
+	tSocketServerAndroid.daemon = True
+	tSocketServerAndroid.start()
 
 
 def start_threads_tts():
@@ -450,9 +457,10 @@ def start_threads_tts():
 
 someValue = True
 if __name__ == "__main__":
+	TTS = TTS()
 	root = ttk.Window()
 	tray = IconTray(root)
-	chatMain = ttkgui(root, tray, someValue) 
+	chatMain = ttkgui(root, tray, TTS, someValue) 
 	start_threads()
 	start_threads_tts()
 	root.mainloop()

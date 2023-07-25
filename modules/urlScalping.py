@@ -4,7 +4,7 @@ import time, datetime
 import json
 
 
-from modules.GoogleTTS import tts
+#from modules.GoogleTTS import tts
 
 import modules.controlPanel
 sleep_duration = modules.controlPanel.sleep_duration
@@ -13,7 +13,8 @@ MAX_LINES = modules.controlPanel.MAX_LINES
 
 
 class urlScalping():
-	def __init__(self, tray, chatMain):
+	def __init__(self, tray, chatMain, TTS):
+		self.TTS = TTS
 		self.chatMain = chatMain
 		self.tray = tray
 		# initialize manga dictionary with data from Mdata.txt
@@ -91,7 +92,7 @@ class urlScalping():
 					print(log_message)
 					self.chatMain.add_log_message(log_message)
 					self.chatMain.add_log_message("")
-					tts(log_messagetts)
+					self.TTS.tts(log_messagetts)
 					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
 
 
@@ -127,7 +128,7 @@ class urlScalping():
 
 			#print(debug)
 			if debug == 4:
-				tts("mangareader is downn")
+				self.TTS.tts("mangareader is downn")
 				print("mangareader is downn")
 				self.chatMain.add_log_message("")
 				time.sleep(60)

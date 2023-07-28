@@ -179,16 +179,18 @@ class GmailChecker():
 					message2 = message2[:-1]
 					message2 += " stream"
 
+				elif not matched_keywords_filter:
+					message2 = message2.replace(".", "")
 				#self.TTS.tts(message2)
 				TTSgmail = threading.Thread(target=self.TTS.tts, args=(message2,))
 				TTSgmail.start()
 				print(message2)
-				message2 = message2.replace(".", "    #")
+				message2 = message2.replace(".", "    !")
 				Schat2(message2)
 				if change_icon == False: 
 					time.sleep(1)
 
-				if change_icon == True:
+				elif change_icon == True:
 					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
 					dynamic_icon.start()
 					#print(threading.active_count())

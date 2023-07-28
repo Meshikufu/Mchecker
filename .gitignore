@@ -370,3 +370,6 @@ temp/Mdata.json
 temp/Mdata.txt
 save/twitchfilter.py
 save/myip.py
+gBot/gdata2023.csv
+gBot/graph.py
+modules/gPriceChecker.py

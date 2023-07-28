@@ -3,7 +3,7 @@ from modules.SocketClient import Schat
 #from modules.GoogleTTS import tts
 from save.myip import myip
 
-def socketServer(tray, chatMain):
+def socketServer(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
 	HOST = socket.gethostname()
@@ -29,7 +29,14 @@ def socketServer(tray, chatMain):
 			tray.change_icon('pic/alert.png')
 		elif message == "start_sleep_bar2":
 			chatMain.start_sleep_bar2()	
+		elif message == "Added!" or message == "Deleted!":
+			TTS.tts(message)
+		if "$tts" in message:
+			message = message.replace("$tts ", "")
+			message = message.replace(".", " point ")
+			TTS.tts(message)
 		else:
+			#TTS.tts(message)
 			chatMain.add_log_message(message)
 			chatMain.add_log_message("")
 

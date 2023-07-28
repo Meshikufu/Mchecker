@@ -35,6 +35,7 @@ import modules.controlPanel
 sleep_duration = modules.controlPanel.sleep_duration
 sleep_duration2 = modules.controlPanel.sleep_duration2
 MAX_LINES = modules.controlPanel.MAX_LINES
+geometry_starting_positiong = modules.controlPanel.geometry_starting_position
 
 
 
@@ -81,7 +82,7 @@ class ttkgui():
 		self.tray = tray
 		self.master = master
 		root.title("Mchecker")
-		root.geometry("+1200+700")
+		root.geometry(geometry_starting_positiong)
 		# Remove the top bar
 		root.overrideredirect(True)
 		# Make the window stay on top of other windows
@@ -200,16 +201,18 @@ class ttkgui():
 			with open("temp/Mdata.txt", "a") as f:
 				f.write(new_url + "\n")
 
-			my_scalper = urlScalping(tray, chatMain)
+			my_scalper = urlScalping(tray, chatMain, TTS)
 			my_scalper.update_data_json()
 
 			self.create_menu()
 			print(f"{clipboard_content} is added")
 			message = (f"{clipboard_content} is added")
-			Schat(message)
+			Schat(message) # print to chatbox
 			#chatMain.add_log_message(f"{clipboard_content} is added!")
 			#chatMain.add_log_message("")
-			self.TTS.tts("added!")
+			message = "Added!"
+			Schat(message) # tts signal
+			#self.TTS.tts("added!")
 
 			#refresh open url menu
 			self.open_manga_list.config(menu="")
@@ -335,13 +338,15 @@ class ttkgui():
 					f.write(line)
 		self.create_menu()
 
-		my_scalper = urlScalping(tray, chatMain)
+		my_scalper = urlScalping(tray, chatMain, TTS)
 		my_scalper.update_data_json()
 
 		print(f"{selected_option} is deleted.")
 		chatMain.add_log_message(f"{selected_option} is deleted.")
 		chatMain.add_log_message("")
-		self.TTS.tts("Deleted!")
+		message = "Deleted!"
+		Schat(message)
+		#self.TTS.tts("Deleted!")
 
 		####
 		#refresh open url menu
@@ -441,7 +446,7 @@ def start_threads():
 	t4.daemon = True
 	t4.start()
 
-	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain,))
+	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain, TTS,))
 	tSocketServer.daemon = True
 	tSocketServer.start()
 

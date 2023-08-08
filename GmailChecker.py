@@ -22,10 +22,7 @@ from save.twitchfilter import positives_list_irl
 
 
 class GmailChecker():
-	def __init__(self, tray, chatMain, TTS):
-		self.TTS = TTS
-		self.chatMain = chatMain
-		self.tray = tray
+	def __init__(self):
 		self.gmail = Gmail()
 		self.construct_query = construct_query
 
@@ -96,10 +93,10 @@ class GmailChecker():
 		PORT = 1235
 
 
-		#unread_eraser_iterations = 120#480 * 3
-		#gmail_progressbar_duration = sleep_duration2
-		#unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
-		#unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
+		unread_eraser_iterations = 120#480 * 3
+		gmail_progressbar_duration = sleep_duration2
+		unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
+		unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
 		# unread_eraser logic
 
 		#restarted = True
@@ -111,8 +108,8 @@ class GmailChecker():
 			#print(f"START unread_eraser: {unread_eraser}")
 		while True:
 			try:
+				self.messages = ""
 				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params))
-				#print(f"gmail is: {self.gmail}")
 			except ssl.SSLEOFError as e:
 				print("SSL EOF Error occurred. Retrying...")
 				time.sleep(10)
@@ -130,9 +127,7 @@ class GmailChecker():
 					print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
 					time.sleep(10)
 					continue
-
 			for message in self.messages:
-				#print(f"meesage is: {message}")
 				print("Subject:", message.subject)
 				print("Snippet:", message.snippet)
 				print("-" * 20)
@@ -203,7 +198,7 @@ class GmailChecker():
 				elif change_icon == True:
 					#dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
 					#dynamic_icon.start()
-					self.tray.change_icon('pic/alert.png')
+					#self.tray.change_icon('pic/alert.png')
 					#print(threading.active_count())
 					#print(threading.enumerate())
 
@@ -212,50 +207,60 @@ class GmailChecker():
 
 
 
-			## unread_eraser logic
-			#unread_eraser = unread_eraser - gmail_progressbar_duration
-			#if unread_eraser == 0:
-			#	unread_eraser = unread_eraser_base
-			#if unread_eraser == unread_eraser_base:
-			#	#if restarted == False:
-			#	#	#print(threading.active_count())
-			#	#	#print(threading.enumerate())
-			#	#	message = "RestartGmailChecker"
-			#	#	Schat(message)
-			#	#	message = '$tts Restarting GmailChecker'
-			#	#	Schat(message)
-			#	#	print("restarting GmailChecker")
-			#	#	break
-			#	#	
-			#	#restarted = False
+			# unread_eraser logic
+			unread_eraser = unread_eraser - gmail_progressbar_duration
+			if unread_eraser == 0:
+				unread_eraser = unread_eraser_base
+			if unread_eraser == unread_eraser_base:
+				#if restarted == False:
+				#	#print(threading.active_count())
+				#	#print(threading.enumerate())
+				#	message = "RestartGmailChecker"
+				#	Schat(message)
+				#	message = '$tts Restarting GmailChecker'
+				#	Schat(message)
+				#	print("restarting GmailChecker")
+				#	break
+				#	
+				#restarted = False
 
-			try:
-				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
-			except ssl.SSLEOFError as e:
-				print("SSL EOF Error occurred. Retrying...")
-				time.sleep(10)
-				continue
-			except http.client.RemoteDisconnected as remote_disconnected_error:
-				print("Remote Disconnected Error occurred. Retrying...")
-				time.sleep(10)
-				continue
-			except socket.gaierror as gai_error:
-				print("getaddrinfo failed. Retrying...")
-				time.sleep(10)
-				continue
-			except Exception as e:
-				if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
-					print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+				try:
+					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
+				except ssl.SSLEOFError as e:
+					print("SSL EOF Error occurred. Retrying...")
 					time.sleep(10)
 					continue
-			for message in self.messages:
-				# Mark the message as read or perform other actions as needed
-				message.mark_as_read()
+				except http.client.RemoteDisconnected as remote_disconnected_error:
+					print("Remote Disconnected Error occurred. Retrying...")
+					time.sleep(10)
+					continue
+				except socket.gaierror as gai_error:
+					print("getaddrinfo failed. Retrying...")
+					time.sleep(10)
+					continue
+				except Exception as e:
+					if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
+						print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+						time.sleep(10)
+						continue
+				for message in self.messages:
+					# Mark the message as read or perform other actions as needed
+					message.mark_as_read()
 
-			#time.sleep(sleep_duration2)
+				#time.sleep(sleep_duration2)
 
 
 			#print("")
 			#print(threading.active_count())
 			#print(threading.enumerate())
-			self.chatMain.start_sleep_bar2()
+			time.sleep(2)
+			#self.chatMain.start_sleep_bar2()
+
+def start_gmail_checker():
+	gmail_checker = GmailChecker()  # Gmail API 
+	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
+	t4.daemon = True
+	t4.start()
+
+if __name__ == "__main__":
+	start_gmail_checker()

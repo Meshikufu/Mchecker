@@ -1,0 +1,38 @@
+{
+    "seller1": {
+        "seller_name": "CallmeGrepy",
+        "seller_level": "Level 13",
+        "delivery_speed": "1h",
+        "stock": 150,
+        "min_purchase": "150",
+        "offer_price": 0.098,
+        "currency_unit": "EUR / Unit"
+    },
+    "seller2": {
+        "seller_name": "Orimay",
+        "seller_level": "Level 85",
+        "delivery_speed": "9h",
+        "stock": 400,
+        "min_purchase": "200",
+        "offer_price": 0.099,
+        "currency_unit": "EUR / Unit"
+    },
+    "seller3": {
+        "seller_name": "zdochliak123",
+        "seller_level": "Level 44",
+        "delivery_speed": "1h",
+        "stock": 100,
+        "min_purchase": "100",
+        "offer_price": 0.1,
+        "currency_unit": "EUR / Unit"
+    },
+    "seller4": {
+        "seller_name": "Vezyn",
+        "seller_level": "Level 117",
+        "delivery_speed": "1h",
+        "stock": 710,
+        "min_purchase": "200",
+        "offer_price": 0.100227,
+        "currency_unit": "EUR / Unit"
+    }
+}

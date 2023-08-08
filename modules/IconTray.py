@@ -55,6 +55,7 @@ class IconTray():
 	def action(self, icon, item):
 		self.root.deiconify()
 		self.icon_idle = True
+		time.sleep(0.1)
 		self.change_icon(self.icon_list_idle[0])
 	
 	def dynamic_icon_alert(self):
@@ -67,6 +68,17 @@ class IconTray():
 					self.change_icon(alarm)
 					time.sleep(0.3)
 
+
+#	def dynamic_icon_alert(self):
+#		if self.icon_idle == True:
+#			self.icon_idle = False
+#			while True:
+#				for alarm in self.icon_list_alarm:
+#					if self.icon_idle == False:
+#						self.change_icon(alarm)
+#						time.sleep(0.3)
+#					elif self.icon_idle == True:
+#						break
 
 
 

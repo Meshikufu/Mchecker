@@ -48,7 +48,7 @@ def socketServerAndroid(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
 	HOST = myip #socket.gethostname()
-	PORT = 1245
+	PORT = 59621
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((HOST, PORT))

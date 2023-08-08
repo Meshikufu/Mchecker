@@ -12,6 +12,7 @@ from tkinter import Tk, PhotoImage
 
 
 
+
 #os.chdir('C:/Programming/PythonProjects/Mchecker')
 
 #todo4 this one below doesnt hide message in console
@@ -27,8 +28,8 @@ from modules.SocketClient import Schat
 from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
-from modules.socketserverM import socketServer
-from modules.socketserverM import socketServerAndroid
+#from modules.socketserverM import socketServer
+#from modules.socketserverM import socketServerAndroid
 
 
 import modules.controlPanel
@@ -36,6 +37,8 @@ sleep_duration = modules.controlPanel.sleep_duration
 sleep_duration2 = modules.controlPanel.sleep_duration2
 MAX_LINES = modules.controlPanel.MAX_LINES
 geometry_starting_positiong = modules.controlPanel.geometry_starting_position
+
+
 
 
 
@@ -426,6 +429,88 @@ class ttkgui():
 
 
 
+import socket
+#from modules.SocketClient import Schat
+#from modules.GoogleTTS import tts
+from save.myip import myip
+
+def socketServer(tray, chatMain, TTS):
+	chatMain = chatMain
+	tray = tray
+	HOST = socket.gethostname()
+	PORT = 1235
+
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind((HOST, PORT))
+	s.listen(5)
+
+	print("Socket server started successfully!")
+
+	while True:
+		clientsocket, address = s.accept()
+		print(f"Connection from {address} has been established!")
+
+		# Receive the message from the client
+		message = clientsocket.recv(1024).decode("utf-8")
+
+		print("Received message:")
+		print(message)
+
+		if message == "change_icon_alert":
+			tray.change_icon('pic/alert.png')
+		elif message == "start_sleep_bar2":
+			chatMain.start_sleep_bar2()	
+		elif message == "Added!" or message == "Deleted!":
+			TTS.tts(message)
+		elif message == "RestartGmailChecker":
+			time.sleep(1)
+			#print(threading.active_count())
+			#print(threading.enumerate())
+			start_gmail_checker()
+
+		if "$tts" in message:
+			message = message.replace("$tts ", "")
+			message = message.replace(".", " point ")
+			TTS.tts(message)
+		else:
+			#TTS.tts(message)
+			chatMain.add_log_message(message)
+			chatMain.add_log_message("")
+
+		# Process the received message as needed
+		clientsocket.close()
+
+
+def socketServerAndroid(tray, chatMain, TTS):
+	chatMain = chatMain
+	tray = tray
+	HOST = myip #socket.gethostname()
+	PORT = 59621
+
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind((HOST, PORT))
+	s.listen(5)
+
+	print("Socket server for Android started successfully!")
+
+	while True:
+		clientsocket, address = s.accept()
+		print(f"Connection from {address} has been established!")
+
+		# Receive the message from the client
+		message = clientsocket.recv(1024).decode("utf-8")
+
+		print("Received message:")
+		print(message)
+
+		if message == "AndroidSignal":
+			TTS.tts("Android signal recieved!")
+		
+
+		# Process the received message as needed
+		clientsocket.close()
+
+
 def start_threads():
 	tray = IconTray(root)  # Icon in tray
 
@@ -441,10 +526,10 @@ def start_threads():
 	t3.daemon = True
 	t3.start()
 
-	gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
-	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	t4.daemon = True
-	t4.start()
+	#gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
+	#t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
+	#t4.daemon = True
+	#t4.start()
 
 	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain, TTS,))
 	tSocketServer.daemon = True
@@ -460,6 +545,17 @@ def start_threads_tts():
 	t7.daemon = True
 	t7.start()
 
+def start_gmail_checker():
+	tray = IconTray(root)  # Icon in tray
+	gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
+	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
+	t4.daemon = True
+	t4.start()
+
+
+
+
+
 someValue = True
 if __name__ == "__main__":
 	TTS = TTS()
@@ -468,4 +564,9 @@ if __name__ == "__main__":
 	chatMain = ttkgui(root, tray, TTS, someValue) 
 	start_threads()
 	start_threads_tts()
+	start_gmail_checker()
+
+
+
+
 	root.mainloop()

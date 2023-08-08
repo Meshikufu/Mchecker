@@ -98,10 +98,10 @@ class urlScalping():
 
 
 
-					import threading
-					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
-					dynamic_icon.start()
-					#self.tray.change_icon('pic/alert.png')
+					#import threading
+					#dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+					#dynamic_icon.start()
+					self.tray.change_icon('pic/alert.png')
 
 
 

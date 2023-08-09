@@ -443,6 +443,7 @@ import socket
 from save.myip import myip
 
 def socketServer(tray, chatMain, TTS):
+	global Gmailprocess 
 	chatMain = chatMain
 	tray = tray
 	HOST = socket.gethostname()
@@ -453,6 +454,9 @@ def socketServer(tray, chatMain, TTS):
 	s.listen(5)
 
 	print("Socket server started successfully!")
+
+	def start_sleep_bar2_daemon():
+		chatMain.start_sleep_bar2()
 
 	while True:
 		clientsocket, address = s.accept()
@@ -472,13 +476,20 @@ def socketServer(tray, chatMain, TTS):
 		elif message == "Added!" or message == "Deleted!":
 			TTS.tts(message)
 		elif message == "GmailprocessNone":
-			global Gmailprocess
 			Gmailprocess = None
+		elif message == "KillSubprocessGmail":
+			if Gmailprocess is not None:  # Check if the subprocess was started
+				Gmailprocess.terminate()
+			root.destroy()
 		elif message == "RestartingGmailChecker":
 			time.sleep(5)
 			Gmail_Checker()
+		#elif message == "StartSleepBar2":
+		#	chatMain.start_sleep_bar2()
 		elif message == "StartSleepBar2":
-			chatMain.start_sleep_bar2()
+			threadSleepBar2 = threading.Thread(target=start_sleep_bar2_daemon)
+			threadSleepBar2.daemon = True  # Set the thread as a daemon thread
+			threadSleepBar2.start()
 		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")

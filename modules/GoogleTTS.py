@@ -2,7 +2,8 @@ import os
 import queue
 import tempfile
 from gtts import gTTS
-import pygame
+#import pygame
+from playsound import playsound
 import threading
 import time
 
@@ -111,25 +112,29 @@ class TTS():
 				if not file_queue.empty():
 					# dequeue the file path
 					filename = file_queue.get()
-					# load the audio file using pygame mixer
-					sound = pygame.mixer.Sound(filename)	#todo error
-					# play the audio file
-					sound.play()
-					# wait until the audio finishes playing
-					pygame.time.wait(int(sound.get_length() * 1000))
+
+
+				#	# load the audio file using pygame mixer
+				#	sound = pygame.mixer.Sound(filename)	#todo error
+				#	# play the audio file
+				#	sound.play()
+
+
+					playsound(filename)
+
+
+				#	# wait until the audio finishes playing
+				#	pygame.time.wait(int(sound.get_length() * 1000))
+
 					# delete the audio file
 					os.remove(filename)
 					print(f" Deleted file: {filename}")
 					print("")
 					self.tts_instance_tracker -= 1
-	#				print('###deleted file')
-	#				print(self.tts_instance_tracker)
-	#				print('###deleted file')
-					#if self.tts_instance_tracker <= 0:
-					#	self.tts_instance_tracker = 1
 				else:
 					# wait for a short time if there are no files in the queue
-					pygame.time.wait(10)
+					#pygame.time.wait(10)
+					time.sleep(0.01)
 					# check if the file creation thread has finished and there are no more files in the queue
 					if create_files_thread.is_alive() == False and file_queue.empty() == True:
 						break

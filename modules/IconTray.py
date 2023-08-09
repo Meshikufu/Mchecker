@@ -1,8 +1,8 @@
-from playsound import playsound
 import time, datetime
 import win32gui, win32con, win32api, win32console
 import pystray
 import PIL.Image
+from modules.SocketClient import Schat
 
 
 class IconTray():
@@ -43,6 +43,8 @@ class IconTray():
 		elif str(item) == "hide app":
 			self.root.withdraw()
 		elif str(item) == "Exit":
+			Schat("KillSubprocessGmail")
+			time.sleep(0.1)
 			self.root.destroy()
 
 	def change_icon(self, new_icon_path):

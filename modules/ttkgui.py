@@ -1,6 +1,6 @@
 from flask import Flask
 from playsound import playsound
-import time, datetime, os, threading, webbrowser, pygame, keyboard, subprocess, json
+import time, datetime, os, threading, webbrowser, keyboard, subprocess, json
 import ttkbootstrap as ttk
 from ttkbootstrap import Style
 from ttkbootstrap.constants import *

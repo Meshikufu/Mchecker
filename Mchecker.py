@@ -1,11 +1,11 @@
-from flask import Flask
-from playsound import playsound
+#from flask import Flask
+#from playsound import playsound
 import time, datetime, os, threading, webbrowser, pygame, keyboard, subprocess, json
 import ttkbootstrap as ttk
 from ttkbootstrap import Style
 from ttkbootstrap.constants import *
 import tkinter as tk
-import pyperclip, re, sqlite3
+import pyperclip, re
 from tkinter import Tk, PhotoImage
 
 
@@ -25,18 +25,18 @@ current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 from modules.GoogleTTS import TTS
 from modules.SocketClient import Schat
-from modules.GmailChecker import GmailChecker
+#from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
 #from modules.socketserverM import socketServer
 #from modules.socketserverM import socketServerAndroid
 
 
-import modules.controlPanel
-sleep_duration = modules.controlPanel.sleep_duration
-sleep_duration2 = modules.controlPanel.sleep_duration2
-MAX_LINES = modules.controlPanel.MAX_LINES
-geometry_starting_positiong = modules.controlPanel.geometry_starting_position
+import save.controlPanel
+sleep_duration = save.controlPanel.sleep_duration
+sleep_duration2 = save.controlPanel.sleep_duration2
+MAX_LINES = save.controlPanel.MAX_LINES
+geometry_starting_positiong = save.controlPanel.geometry_starting_position
 
 
 
@@ -247,6 +247,9 @@ class ttkgui():
 #
 #
 		def exit_app():
+			global Gmailprocess  # Use the global process variable
+			if Gmailprocess is not None:  # Check if the subprocess was started
+				Gmailprocess.terminate()
 			root.destroy()
 
 		self.exit = ttk.Button(self.leftleft_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
@@ -369,7 +372,10 @@ class ttkgui():
 
 ######################################## progress bar triggers
 	def start_sleep_bar(self): # manga progress bar
-		self.create_menu_open_url()
+
+		# todo MEMORY LEAK below
+		#self.create_menu_open_url()
+
 		#tts("test")
 		#print(f"{current_time} === progress bar start")
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
@@ -383,11 +389,13 @@ class ttkgui():
 			self.sleep_bar.step(1)
 			self.sleep_bar.update()
 			time.sleep(secs_per_step)
-		self.create_menu()
-		self.create_menu_open_url()
+
+		# todo MEMORY LEAK below
+		#self.create_menu()
+		#self.create_menu_open_url()
 
 	def start_sleep_bar2(self): # gmail progress bar
-		self.create_menu_open_url()
+		#self.create_menu_open_url()
 		#tts("test")
 		#print(f"{current_time} === progress bar start")
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
@@ -448,13 +456,14 @@ def socketServer(tray, chatMain, TTS):
 
 	while True:
 		clientsocket, address = s.accept()
-		print(f"Connection from {address} has been established!")
+		#print(f"Connection from {address} has been established!")
 
 		# Receive the message from the client
 		message = clientsocket.recv(1024).decode("utf-8")
 
-		print("Received message:")
-		print(message)
+		if message != "StartSleepBar2" and message != "change_icon_alert":
+
+			print(f"socketServer-Received message: {message}")
 
 		if message == "change_icon_alert":
 			tray.change_icon('pic/alert.png')
@@ -462,13 +471,15 @@ def socketServer(tray, chatMain, TTS):
 			chatMain.start_sleep_bar2()	
 		elif message == "Added!" or message == "Deleted!":
 			TTS.tts(message)
-		elif message == "RestartGmailChecker":
-			time.sleep(1)
-			#print(threading.active_count())
-			#print(threading.enumerate())
-			start_gmail_checker()
-
-		if "$tts" in message:
+		elif message == "GmailprocessNone":
+			global Gmailprocess
+			Gmailprocess = None
+		elif message == "RestartingGmailChecker":
+			time.sleep(5)
+			Gmail_Checker()
+		elif message == "StartSleepBar2":
+			chatMain.start_sleep_bar2()
+		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")
 			TTS.tts(message)
@@ -500,7 +511,7 @@ def socketServerAndroid(tray, chatMain, TTS):
 		# Receive the message from the client
 		message = clientsocket.recv(1024).decode("utf-8")
 
-		print("Received message:")
+		print(f"socketServerAndroid-Received message: {message}")
 		print(message)
 
 		if message == "AndroidSignal":
@@ -545,16 +556,12 @@ def start_threads_tts():
 	t7.daemon = True
 	t7.start()
 
-def start_gmail_checker():
-	tray = IconTray(root)  # Icon in tray
-	gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
-	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	t4.daemon = True
-	t4.start()
 
-
-
-
+def Gmail_Checker():
+    global Gmailprocess  # Use the global process variable
+    script_path = "GmailChecker.py"
+    Gmailprocess = subprocess.Popen(["python", script_path]) 
+	# to kill process: Schat("StartSleepBar2")
 
 someValue = True
 if __name__ == "__main__":
@@ -564,8 +571,7 @@ if __name__ == "__main__":
 	chatMain = ttkgui(root, tray, TTS, someValue) 
 	start_threads()
 	start_threads_tts()
-	start_gmail_checker()
-
+	Gmail_Checker()
 
 
 

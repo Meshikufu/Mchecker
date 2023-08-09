@@ -1,10 +1,8 @@
 from playsound import playsound
 import time, datetime
 import win32gui, win32con, win32api, win32console
-import sys, os
 import pystray
 import PIL.Image
-import threading
 
 
 class IconTray():

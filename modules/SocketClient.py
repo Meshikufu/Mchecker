@@ -13,7 +13,7 @@ def Schat(message):
 	except ConnectionRefusedError:
 		print(f"Connection refused. Couldn't send message: {message}")
 		#print(f'{message}')
-		time.sleep(5)
+		time.sleep(0.5)
 
 def Schat2(message2):
 	HOST = socket.gethostname()
@@ -27,4 +27,4 @@ def Schat2(message2):
 	except ConnectionRefusedError:
 		print(f"Connection refused. Couldn't send message: {message2}")
 		#print(f'{message}')
-		time.sleep(5)
+		time.sleep(0.5)

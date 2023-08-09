@@ -4,25 +4,23 @@ import ssl
 from simplegmail import Gmail
 from simplegmail.query import construct_query
 import http.client
-import socket, threading
+import socket
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
 from modules.SocketClient import Schat2
 
-import modules.controlPanel
-sleep_duration2 = modules.controlPanel.sleep_duration2
-MAX_LINES = modules.controlPanel.MAX_LINES
+import save.controlPanel
+sleep_duration2 = save.controlPanel.sleep_duration2
+MAX_LINES = save.controlPanel.MAX_LINES
 
 from save.twitchfilter import negatives_list
 from save.twitchfilter import positives_list
-from save.twitchfilter import positives_list_drinking
-from save.twitchfilter import positives_list_collab
-from save.twitchfilter import positives_list_irl
 
 
 class GmailChecker():
 	def __init__(self):
+		
 		self.gmail = Gmail()
 		self.construct_query = construct_query
 
@@ -93,23 +91,16 @@ class GmailChecker():
 		PORT = 1235
 
 
-		unread_eraser_iterations = 120#480 * 3
+		unread_eraser_iterations = 1200#480 * 3
 		gmail_progressbar_duration = sleep_duration2
 		unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
-		unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
 		# unread_eraser logic
 
-		#restarted = True
-
-		#print(threading.active_count())
-		#print(threading.enumerate())
-
-		#while True:
-			#print(f"START unread_eraser: {unread_eraser}")
 		while True:
+
 			try:
-				self.messages = ""
 				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params))
+				#print(f"gmail is: {self.gmail}")
 			except ssl.SSLEOFError as e:
 				print("SSL EOF Error occurred. Retrying...")
 				time.sleep(10)
@@ -127,7 +118,9 @@ class GmailChecker():
 					print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
 					time.sleep(10)
 					continue
+
 			for message in self.messages:
+				#print(f"meesage is: {message}")
 				print("Subject:", message.subject)
 				print("Snippet:", message.snippet)
 				print("-" * 20)
@@ -196,12 +189,13 @@ class GmailChecker():
 					time.sleep(1)
 
 				elif change_icon == True:
-					#dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+					#dynamic_icon = threading.Thread(target=.dynamic_icon_alert)
 					#dynamic_icon.start()
-					#self.tray.change_icon('pic/alert.png')
+
 					#print(threading.active_count())
 					#print(threading.enumerate())
-
+					#message = "change_icon_alert"
+					Schat("change_icon_alert")
 					time.sleep(1)
 		
 
@@ -209,21 +203,8 @@ class GmailChecker():
 
 			# unread_eraser logic
 			unread_eraser = unread_eraser - gmail_progressbar_duration
+			#print(unread_eraser)
 			if unread_eraser == 0:
-				unread_eraser = unread_eraser_base
-			if unread_eraser == unread_eraser_base:
-				#if restarted == False:
-				#	#print(threading.active_count())
-				#	#print(threading.enumerate())
-				#	message = "RestartGmailChecker"
-				#	Schat(message)
-				#	message = '$tts Restarting GmailChecker'
-				#	Schat(message)
-				#	print("restarting GmailChecker")
-				#	break
-				#	
-				#restarted = False
-
 				try:
 					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
 				except ssl.SSLEOFError as e:
@@ -246,21 +227,15 @@ class GmailChecker():
 				for message in self.messages:
 					# Mark the message as read or perform other actions as needed
 					message.mark_as_read()
-
-				#time.sleep(sleep_duration2)
-
-
-			#print("")
-			#print(threading.active_count())
-			#print(threading.enumerate())
-			time.sleep(2)
-			#self.chatMain.start_sleep_bar2()
-
-def start_gmail_checker():
-	gmail_checker = GmailChecker()  # Gmail API 
-	t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	t4.daemon = True
-	t4.start()
+				message = "RestartingGmailChecker"
+				print(message)
+				Schat("GmailprocessNone")
+				Schat(message)
+				break
+			
+			Schat("StartSleepBar2")
+			time.sleep(sleep_duration2 + 0.1)
 
 if __name__ == "__main__":
-	start_gmail_checker()
+    checker = GmailChecker()
+    checker.twitch_live_announcer()

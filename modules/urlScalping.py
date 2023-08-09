@@ -6,10 +6,10 @@ import json
 
 #from modules.GoogleTTS import tts
 
-import modules.controlPanel
-sleep_duration = modules.controlPanel.sleep_duration
-sleep_duration2 = modules.controlPanel.sleep_duration2
-MAX_LINES = modules.controlPanel.MAX_LINES
+import save.controlPanel
+sleep_duration = save.controlPanel.sleep_duration
+sleep_duration2 = save.controlPanel.sleep_duration2
+MAX_LINES = save.controlPanel.MAX_LINES
 
 
 class urlScalping():

@@ -10,9 +10,9 @@ import socket, threading
 from modules.SocketClient import Schat
 from modules.SocketClient import Schat2
 
-import modules.controlPanel
-sleep_duration2 = modules.controlPanel.sleep_duration2
-MAX_LINES = modules.controlPanel.MAX_LINES
+import save.controlPanel
+sleep_duration2 = save.controlPanel.sleep_duration2
+MAX_LINES = save.controlPanel.MAX_LINES
 
 from save.twitchfilter import negatives_list
 from save.twitchfilter import positives_list
@@ -96,10 +96,10 @@ class GmailChecker():
 		PORT = 1235
 
 
-		#unread_eraser_iterations = 120#480 * 3
-		#gmail_progressbar_duration = sleep_duration2
-		#unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
-		#unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
+		unread_eraser_iterations = 120#480 * 3
+		gmail_progressbar_duration = sleep_duration2
+		unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
+		unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
 		# unread_eraser logic
 
 		#restarted = True
@@ -212,50 +212,55 @@ class GmailChecker():
 
 
 
-			## unread_eraser logic
-			#unread_eraser = unread_eraser - gmail_progressbar_duration
-			#if unread_eraser == 0:
-			#	unread_eraser = unread_eraser_base
-			#if unread_eraser == unread_eraser_base:
-			#	#if restarted == False:
-			#	#	#print(threading.active_count())
-			#	#	#print(threading.enumerate())
-			#	#	message = "RestartGmailChecker"
-			#	#	Schat(message)
-			#	#	message = '$tts Restarting GmailChecker'
-			#	#	Schat(message)
-			#	#	print("restarting GmailChecker")
-			#	#	break
-			#	#	
-			#	#restarted = False
+			# unread_eraser logic
+			unread_eraser = unread_eraser - gmail_progressbar_duration
+			if unread_eraser == 0:
+				unread_eraser = unread_eraser_base
+			if unread_eraser == unread_eraser_base:
+				#if restarted == False:
+				#	#print(threading.active_count())
+				#	#print(threading.enumerate())
+				#	message = "RestartGmailChecker"
+				#	Schat(message)
+				#	message = '$tts Restarting GmailChecker'
+				#	Schat(message)
+				#	print("restarting GmailChecker")
+				#	break
+				#	
+				#restarted = False
 
-			try:
-				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
-			except ssl.SSLEOFError as e:
-				print("SSL EOF Error occurred. Retrying...")
-				time.sleep(10)
-				continue
-			except http.client.RemoteDisconnected as remote_disconnected_error:
-				print("Remote Disconnected Error occurred. Retrying...")
-				time.sleep(10)
-				continue
-			except socket.gaierror as gai_error:
-				print("getaddrinfo failed. Retrying...")
-				time.sleep(10)
-				continue
-			except Exception as e:
-				if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
-					print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+				try:
+					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
+				except ssl.SSLEOFError as e:
+					print("SSL EOF Error occurred. Retrying...")
 					time.sleep(10)
 					continue
-			for message in self.messages:
-				# Mark the message as read or perform other actions as needed
-				message.mark_as_read()
+				except http.client.RemoteDisconnected as remote_disconnected_error:
+					print("Remote Disconnected Error occurred. Retrying...")
+					time.sleep(10)
+					continue
+				except socket.gaierror as gai_error:
+					print("getaddrinfo failed. Retrying...")
+					time.sleep(10)
+					continue
+				except Exception as e:
+					if str(e).startswith("Exception in thread Thread-4 (twitch_live_announcer)"):
+						print("Exception occurred in thread Thread-4 (twitch_live_announcer)")
+						time.sleep(10)
+						continue
+				for message in self.messages:
+					# Mark the message as read or perform other actions as needed
+					message.mark_as_read()
 
-			#time.sleep(sleep_duration2)
+				#time.sleep(sleep_duration2)
 
 
 			#print("")
 			#print(threading.active_count())
 			#print(threading.enumerate())
 			self.chatMain.start_sleep_bar2()
+
+
+if __name__ == "__main__":
+    checker = GmailChecker()
+    checker.twitch_live_announcer()

@@ -2,8 +2,8 @@ import os
 import queue
 import tempfile
 from gtts import gTTS
-#import pygame
-from playsound import playsound
+import pygame
+#from playsound import playsound
 import threading
 import time
 
@@ -22,6 +22,8 @@ class TTS():
 
 
 	def tts(self, text):
+		print(threading.active_count())
+		print(threading.enumerate())
 	#	print('###starting tracker')
 	#	print(self.tts_instance_tracker)
 	#	print('###starting tracker')
@@ -114,17 +116,17 @@ class TTS():
 					filename = file_queue.get()
 
 
-				#	# load the audio file using pygame mixer
-				#	sound = pygame.mixer.Sound(filename)	#todo error
-				#	# play the audio file
-				#	sound.play()
+					# load the audio file using pygame mixer
+					sound = pygame.mixer.Sound(filename)	#todo error
+					# play the audio file
+					sound.play()
 
 
-					playsound(filename)
+				#	playsound(filename)
 
 
 				#	# wait until the audio finishes playing
-				#	pygame.time.wait(int(sound.get_length() * 1000))
+					pygame.time.wait(int(sound.get_length() * 1000))
 
 					# delete the audio file
 					os.remove(filename)
@@ -142,8 +144,9 @@ class TTS():
 			# Delete all the audio files in the ttsvoice folder
 			for file in os.listdir("ttsvoice"):
 				if file.endswith(".mp3"):
+					print("deleting all mp3 files")
 					os.remove(os.path.join("ttsvoice", file))
-			print("All audio files deleted.")
+			#print("All audio files deleted.")
 			self.tts_instance_tracker -= 1
 	#		print('###all files deleted')
 	#		print(self.tts_instance_tracker)

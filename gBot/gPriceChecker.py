@@ -1893,8 +1893,12 @@ from datetime import datetime
 import sys
 sys.path.insert(0, r'C:\Users\Kufu\PythonProjects\Mchecker\modules')
 from SocketClient import Schat
-import controlPanel
 sys.path.remove(r'C:\Users\Kufu\PythonProjects\Mchecker\modules')
+
+
+sys.path.insert(0, r'C:\Users\Kufu\PythonProjects\Mchecker\save')
+import controlPanel
+sys.path.remove(r'C:\Users\Kufu\PythonProjects\Mchecker\save')
 
 
 def PriceChecker():

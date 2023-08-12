@@ -11,8 +11,8 @@ from tkinter import Tk, PhotoImage
 from modules.GoogleTTS import tts
 
 import modules.constrolPanel
-sleep_duration = modules.constrolPanel.sleep_duration
-sleep_duration2 = modules.constrolPanel.sleep_duration2
+ProgressBarSleepDuration = modules.constrolPanel.ProgressBarSleepDuration
+ProgressBarSleepDuration2 = modules.constrolPanel.ProgressBarSleepDuration2
 MAX_LINES = modules.constrolPanel.MAX_LINES
 
 
@@ -329,7 +329,7 @@ class ttkgui():
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
 		num_steps = 100
 		# Calculate the number of seconds for each step
-		secs_per_step = sleep_duration / num_steps
+		secs_per_step = ProgressBarSleepDuration / num_steps
 		# Set the initial progress bar value to 0
 		self.sleep_bar['value'] = 0
 		# Update the progress bar every second until it reaches 100%
@@ -347,7 +347,7 @@ class ttkgui():
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
 		num_steps = 100
 		# Calculate the number of seconds for each step
-		secs_per_step = sleep_duration2 / num_steps
+		secs_per_step = ProgressBarSleepDuration2 / num_steps
 		# Set the initial progress bar value to 0
 		self.sleep_bar2['value'] = 0
 		# Update the progress bar every second until it reaches 100%

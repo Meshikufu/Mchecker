@@ -1,6 +1,7 @@
 #from flask import Flask
 #from playsound import playsound
 import time, datetime, os, threading, webbrowser, pygame, keyboard, subprocess, json
+import win32gui, win32con, win32api, win32console
 import ttkbootstrap as ttk
 from ttkbootstrap import Style
 from ttkbootstrap.constants import *
@@ -30,11 +31,12 @@ from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
 #from modules.socketserverM import socketServer
 #from modules.socketserverM import socketServerAndroid
+from gBot.gPriceCheckerModule import PriceChecker
 
 
 import save.controlPanel
-sleep_duration = save.controlPanel.sleep_duration
-sleep_duration2 = save.controlPanel.sleep_duration2
+ProgressBarSleepDuration = save.controlPanel.ProgressBarSleepDuration
+ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 geometry_starting_positiong = save.controlPanel.geometry_starting_position
 
@@ -90,6 +92,8 @@ class ttkgui():
 		root.overrideredirect(True)
 		# Make the window stay on top of other windows
 		root.attributes('-topmost', True)
+
+		self.ConsoleCondition = False
 
 
 		# Function to handle window dragging
@@ -252,11 +256,14 @@ class ttkgui():
 				Gmailprocess.terminate()
 			root.destroy()
 
-		self.exit = ttk.Button(self.leftleft_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
+		self.exit = ttk.Button(self.right_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
 		self.exit.pack(side=LEFT, padx=5, pady=5)
 
-		self.hide = ttk.Button(self.right_subframe_buttonsMainDown, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
-		self.hide.pack(side=RIGHT, padx=5, pady=5)
+		self.hide = ttk.Button(self.leftleft_subframe_buttonsMainDown, text="Hide", bootstyle=(DANGER, OUTLINE), command=self.ba.hide_app)
+		self.hide.pack(side=LEFT, padx=5, pady=5)
+
+		self.console = ttk.Button(self.leftleft_subframe_buttonsMainDown, text="Terminal", bootstyle=(INFO,OUTLINE), command=self.console_button)
+		self.console.pack(side=LEFT, padx=5, pady=5)
 
 		self.bottom_frame_chatMain = ttk.Frame(self.master, padding=0)
 		self.bottom_frame_chatMain.pack(side=BOTTOM, fill=ttk.BOTH, expand=True)
@@ -300,6 +307,17 @@ class ttkgui():
 #		# add new options to menu
 #		for option in self.data:
 #			self.menu.add_radiobutton(label=option, value=option, variable=self.option_var, command=self.on_option_select)
+	def console_button(self):
+		self.console = win32console.GetConsoleWindow()
+		win32gui.ShowWindow(self.console, 0)
+		win32api.SetConsoleCtrlHandler(lambda x: True, True)
+		if self.ConsoleCondition == False:
+			win32gui.ShowWindow(self.console, win32con.SW_SHOW)
+			self.ConsoleCondition = True
+		else:
+			win32gui.ShowWindow(self.console, 0)
+			win32api.SetConsoleCtrlHandler(lambda x: True, True)
+			self.ConsoleCondition = False
 
 	def create_menu_open_url(self):
 		#refresh open url menu
@@ -381,7 +399,7 @@ class ttkgui():
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
 		num_steps = 100
 		# Calculate the number of seconds for each step
-		secs_per_step = sleep_duration / num_steps
+		secs_per_step = ProgressBarSleepDuration / num_steps
 		# Set the initial progress bar value to 0
 		self.sleep_bar['value'] = 0
 		# Update the progress bar every second until it reaches 100%
@@ -401,7 +419,7 @@ class ttkgui():
 		# Set the number of steps in the progress bar (e.g. 100 steps for 100%)
 		num_steps = 100
 		# Calculate the number of seconds for each step
-		secs_per_step = sleep_duration2 / num_steps
+		secs_per_step = ProgressBarSleepDuration2 / num_steps
 		# Set the initial progress bar value to 0
 		self.sleep_bar2['value'] = 0
 		# Update the progress bar every second until it reaches 100%
@@ -441,6 +459,10 @@ import socket
 #from modules.SocketClient import Schat
 #from modules.GoogleTTS import tts
 from save.myip import myip
+
+
+def tts_thread(message):
+    TTS.tts(message)
 
 def socketServer(tray, chatMain, TTS):
 	global Gmailprocess 
@@ -493,7 +515,15 @@ def socketServer(tray, chatMain, TTS):
 		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")
-			TTS.tts(message)
+			ttsThread = threading.Thread(target=tts_thread, args=(message,))
+			ttsThread.daemon = True  # Set the thread as a daemon thread
+			ttsThread.start()
+		elif "#tts" in message:
+			message = message.replace("#tts ", "")
+			message = message.replace(".", " point ")
+			TTS.tts(message)	
+			chatMain.add_log_message(message)
+			chatMain.add_log_message("")
 		else:
 			#TTS.tts(message)
 			chatMain.add_log_message(message)
@@ -560,6 +590,10 @@ def start_threads():
 	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
 	tSocketServerAndroid.daemon = True
 	tSocketServerAndroid.start()
+
+	PriceCheckerThread = threading.Thread(target=PriceChecker)
+	PriceCheckerThread.daemon = True
+	PriceCheckerThread.start()
 
 
 def start_threads_tts():

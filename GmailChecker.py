@@ -1,4 +1,3 @@
-
 import time, os
 import ssl
 from simplegmail import Gmail
@@ -8,10 +7,10 @@ import socket
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
-from modules.SocketClient import Schat2
+#from modules.SocketClient import Schat2
 
 import save.controlPanel
-sleep_duration2 = save.controlPanel.sleep_duration2
+ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 
 from save.twitchfilter import negatives_list
@@ -85,15 +84,26 @@ class GmailChecker():
 		# Write the updated lines to the file
 		with open(file_path, "w") as file:
 			file.writelines(lines)
-
+	
 	def twitch_live_announcer(self):
 		HOST = socket.gethostname()
 		PORT = 1235
 
 
-		unread_eraser_iterations = 1200#480 * 3
-		gmail_progressbar_duration = sleep_duration2
-		unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
+		Adjustment = 1
+		if ProgressBarSleepDuration2 <= 1:
+			Adjustment = 5
+		elif ProgressBarSleepDuration2 == 2:
+			Adjustment = 2.5
+		elif ProgressBarSleepDuration2 == 5:
+			Adjustment = 1
+		elif ProgressBarSleepDuration2 == 10:
+			Adjustment = 0.5
+		elif ProgressBarSleepDuration2 >= 20:
+			Adjustment = 0.25
+
+		MarkAsRead_IterationNumber = 1200 * Adjustment #480 * 3
+		MarkAsReadTimer = ProgressBarSleepDuration2 * MarkAsRead_IterationNumber + ProgressBarSleepDuration2
 		# unread_eraser logic
 
 		while True:
@@ -182,9 +192,39 @@ class GmailChecker():
 				#TTSgmail = threading.Thread(target=self.TTS.tts, args=(message2,))
 				#TTSgmail.start()
 				print(message2)
+				message2 = message2.replace("!", "")
 				message2 = message2.replace(".", "    !")
 				message2 = "$tts " + message2
-				Schat2(message2)
+				Schat(message2)
+
+
+				message = message.snippet
+				start_keyword = "is live!"
+				end_keyword = "Streaming"
+
+				# Find the first occurrence of the start keyword
+				first_start_index = message.rfind(start_keyword)
+				print(f"first_start_index: {first_start_index}")
+				if first_start_index != -1:
+					# Find the end keyword starting from the second start index
+					end_index = message.find(end_keyword, first_start_index + len(start_keyword))
+					print(end_index)
+					if end_index != -1:
+						#print("1")
+						extracted_text = message[first_start_index + len(start_keyword):end_index].strip()
+						print(extracted_text)
+						Schat(f"{stream_username}: {extracted_text}")
+					elif end_index == -1:
+						#end_index = 0
+						#print(message)
+						#print("2")
+						extracted_text = message[first_start_index + len(start_keyword):].strip()
+						print(extracted_text)
+						Schat(f"{stream_username}: {extracted_text}")
+					else:
+						print("message.snipper to text box error!")
+				else:
+					print("Start keyword not found.")
 				if change_icon == False: 
 					time.sleep(1)
 
@@ -202,9 +242,12 @@ class GmailChecker():
 
 
 			# unread_eraser logic
-			unread_eraser = unread_eraser - gmail_progressbar_duration
-			#print(unread_eraser)
-			if unread_eraser == 0:
+			MarkAsReadTimer = MarkAsReadTimer - ProgressBarSleepDuration2
+			if MarkAsReadTimer < 30:
+				#Iteration_result(MarkAsReadTimer)
+				print(f"Will restart at value: 0. Current value is: {MarkAsReadTimer}")
+				#print(MarkAsReadTimer)
+			if MarkAsReadTimer == 0:
 				try:
 					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
 				except ssl.SSLEOFError as e:
@@ -232,9 +275,12 @@ class GmailChecker():
 				Schat("GmailprocessNone")
 				Schat(message)
 				break
-			
+			#try:
 			Schat("StartSleepBar2")
-			time.sleep(sleep_duration2 + 0.1)
+			#except ConnectionAbortedError:
+			#	# Code to handle the ConnectionAbortedError
+			#	print("Connection was aborted by the software on the host machine.")
+			time.sleep(ProgressBarSleepDuration2 + 0.1)
 
 if __name__ == "__main__":
     checker = GmailChecker()

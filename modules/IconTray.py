@@ -18,6 +18,7 @@ class IconTray():
 		self.icon_idle = True
 		
 		self.console = win32console.GetConsoleWindow()
+		Console = self.console
 		win32gui.ShowWindow(self.console, 0)
 		win32api.SetConsoleCtrlHandler(lambda x: True, True)
 		
@@ -30,7 +31,7 @@ class IconTray():
 			pystray.MenuItem("hide console", self.on_clicked),
 			pystray.MenuItem("Exit", self.on_clicked)
 		)
-	
+
 	def on_clicked(self, icon, item):
 		current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		if str(item) == "open console":

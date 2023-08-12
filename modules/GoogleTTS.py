@@ -155,6 +155,7 @@ class TTS():
 		# create and start the thread to play the audio files
 		play_files_thread = threading.Thread(target=play_files)
 		play_files_thread.start()
+		time.sleep(0.4)
 #		self.tts_instance_tracker -= 1
 #		print('###3')
 #		print(self.tts_instance_tracker)

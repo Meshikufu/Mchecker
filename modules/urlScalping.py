@@ -7,8 +7,8 @@ import json
 #from modules.GoogleTTS import tts
 
 import save.controlPanel
-sleep_duration = save.controlPanel.sleep_duration
-sleep_duration2 = save.controlPanel.sleep_duration2
+ProgressBarSleepDuration = save.controlPanel.ProgressBarSleepDuration
+ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 
 
@@ -204,5 +204,5 @@ class urlScalping():
 					#print("manga_is_out")
 					#print(manga_is_out)
 
-				#print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes") #log
+				#print(f"{current_time} === starting progress bar for {ProgressBarSleepDuration / 60} minutes") #log
 				self.chatMain.start_sleep_bar()

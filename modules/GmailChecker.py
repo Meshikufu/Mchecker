@@ -8,10 +8,10 @@ import socket, threading
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
-from modules.SocketClient import Schat2
+#from modules.SocketClient import Schat2
 
 import save.controlPanel
-sleep_duration2 = save.controlPanel.sleep_duration2
+ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 
 from save.twitchfilter import negatives_list
@@ -97,7 +97,7 @@ class GmailChecker():
 
 
 		unread_eraser_iterations = 120#480 * 3
-		gmail_progressbar_duration = sleep_duration2
+		gmail_progressbar_duration = ProgressBarSleepDuration2
 		unread_eraser = gmail_progressbar_duration * unread_eraser_iterations + gmail_progressbar_duration
 		unread_eraser_base = gmail_progressbar_duration * unread_eraser_iterations
 		# unread_eraser logic
@@ -196,7 +196,7 @@ class GmailChecker():
 				print(message2)
 				message2 = message2.replace(".", "    !")
 				message2 = "$tts " + message2
-				Schat2(message2)
+				Schat(message2)
 				if change_icon == False: 
 					time.sleep(1)
 
@@ -252,7 +252,7 @@ class GmailChecker():
 					# Mark the message as read or perform other actions as needed
 					message.mark_as_read()
 
-				#time.sleep(sleep_duration2)
+				#time.sleep(ProgressBarSleepDuration2)
 
 
 			#print("")

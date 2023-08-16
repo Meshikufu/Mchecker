@@ -204,11 +204,11 @@ class GmailChecker():
 
 				# Find the first occurrence of the start keyword
 				first_start_index = message.rfind(start_keyword)
-				print(f"first_start_index: {first_start_index}")
+				#print(f"first_start_index: {first_start_index}")
 				if first_start_index != -1:
 					# Find the end keyword starting from the second start index
 					end_index = message.find(end_keyword, first_start_index + len(start_keyword))
-					print(end_index)
+					#print(end_index)
 					if end_index != -1:
 						#print("1")
 						extracted_text = message[first_start_index + len(start_keyword):end_index].strip()

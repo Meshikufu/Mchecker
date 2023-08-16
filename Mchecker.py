@@ -39,6 +39,7 @@ ProgressBarSleepDuration = save.controlPanel.ProgressBarSleepDuration
 ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 geometry_starting_positiong = save.controlPanel.geometry_starting_position
+gPriceChecker_Is_On = save.controlPanel.gPriceChecker_Is_On
 
 
 
@@ -591,9 +592,10 @@ def start_threads():
 	tSocketServerAndroid.daemon = True
 	tSocketServerAndroid.start()
 
-	PriceCheckerThread = threading.Thread(target=PriceChecker)
-	PriceCheckerThread.daemon = True
-	PriceCheckerThread.start()
+	if gPriceChecker_Is_On is True:
+		PriceCheckerThread = threading.Thread(target=PriceChecker)
+		PriceCheckerThread.daemon = True
+		PriceCheckerThread.start()
 
 
 def start_threads_tts():

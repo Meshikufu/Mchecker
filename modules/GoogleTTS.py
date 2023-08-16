@@ -22,8 +22,8 @@ class TTS():
 
 
 	def tts(self, text):
-		print(threading.active_count())
-		print(threading.enumerate())
+		#print(threading.active_count())
+		#print(threading.enumerate())
 	#	print('###starting tracker')
 	#	print(self.tts_instance_tracker)
 	#	print('###starting tracker')

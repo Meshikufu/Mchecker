@@ -243,10 +243,10 @@ class GmailChecker():
 
 			# unread_eraser logic
 			MarkAsReadTimer = MarkAsReadTimer - ProgressBarSleepDuration2
-			if MarkAsReadTimer < 30:
-				#Iteration_result(MarkAsReadTimer)
-				print(f"Will restart at value: 0. Current value is: {MarkAsReadTimer}")
-				#print(MarkAsReadTimer)
+		#	if MarkAsReadTimer < 30:
+		#		#Iteration_result(MarkAsReadTimer)
+		#		print(f"Will restart at value: 0. Current value is: {MarkAsReadTimer}")
+		#		#print(MarkAsReadTimer)
 			if MarkAsReadTimer == 0:
 				try:
 					self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params_clear))
@@ -276,7 +276,14 @@ class GmailChecker():
 				Schat(message)
 				break
 			#try:
-			Schat("StartSleepBar2")
+
+
+			#todo FIX THIS, it is sending messages nonstop
+			message = "StartSleepBar2"
+			Schat(message)
+			#print("sending")		
+			
+
 			#except ConnectionAbortedError:
 			#	# Code to handle the ConnectionAbortedError
 			#	print("Connection was aborted by the software on the host machine.")

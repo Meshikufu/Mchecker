@@ -29,7 +29,7 @@ def date_Database():
 
 
 def PriceChecker():
-    time.sleep(5*2)
+    time.sleep(5*3)
     try:
 
         def process_sellerInfo(sellerInfo):
@@ -68,8 +68,6 @@ def PriceChecker():
         price_matched = False
         my_name = save.controlPanel.my_name
         target_name = save.controlPanel.target_name
-        testingPhase = save.controlPanel.testingPhase
-        TestMethodSelenium = save.controlPanel.TestMethodSelenium
 
         
         
@@ -81,6 +79,8 @@ def PriceChecker():
         while True:
 
             if test_phase is False:
+                IterationSleepTime = random.randint(150, 190) 
+
                 url = save.controlPanel.gPriceCheckerURL_sellerList
                 response = requests.get(url)
                 html_content = response.text
@@ -262,53 +262,12 @@ def PriceChecker():
             #    print(OldSeller[1])
             #    print(OldSeller[1]['price'])
 
-            if testingPhase is True:
-                import copy
-
-                CurrentlySelling = True
-
-                for i in dict_range:
-                    try:
-                        OldSeller[i] = copy.deepcopy(Seller[i])
-                    except KeyError:
-                        break
-
-                OldName = NewName
-                OldPrice = NewPrice
-                OldStock = NewStock
-                dict_filled = True
-
-                print(Seller[1])
-                print(OldSeller[1])
-
-                Seller[1]['name'] = "Testing"
-
-                print(Seller[1])
-                print(OldSeller[1])
-
-                #Seller[1]['price'] -= 0.0003
-                TestNewPrice = save.controlPanel.TestNewPrice
-                Seller[1]['price'] = TestNewPrice
-                #OldSeller[1]['price'] = 1.2
-
-                NewName = Seller[1]['name']
-                NewPrice = Seller[1]['price']
-                NewStock = Seller[1]['stock']
-
-                print("testing name and price swap")
-                print(Seller[1])
-                print(OldSeller[1])
-
-
-
             if CurrentlySelling is True:
 
                 if Seller[1]['name'] != my_name and dict_filled is True:
                     print("first pass")
-                    print(Seller[1]['name'])
-                    print(OldSeller[1]['name'])
                     # checking if seller with lowest price is still with lowest price
-                    if Seller[1]['name'] != OldSeller[1]['name'] or Seller[1]['price'] != OldSeller[1]['price'] or Seller[1]['stock'] != OldSeller[1]['stock'] or testingPhase is True:
+                    if Seller[1]['name'] != OldSeller[1]['name'] or Seller[1]['price'] != OldSeller[1]['price'] or Seller[1]['stock'] != OldSeller[1]['stock']:
                         skip = False
                         skip_myname = False
                         new_account_skip = False
@@ -330,8 +289,6 @@ def PriceChecker():
                             new_account_skip = True
 
 
-                        print(OldPrice)
-                        print(NewPrice)
                         ### price change 
                         if OldPrice > NewPrice and new_account_skip is False:
                             final_price = OldPrice - NewPrice
@@ -351,90 +308,44 @@ def PriceChecker():
                                     #print(message)
                             else:
                                 message = f"$tts {Seller[1]['name']} lowered price by {final_price:.2f} Euro"
-                            
+                            Schat(message)
+                            myprice = Seller[1]['price'] - 0.01
+                            #Schat(f"$tts {myprice:.2f}")
+                            Schat("###########################")
+                            Schat(f"{Seller[1]['name']} new price is: {Seller[1]['price']}")
+                            price_matched = False
 
-#                            if Seller[1]['price'] > 3:
-#                                Schat(message)
-#                                myprice = Seller[1]['price'] - 0.01
-#                                #Schat(f"$tts {myprice:.2f}")
-#                                Schat("###########################")
-#                                Schat(f"{Seller[1]['name']} new price is: {Seller[1]['price']}")
-#                                price_matched = False
-#
-#
-#                                # Input decimal valuemyprice
-#                                decimal_value = NewPrice
-#
-#                                # Convert to a string
-#                                decimal_str = str(decimal_value)
-#
-#                                # Split the string at the decimal point
-#                                whole_part, decimal_part = decimal_str.split('.')
-#
-#                                # Convert the decimal part to an integer and subtract 1
-#                                new_decimal_part = str(int(decimal_part) - 1)
-#
-#                                # Combine the whole part and modified decimal part
-#                                new_decimal_str = whole_part + '.' + new_decimal_part
-#
-#                                # Convert back to a float if needed
-#                                new_decreased_price = float(new_decimal_str)
-#
-#                                Schat(f"Price to copy: {new_decreased_price}")
-#                                import pyperclip
-#                                pyperclip.copy(str(new_decreased_price))
-#
-#                                
-#                                Schat(f"Set price to {myprice} (-0.01)")
-#                                print(f"### price change  message is: {message}")
 
-                            from decimal import Decimal
+                            # Input decimal valuemyprice
+                            decimal_value = NewPrice
 
-                            def reduce_price(price):
-                                price = Decimal(str(price))  # Convert the price to a Decimal
+                            # Convert to a string
+                            decimal_str = str(decimal_value)
 
-                                price_str = str(price)
-                                int_part, decimal_part = price_str.split('.')
+                            # Split the string at the decimal point
+                            whole_part, decimal_part = decimal_str.split('.')
 
-                                # Calculate the minimum reduction based on the length of the decimal part
-                                min_reduction = Decimal('1e-{0}'.format(len(decimal_part)))
-                                
-                                # Calculate the reduced price
-                                reduced_price = price - min_reduction
-                                
-                                # Check if the price is less than or equal to 3 and the decimal part has only one decimal place
-                                rand1 = str(random.randint(8, 9))
-                                rand2 = str(random.randint(97, 99))
-                                if price <= 2 and len(decimal_part) == 1:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand2}")
-                                elif price <= 2 and len(decimal_part) == 2:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
+                            # Convert the decimal part to an integer and subtract 1
+                            new_decimal_part = str(int(decimal_part) - 1)
 
-                                elif price <= 3 and len(decimal_part) == 1:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-                                elif price <= 3 and len(decimal_part) == 2:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-                                else:
-                                    reduced_price = str(reduced_price)
-                                
-                                
-                                return reduced_price
+                            # Combine the whole part and modified decimal part
+                            new_decimal_str = whole_part + '.' + new_decimal_part
 
-                            new_decreased_price = reduce_price(NewPrice)
+                            # Convert back to a float if needed
+                            new_decreased_price = float(new_decimal_str)
+
+                            Schat(f"Price to copy: {new_decreased_price}")
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
-                            Schat(f"New price is {new_decreased_price}")
+
+                            
+                            Schat(f"Set price to {myprice} (-0.01)")
+                            print(f"### price change  message is: {message}")
 
 
                             medianPrice = (Seller[2]['price'] + Seller[3]['price'] + Seller[4]['price']) / 3
                             priceDiff = abs(medianPrice - Seller[1]['price'])
                             thresholdPercentage = 0.03
-                            if testingPhase:
-                                thresholdPercentage = 0.3
                             print(f"median price of Seller[2-4] is: {medianPrice}")
                             print(f"price diff is: {priceDiff}")
 
@@ -444,147 +355,74 @@ def PriceChecker():
                                 Schat(f"tts changing price")
                                 Schat(f"Time: {Seller[1]['time']}")
 
-                                from selenium import webdriver
-                                from selenium.webdriver.common.by import By
-                                from selenium.webdriver.chrome.options import Options
-                                from selenium.webdriver.support.ui import WebDriverWait
-                                from selenium.webdriver.support import expected_conditions as EC
+                                autoChangePrice = save.controlPanel.autoChangePrice
+                                if autoChangePrice is True:
+                                    from selenium import webdriver
+                                    from selenium.webdriver.common.keys import Keys
+                                    from selenium.webdriver.chrome.options import Options
+                                    from selenium.webdriver.common.by import By
+                                    from selenium.webdriver.support.ui import WebDriverWait
+                                    from selenium.webdriver.support import expected_conditions as EC
 
-                                if TestMethodSelenium == 1:
+                                    myPage = save.controlPanel.gPriceCheckerURL_myPage
 
-                                    autoChangePrice = save.controlPanel.autoChangePrice
+                                    # Set up Chrome options for headless mode
+                                    chrome_options = Options()
+                                    chrome_options.add_argument('--headless')  # Run in headless mode (no GUI)
+                                    chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration (necessary for some systems)
 
-                                    if autoChangePrice:
-                                        myPage = save.controlPanel.gPriceCheckerURL_myPage
-                                        # new_decreased_price = "your_new_price"  # Replace with your desired price
-                                        # Set up Chrome options for connecting to an existing instance
-                                        chrome_options = Options()
-                                        chrome_options.debugger_address = "127.0.0.1:9227"  # Use the correct address and port
-                                        # Run Chrome in headless mode to hide the browser window
-                                        chrome_options.add_argument("--headless")
-                                        # Initialize the ChromeDriver with the specified options
-                                        driver = webdriver.Chrome(options=chrome_options)
-                                        try:
-                                            # Get the current window handle
-                                            original_window_handle = driver.current_window_handle
+                                    # Replace with the path to your ChromeDriver executable
+                                    chromedriverPath = save.controlPanel.chromedriverPath
+                                    driver_path = chromedriverPath
 
-                                            # Open the G2G URL in a new tab (can be the current tab)
-                                            driver.execute_script("window.open('" + myPage + "', '_blank');")
+                                    # Initialize the ChromeDriver with the specified options
+                                    driver = webdriver.Chrome(options=chrome_options)
+                                    #driver = webdriver.Chrome(executable_path=driver_path, options=chrome_options)
 
-                                            # Switch back to the original tab
-                                            driver.switch_to.window(original_window_handle)
+                                    # Navigate to the web page
+                                    driver.get(myPage)  # Replace with the URL of the webpage you want to edit
 
-                                            # Navigate to the web page
-                                            # driver.get(myPage)  # Replace with the URL of the webpage you want to edit
+                                    time.sleep(7)
 
-                                            # Wait for the price element to be present on the page
-                                            element = WebDriverWait(driver, 10).until(
-                                                EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
-                                            )
+                                #    # Locate the input field within the pop-up window
+                                #    input_field = driver.find_element(By.CSS_SELECTOR, '.editable-input input[type="text"]')
+                                    # Wait for the input field to be present on the page
+                                    #input_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.editable-input input[type="text"]')))
+                                    #element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price')))
+                                    element = driver.find_element(By.CLASS_NAME, value="g2g_products_price editable editable-click")
 
-                                            # Click on the element to make it editable
-                                            element.click()
+                                    # Click on the element
+                                    element.click()
 
-                                            # Locate the input field for the price
-                                            input_field = WebDriverWait(driver, 5).until(
-                                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
-                                            )
+                                    print("pass 1")
 
-                                            # Clear the existing value and enter the new price
-                                            input_field.clear()
-                                            input_field.send_keys(str(new_decreased_price))
+                                    time.sleep(2)
 
-                                            # Locate and click the "Save" button
-                                            save_button = WebDriverWait(driver, 5).until(
-                                                EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
-                                            )
+                                    # Switch to the new window or pop-up
+                                    driver.switch_to.window(driver.window_handles[-1])  # Assumes it's the latest window
 
-                                            save_button.click()
+                                    # Locate the <input> element in the new window by its CSS selector
+                                    input_field = WebDriverWait(driver, 5).until(
+                                        EC.presence_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
+                                    )
 
-                                            # Optionally, you can perform further actions on the page after saving the price.
+                                    # Clear the existing value and enter new data
+                                    input_field.clear()
+                                    input_field.send_keys(new_decreased_price)  # Replace with the desired new data
 
-                                        finally:
-                                            # Make sure to close the browser, even if there is an exception
-                                            driver.quit()
-                                
-                                if TestMethodSelenium == 2:
-                                    autoChangePrice = save.controlPanel.autoChangePrice
+                                    time.sleep(2)
 
-                                    if autoChangePrice:
-#                                        myPage = save.controlPanel.gPriceCheckerURL_myPage
-#
-#                                        # Set up Chrome options for connecting to an existing instance
-#                                        chrome_options = Options()
-#                                        chrome_options.debugger_address = "127.0.0.1:9223"  # Use the desired address and port
-#                                        chrome_options.add_argument("--start-maximized")
-#
-#                                        # Initialize the ChromeDriver with the specified options
-#                                        driver = webdriver.Chrome(options=chrome_options)
-#
-#                                       import subprocess
-#
-#                                       # Set the path to the Chrome binary and the desired debugging port
-#                                       chrome_path = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
-#                                       debugging_port = 9223
-#
-#                                       # Set the URL of the page you want to interact with
-#                                       myPage = save.controlPanel.gPriceCheckerURL_myPage
-#
-#                                       # Build the command to run Chrome with the desired options
-#                                       command = f'"{chrome_path}" --remote-debugging-port={debugging_port} "{myPage}"'
-#
-#                                       # Use subprocess to run the command in cmd
-#                                       subprocess.Popen(command, shell=True)
+                                    # Locate and click the "Save" button in the new window
+                                    save_button = WebDriverWait(driver, 5).until(
+                                        EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
+                                    )
 
+                                    save_button.click()
 
+                                    # Optionally, you can perform further actions on the page after saving the price.
 
-
-                                        # Set the desired debugging port
-                                        debugging_port = 9223
-
-                                        # Set up Chrome options to run in debugging mode with a specific port
-                                        chrome_options = webdriver.ChromeOptions()
-                                        chrome_options.add_argument(f'--remote-debugging-port={debugging_port}')
-
-                                        # Initialize the ChromeDriver with the specified options
-                                        driver = webdriver.Chrome(options=chrome_options)
-
-                                        # Define the URL of the page you want to interact with
-                                        myPage = save.controlPanel.gPriceCheckerURL_myPage
-
-                                        try:
-                                            # Navigate to the web page
-                                            driver.get(myPage)
-
-                                            # Wait for the price element to be present on the page
-                                            element = WebDriverWait(driver, 10).until(
-                                                EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
-                                            )
-
-                                            # Click on the element to make it editable
-                                            element.click()
-
-                                            # Locate the input field for the price
-                                            input_field = WebDriverWait(driver, 10).until(
-                                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
-                                            )
-
-                                            # Clear the existing value and enter the new price
-                                            input_field.clear()
-                                            input_field.send_keys(new_decreased_price)
-
-                                            # Locate and click the "Save" button
-                                            save_button = WebDriverWait(driver, 5).until(
-                                                EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
-                                            )
-
-                                            save_button.click()
-
-                                            # Optionally, you can perform further actions on the page after saving the price.
-
-                                        finally:
-                                            # Make sure to close the browser, even if there is an exception
-                                            driver.quit()
+                                    # Close the browser tab
+                                    driver.quit()
 
                             elif priceDiff > thresholdPercentage:
                             #elif final_price > 0.03:
@@ -749,49 +587,49 @@ def PriceChecker():
                             pyperclip.copy(str(new_decreased_price))
 
 
-#               target_name_trigger  = 0
-#               target_name_trigger_cell1 = False
-#               target_name_trigger_cell2 = False
-#
-#               if dict_filled is True:
-#                   for i in dict_range:
-#                       if target_name_trigger_cell1 is False:
-#                           try:
-#                               if Seller[i]['name'] == target_name:
-#                                   target_price_new = Seller[i]['price']
-#                                   target_name_trigger += 1
-#                                   target_name_trigger_cell1 = True
-#                                   print(f"{target_name} test cell 1: {target_price_new} and {Seller[i]['price']}")
-#                           except KeyError:
-#                               print(f"Error: cell 1 Seller in position {i} doesn't exist.")
-#                               break
-#                       if target_name_trigger_cell2 is False:
-#                           try:
-#                               if OldSeller[i]['name'] == target_name:
-#                                   target_price_old = OldSeller[i]['price']
-#                                   target_name_trigger += 1
-#                                   target_name_trigger_cell2 = True
-#                                   print(f"{target_name} test cell 2: {target_price_old} and {OldSeller[i]['price']}")
-#                           except KeyError:
-#                               print(f"Error: cell 2 Seller in position {i} doesn't exist.")
-#                               break
-#                       if target_name_trigger == 2:
-#                           if target_price_new > target_price_old:
-#                               message = f"$tts {target_name} raised price"
-#                               print(message)
-#                               Schat(message)
-#                               break
-#                           elif target_price_new < target_price_old:
-#                               message = f"{target_name} lowered price"
-#                               print(message)
-#                               Schat(message)
-#                               break
-#                           else:
-#                               print(f"{target_name} has same price")
-#                               break
-#                       else:
-#                           continue
-#
+                target_name_trigger  = 0
+                target_name_trigger_cell1 = False
+                target_name_trigger_cell2 = False
+
+                if dict_filled is True:
+                    for i in dict_range:
+                        if target_name_trigger_cell1 is False:
+                            try:
+                                if Seller[i]['name'] == target_name:
+                                    target_price_new = Seller[i]['price']
+                                    target_name_trigger += 1
+                                    target_name_trigger_cell1 = True
+                                    print(f"{target_name} test cell 1: {target_price_new} and {Seller[i]['price']}")
+                            except KeyError:
+                                print(f"Error: cell 1 Seller in position {i} doesn't exist.")
+                                break
+                        if target_name_trigger_cell2 is False:
+                            try:
+                                if OldSeller[i]['name'] == target_name:
+                                    target_price_old = OldSeller[i]['price']
+                                    target_name_trigger += 1
+                                    target_name_trigger_cell2 = True
+                                    print(f"{target_name} test cell 2: {target_price_old} and {OldSeller[i]['price']}")
+                            except KeyError:
+                                print(f"Error: cell 2 Seller in position {i} doesn't exist.")
+                                break
+                        if target_name_trigger == 2:
+                            if target_price_new > target_price_old:
+                                message = f"$tts {target_name} raised price"
+                                print(message)
+                                Schat(message)
+                                break
+                            elif target_price_new < target_price_old:
+                                message = f"{target_name} lowered price"
+                                print(message)
+                                Schat(message)
+                                break
+                            else:
+                                print(f"{target_name} has same price")
+                                break
+                        else:
+                            continue
+
                 
 
                 print(f"skip: {skip}")
@@ -813,7 +651,6 @@ def PriceChecker():
             print("")
             dict_filled = True
 
-            IterationSleepTime = save.controlPanel.IterationSleepTime
             time.sleep(IterationSleepTime)
     except Exception as e:
         import traceback

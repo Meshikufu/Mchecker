@@ -487,7 +487,9 @@ def socketServer(tray, chatMain, TTS):
 
 		# Receive the message from the client
 		message = clientsocket.recv(1024).decode("utf-8")
-
+		#print(message)
+		#print("this was message above")
+#
 		if message != "StartSleepBar2" and message != "change_icon_alert":
 
 			print(f"socketServer-Received message: {message}")
@@ -513,6 +515,8 @@ def socketServer(tray, chatMain, TTS):
 			threadSleepBar2 = threading.Thread(target=start_sleep_bar2_daemon)
 			threadSleepBar2.daemon = True  # Set the thread as a daemon thread
 			threadSleepBar2.start()
+			#print("starting")
+			#print(current_time)
 		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")
@@ -588,9 +592,9 @@ def start_threads():
 	tSocketServer.daemon = True
 	tSocketServer.start()
 
-	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
-	tSocketServerAndroid.daemon = True
-	tSocketServerAndroid.start()
+	#tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
+	#tSocketServerAndroid.daemon = True
+	#tSocketServerAndroid.start()
 
 	if gPriceChecker_Is_On is True:
 		PriceCheckerThread = threading.Thread(target=PriceChecker)

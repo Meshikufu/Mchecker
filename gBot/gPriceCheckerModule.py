@@ -29,7 +29,7 @@ def date_Database():
 
 
 def PriceChecker():
-    time.sleep(5*2)
+    time.sleep(5*12)
     try:
 
         def process_sellerInfo(sellerInfo):

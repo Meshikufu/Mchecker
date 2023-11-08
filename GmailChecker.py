@@ -107,10 +107,8 @@ class GmailChecker():
 		# unread_eraser logic
 
 		while True:
-
 			try:
 				self.messages = self.gmail.get_messages(query=self.construct_query(self.query_params))
-				#print(f"gmail is: {self.gmail}")
 			except ssl.SSLEOFError as e:
 				print("SSL EOF Error occurred. Retrying...")
 				time.sleep(10)
@@ -130,7 +128,6 @@ class GmailChecker():
 					continue
 
 			for message in self.messages:
-				#print(f"meesage is: {message}")
 				print("Subject:", message.subject)
 				print("Snippet:", message.snippet)
 				print("-" * 20)
@@ -157,7 +154,6 @@ class GmailChecker():
 						# Append the stream_username to lastName.txt file
 						self.append_to_file("temp/lastName.txt", stream_username)
 
-						
 
 				### filter logic
 				change_icon = True

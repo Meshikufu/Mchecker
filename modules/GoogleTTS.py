@@ -133,7 +133,7 @@ class TTS():
                     audio_config = texttospeech.AudioConfig(
                         audio_encoding=texttospeech.AudioEncoding.MP3,
                         pitch=1,
-                        speaking_rate=0.93
+                        speaking_rate=0.83
                     )
 
                     response = client.synthesize_speech(
@@ -160,7 +160,7 @@ class TTS():
 
                         file_queue.put(filename)
 
-                    #synthesize_text(sentence)
+                    
 
                     
                     # enqueue the file path

@@ -29,7 +29,13 @@ def date_Database():
 
 
 def PriceChecker():
-    time.sleep(5*12)
+    print("gPriceChecker started")
+    testingPhase = save.controlPanel.testingPhase
+
+    if testingPhase:
+        time.sleep(5)
+    else:
+        time.sleep(5*12)
     try:
 
         def process_sellerInfo(sellerInfo):
@@ -68,7 +74,6 @@ def PriceChecker():
         price_matched = False
         my_name = save.controlPanel.my_name
         target_name = save.controlPanel.target_name
-        testingPhase = save.controlPanel.testingPhase
         TestMethodSelenium = save.controlPanel.TestMethodSelenium
 
         
@@ -444,6 +449,7 @@ def PriceChecker():
                                 Schat(f"tts changing price")
                                 Schat(f"Time: {Seller[1]['time']}")
 
+                                import pygetwindow as gw
                                 from selenium import webdriver
                                 from selenium.webdriver.common.by import By
                                 from selenium.webdriver.chrome.options import Options
@@ -454,9 +460,19 @@ def PriceChecker():
 
                                     autoChangePrice = save.controlPanel.autoChangePrice
 
+                                    def switch_to_desktop(desktop_name):
+                                        desktop = gw.getWindowsWithTitle(desktop_name)
+                                        if desktop:
+                                            desktop[0].activate()
+
                                     if autoChangePrice:
                                         myPage = save.controlPanel.gPriceCheckerURL_myPage
                                         # new_decreased_price = "your_new_price"  # Replace with your desired price
+
+                                        # Switch to Desktop 2 (assuming you have Desktop 2)
+                                        desktop_name = "Desktop 2"
+                                        switch_to_desktop(desktop_name)
+
                                         # Set up Chrome options for connecting to an existing instance
                                         chrome_options = Options()
                                         chrome_options.debugger_address = "127.0.0.1:9227"  # Use the correct address and port
@@ -748,50 +764,51 @@ def PriceChecker():
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
 
+                    target_tracking = save.controlPanel.target_tracking
+                    if target_tracking is True:
+                        target_name_trigger  = 0
+                        target_name_trigger_cell1 = False
+                        target_name_trigger_cell2 = False
 
-#               target_name_trigger  = 0
-#               target_name_trigger_cell1 = False
-#               target_name_trigger_cell2 = False
-#
-#               if dict_filled is True:
-#                   for i in dict_range:
-#                       if target_name_trigger_cell1 is False:
-#                           try:
-#                               if Seller[i]['name'] == target_name:
-#                                   target_price_new = Seller[i]['price']
-#                                   target_name_trigger += 1
-#                                   target_name_trigger_cell1 = True
-#                                   print(f"{target_name} test cell 1: {target_price_new} and {Seller[i]['price']}")
-#                           except KeyError:
-#                               print(f"Error: cell 1 Seller in position {i} doesn't exist.")
-#                               break
-#                       if target_name_trigger_cell2 is False:
-#                           try:
-#                               if OldSeller[i]['name'] == target_name:
-#                                   target_price_old = OldSeller[i]['price']
-#                                   target_name_trigger += 1
-#                                   target_name_trigger_cell2 = True
-#                                   print(f"{target_name} test cell 2: {target_price_old} and {OldSeller[i]['price']}")
-#                           except KeyError:
-#                               print(f"Error: cell 2 Seller in position {i} doesn't exist.")
-#                               break
-#                       if target_name_trigger == 2:
-#                           if target_price_new > target_price_old:
-#                               message = f"$tts {target_name} raised price"
-#                               print(message)
-#                               Schat(message)
-#                               break
-#                           elif target_price_new < target_price_old:
-#                               message = f"{target_name} lowered price"
-#                               print(message)
-#                               Schat(message)
-#                               break
-#                           else:
-#                               print(f"{target_name} has same price")
-#                               break
-#                       else:
-#                           continue
-#
+                        if dict_filled is True:
+                            for i in dict_range:
+                                if target_name_trigger_cell1 is False:
+                                    try:
+                                        if Seller[i]['name'] == target_name:
+                                            target_price_new = Seller[i]['price']
+                                            target_name_trigger += 1
+                                            target_name_trigger_cell1 = True
+                                            print(f"{target_name} test cell 1: {target_price_new} and {Seller[i]['price']}")
+                                    except KeyError:
+                                        print(f"Error: cell 1 Seller in position {i} doesn't exist.")
+                                        break
+                                if target_name_trigger_cell2 is False:
+                                    try:
+                                        if OldSeller[i]['name'] == target_name:
+                                            target_price_old = OldSeller[i]['price']
+                                            target_name_trigger += 1
+                                            target_name_trigger_cell2 = True
+                                            print(f"{target_name} test cell 2: {target_price_old} and {OldSeller[i]['price']}")
+                                    except KeyError:
+                                        print(f"Error: cell 2 Seller in position {i} doesn't exist.")
+                                        break
+                                if target_name_trigger == 2:
+                                    if target_price_new > target_price_old:
+                                        message = f"$tts {target_name} raised price"
+                                        print(message)
+                                        Schat(message)
+                                        break
+                                    elif target_price_new < target_price_old:
+                                        message = f"{target_name} lowered price"
+                                        print(message)
+                                        Schat(message)
+                                        break
+                                    else:
+                                        print(f"{target_name} has same price")
+                                        break
+                                else:
+                                    continue
+
                 
 
                 print(f"skip: {skip}")
@@ -825,3 +842,15 @@ def PriceChecker():
 #PriceChecker = threading.Thread(target=PriceChecker)
 #PriceChecker.start()
 #PriceChecker()
+
+
+
+
+#1  can't win+d, if you do. When price changes, chrome will get maximized, because it will get minimized on win+d
+#2  when price changes u will be left on the tab it changed the price (very left one atm.)
+#3  
+
+#1 try using desktop 2
+
+
+#v2 done. Have to launch two browser windows in desktop 1 and 2. Both must have link open one the very left. Fixes all problems.

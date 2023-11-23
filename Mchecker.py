@@ -32,6 +32,7 @@ from modules.urlScalping import urlScalping
 #from modules.socketserverM import socketServer
 #from modules.socketserverM import socketServerAndroid
 from gBot.gPriceCheckerModule import PriceChecker
+from bot.ss import SS_OfferChecker
 
 
 import save.controlPanel
@@ -600,6 +601,10 @@ def start_threads():
 		PriceCheckerThread = threading.Thread(target=PriceChecker)
 		PriceCheckerThread.daemon = True
 		PriceCheckerThread.start()
+
+	ssBot = threading.Thread(target=SS_OfferChecker)
+	ssBot.daemon = True
+	ssBot.start()
 
 
 def start_threads_tts():

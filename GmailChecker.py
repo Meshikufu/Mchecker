@@ -4,10 +4,12 @@ from simplegmail import Gmail
 from simplegmail.query import construct_query
 import http.client
 import socket
+from importlib import reload
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
-#from modules.SocketClient import Schat2
+from modules.SocketClientTTS import SchatTTS
+
 
 import save.controlPanel
 ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
@@ -191,7 +193,7 @@ class GmailChecker():
 				message2 = message2.replace("!", "")
 				message2 = message2.replace(".", "    !")
 				message2 = "$tts " + message2
-				Schat(message2)
+				SchatTTS(message2)
 
 
 				message = message.snippet

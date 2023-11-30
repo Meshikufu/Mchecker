@@ -373,3 +373,7 @@ gBot/graph.py
 modules/gPriceChecker.py
 save/
 test/
+TTSdb/
+gBot/Test_HTML.txt
+ping_results.db
+ping_results.db-journal

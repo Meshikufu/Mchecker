@@ -1,9 +1,9 @@
 import socket
 import time , ssl
 
-def Schat(message):
+def SchatTTS(message):
 	HOST = socket.gethostname()
-	PORT = 1235
+	PORT = 1279
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((HOST, PORT))

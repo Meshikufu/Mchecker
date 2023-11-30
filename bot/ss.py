@@ -34,6 +34,8 @@ def SS_OfferChecker():
     # List of filter names
     filter_names = save.controlPanel.ss_filter_names
 
+    priceName = None
+
     while True:
         if ssTest:
             html_content = save.controlPanel.html_content
@@ -84,12 +86,24 @@ def SS_OfferChecker():
 
                     # Insert the filtered item ID into the database
                     insert_filtered_item(item_info['id'])
+        
+        if filteredName == "3080":
+            priceName = "graphic card, rtx " + filteredName
+        elif filteredName == '750w' or '800w' or '850w':
+            priceName = "Power Supply " + filteredName
+        elif filteredName == "ryzen":
+            priceName = "processor " + filteredName
+        else:
+            priceName = None
+
+
 
         #print("\nNew Filtered Items:")
         for item_info in new_filtered_items:
-            print(f"{item_info['id']}: {filteredName} - Price: {item_info['price']}")
-            Schat(f"$tts New seller: rtx {filteredName}, price: {item_info['price']} euro")
-            Schat(f"New seller: rtx {filteredName}, price: {item_info['price']} euro")
+            print(f"{item_info['id']}: {priceName} - Price: {item_info['price']}")
+            Schat(f"$tts New seller: {priceName}, price: {item_info['price']} euro")
+            Schat(f"New seller: {priceName}, price: {item_info['price']} euro")
+            Schat(item_info)
             Schat("change_icon_alert")
 
         #print("\nFiltered Items Already in Database:")

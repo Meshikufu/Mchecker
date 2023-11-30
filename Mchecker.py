@@ -33,6 +33,7 @@ from modules.urlScalping import urlScalping
 #from modules.socketserverM import socketServerAndroid
 from gBot.gPriceCheckerModule import PriceChecker
 from bot.ss import SS_OfferChecker
+from modules.GoogleTTSv2 import GenerateAudioFile
 
 
 import save.controlPanel
@@ -41,6 +42,7 @@ ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 geometry_starting_positiong = save.controlPanel.geometry_starting_position
 gPriceChecker_Is_On = save.controlPanel.gPriceChecker_Is_On
+TopRowButtons_Activation = save.controlPanel.top_row_buttons
 
 
 
@@ -165,8 +167,9 @@ class ttkgui():
 			else:
 				print("Not a YouTube URL.")
 
-		self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
-		self.subs.pack(side=LEFT, padx=5, pady=5)
+		if TopRowButtons_Activation is True:
+			self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
+			self.subs.pack(side=LEFT, padx=5, pady=5)
 
 		########
 		#def YT_whisper_large():
@@ -196,9 +199,9 @@ class ttkgui():
 			else:
 				print("Not a Stream URL.")
 
-
-		self.streamTranslator = ttk.Button(self.right_subframe_buttonsMainUp, text="translation.py", bootstyle=DANGER, command=launch_translation)
-		self.streamTranslator.pack(side=LEFT, padx=5, pady=5)
+		if TopRowButtons_Activation is True:
+			self.streamTranslator = ttk.Button(self.right_subframe_buttonsMainUp, text="translation.py", bootstyle=DANGER, command=launch_translation)
+			self.streamTranslator.pack(side=LEFT, padx=5, pady=5)
 
 		########
 		def append_clipboard_to_file():
@@ -238,15 +241,17 @@ class ttkgui():
 			# attach the menu to the Menubutton
 			self.open_manga_list.config(menu=menu)
 
-		self.b1 = ttk.Button(self.right_subframe_buttonsMainUp, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
-		self.b1.pack(side=LEFT, padx=5, pady=5)
+		if TopRowButtons_Activation is True:
+			self.b1 = ttk.Button(self.right_subframe_buttonsMainUp, text="Add url", bootstyle=SUCCESS, command=append_clipboard_to_file)    #lambda: [append_clipboard_to_file(), start_sleep_bar()])
+			self.b1.pack(side=LEFT, padx=5, pady=5)
 
 		####
 		self.us = urlScalping(tray, chatMain, TTS)
 
-		self.menub = ttk.Menubutton(self.right_subframe_buttonsMainUp, text="Delete", bootstyle=DANGER)
-		self.menub.pack(side=LEFT, padx=5, pady=5)
-		self.create_menu()
+		if TopRowButtons_Activation is True:
+			self.menub = ttk.Menubutton(self.right_subframe_buttonsMainUp, text="Delete", bootstyle=DANGER)
+			self.menub.pack(side=LEFT, padx=5, pady=5)
+			self.create_menu()
 
 #		self.br = ttk.Button(self.right_subframe_buttonsMainDown, text="refresh", bootstyle=DANGER, commaand=self.create_menu_refresh())
 #		self.br.pack(side=LEFT, padx=5, pady=5)
@@ -288,9 +293,10 @@ class ttkgui():
 		self.update_manga_buttons()
 		#self.menu_list()
 
-		self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMainUp, text="Open URL", bootstyle=(DARK, OUTLINE))
-		self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
-		self.create_menu_open_url()
+		if TopRowButtons_Activation is True:
+			self.open_manga_list = ttk.Menubutton(self.leftleft_subframe_buttonsMainUp, text="Open URL", bootstyle=(DARK, OUTLINE))
+			self.open_manga_list.pack(side=LEFT, padx=5, pady=5)
+			self.create_menu_open_url()
 
 ##################################################################################################################
 ##################################################################################################################
@@ -539,6 +545,34 @@ def socketServer(tray, chatMain, TTS):
 		clientsocket.close()
 
 
+def socketServerTTS():
+	HOST = socket.gethostname()
+	PORT = 1279
+
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind((HOST, PORT))
+	s.listen(5)
+
+	print("Socket server TTS started successfully!")
+	while True:
+		clientsocket, address = s.accept()
+		message = clientsocket.recv(1024).decode("utf-8")
+
+		print(f"TTS socketServer-Received message: {message}")
+
+		if message is not None and message.strip() != "":
+			if "$tts" in message:
+				message = message.replace("$tts ", "")
+			print("GenerateAudioFile(message)")
+			print("GenerateAudioFile(message)")
+			print("GenerateAudioFile(message)")
+			GenerateAudioFile(message)
+
+		clientsocket.close()
+
+
+
+
 def socketServerAndroid(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
@@ -563,6 +597,13 @@ def socketServerAndroid(tray, chatMain, TTS):
 
 		if message == "AndroidSignal":
 			TTS.tts("Android signal recieved!")
+		# $tts Package is ready for pickup!
+		elif "$tts" in message:
+			message = message.replace("$tts ", "")
+			message = message.replace(".", " point ")
+			ttsThread = threading.Thread(target=tts_thread, args=(message,))
+			ttsThread.daemon = True  # Set the thread as a daemon thread
+			ttsThread.start()
 		
 
 		# Process the received message as needed
@@ -593,9 +634,13 @@ def start_threads():
 	tSocketServer.daemon = True
 	tSocketServer.start()
 
-	#tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
-	#tSocketServerAndroid.daemon = True
-	#tSocketServerAndroid.start()
+	tSocketServerTTS = threading.Thread(target=socketServerTTS)
+	tSocketServerTTS.daemon = True
+	tSocketServerTTS.start()
+
+	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
+	tSocketServerAndroid.daemon = True
+	tSocketServerAndroid.start()
 
 	if gPriceChecker_Is_On is True:
 		PriceCheckerThread = threading.Thread(target=PriceChecker)
@@ -605,6 +650,12 @@ def start_threads():
 	ssBot = threading.Thread(target=SS_OfferChecker)
 	ssBot.daemon = True
 	ssBot.start()
+
+	from bot.pingRouter import PingMonitor
+	ping_monitor_instance = PingMonitor()
+	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
+	PingRouter.daemon = True
+	PingRouter.start()
 
 
 def start_threads_tts():

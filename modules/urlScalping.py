@@ -6,10 +6,10 @@ import json
 
 #from modules.GoogleTTS import tts
 
-import modules.controlPanel
-sleep_duration = modules.controlPanel.sleep_duration
-sleep_duration2 = modules.controlPanel.sleep_duration2
-MAX_LINES = modules.controlPanel.MAX_LINES
+import save.controlPanel
+ProgressBarSleepDuration = save.controlPanel.ProgressBarSleepDuration
+ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
+MAX_LINES = save.controlPanel.MAX_LINES
 
 
 class urlScalping():
@@ -98,10 +98,10 @@ class urlScalping():
 
 
 
-					import threading
-					dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
-					dynamic_icon.start()
-					#self.tray.change_icon('pic/alert.png')
+					#import threading
+					#dynamic_icon = threading.Thread(target=self.tray.dynamic_icon_alert)
+					#dynamic_icon.start()
+					self.tray.change_icon('pic/alert.png')
 
 
 
@@ -204,5 +204,5 @@ class urlScalping():
 					#print("manga_is_out")
 					#print(manga_is_out)
 
-				#print(f"{current_time} === starting progress bar for {sleep_duration / 60} minutes") #log
+				#print(f"{current_time} === starting progress bar for {ProgressBarSleepDuration / 60} minutes") #log
 				self.chatMain.start_sleep_bar()

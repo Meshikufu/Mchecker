@@ -1,10 +1,8 @@
-from playsound import playsound
 import time, datetime
 import win32gui, win32con, win32api, win32console
-import sys, os
 import pystray
 import PIL.Image
-import threading
+from modules.SocketClient import Schat
 
 
 class IconTray():
@@ -20,6 +18,7 @@ class IconTray():
 		self.icon_idle = True
 		
 		self.console = win32console.GetConsoleWindow()
+		Console = self.console
 		win32gui.ShowWindow(self.console, 0)
 		win32api.SetConsoleCtrlHandler(lambda x: True, True)
 		
@@ -32,7 +31,7 @@ class IconTray():
 			pystray.MenuItem("hide console", self.on_clicked),
 			pystray.MenuItem("Exit", self.on_clicked)
 		)
-	
+
 	def on_clicked(self, icon, item):
 		current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		if str(item) == "open console":
@@ -45,6 +44,8 @@ class IconTray():
 		elif str(item) == "hide app":
 			self.root.withdraw()
 		elif str(item) == "Exit":
+			Schat("KillSubprocessGmail")
+			time.sleep(0.1)
 			self.root.destroy()
 
 	def change_icon(self, new_icon_path):
@@ -55,6 +56,7 @@ class IconTray():
 	def action(self, icon, item):
 		self.root.deiconify()
 		self.icon_idle = True
+		time.sleep(0.1)
 		self.change_icon(self.icon_list_idle[0])
 	
 	def dynamic_icon_alert(self):
@@ -67,6 +69,17 @@ class IconTray():
 					self.change_icon(alarm)
 					time.sleep(0.3)
 
+
+#	def dynamic_icon_alert(self):
+#		if self.icon_idle == True:
+#			self.icon_idle = False
+#			while True:
+#				for alarm in self.icon_list_alarm:
+#					if self.icon_idle == False:
+#						self.change_icon(alarm)
+#						time.sleep(0.3)
+#					elif self.icon_idle == True:
+#						break
 
 
 

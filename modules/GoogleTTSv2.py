@@ -5,9 +5,22 @@ import sqlite3
 from google.cloud import texttospeech
 import pygame
 from datetime import datetime
+import tempfile
+from gtts import gTTS
 
 pygame.mixer.init()
 
+
+def play_bell():
+    sound_folder = "sounds"
+    sound_file = "bell.wav"
+    sound_path = os.path.join(sound_folder, sound_file)
+
+    pygame.mixer.music.load(sound_path)
+    pygame.mixer.music.play()
+
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
 
 # Function to create a unique ID based on text content
 def create_unique_id(text):
@@ -121,9 +134,22 @@ def check_if_sentence_exists(text):
 
     return result
 
+
+# Function to play audio files
+def playAudio(filenameID):
+    # Construct the absolute path for the audio file
+    abs_path = os.path.abspath(os.path.join("TTSdb/AudioFiles", filenameID))
+    # Load the audio file using pygame mixer
+    sound = pygame.mixer.Sound(abs_path)
+    sound.play()
+    # Wait until the audio finishes playing
+    pygame.time.wait(int(sound.get_length() * 1000))
+
+
 ### Main function to run
 def GenerateAudioFile(text):
-    quotaLimit = False
+    TTS_type = None
+    output_file_path = None
     # Create TTSdb folder and database if they don't exist
     create_database()
 
@@ -137,36 +163,36 @@ def GenerateAudioFile(text):
 
     client = texttospeech.TextToSpeechClient()
     input_text = texttospeech.SynthesisInput(text=text)
-    
-    voicetype = "Basic"
-    if voicetype == "Neuro2":
-        voicetype = "en-US-Neural2-H"
-    elif voicetype == "Basic": 
-        voicetype = "en-US-Standard-H"
-    
-    date_voicetype = datetime.now().strftime("%Y-%m") + voicetype
 
-    # Check if the voicetype is "en-US-Standard-H"
-    if "en-US-Standard-H" in date_voicetype:
+    test1 = 0
+    if test1 != 1:
         # Get the character length sum from the quota_db function
+        voicetype = "en-US-Standard-H"  # "Basic"
+        date_voicetype = datetime.now().strftime("%Y-%m") + voicetype
         char_len_sum = get_char_len_sum_from_quota_db(date_voicetype)
-
         char_len_quota = 3500000
-
-        # Check if the character length exceeds the quota
-        if char_len_sum > char_len_quota:
+        if char_len_sum <= char_len_quota:
+            TTS_type = "Basic"
+        elif char_len_sum > char_len_quota:
             print("Quota exceeded for", date_voicetype)
-            quotaLimit = True
+            #play_bell()
+            voicetype = "en-US-Wavenet-H"
+            date_voicetype = datetime.now().strftime("%Y-%m") + voicetype
+            char_len_sum = get_char_len_sum_from_quota_db(date_voicetype)
+            char_len_quota = 750000
+            if char_len_sum <= char_len_quota:
+                TTS_type = "WaveNet"
+            elif char_len_sum > char_len_quota:
+                print("Quota exceeded for", date_voicetype)
+                print("Initiating shitty text to speech")
+                TTS_type = "gTTS"
+    
+    if test1 == 1:
+        voicetype = "en-US-Wavenet-H"
+        date_voicetype = datetime.now().strftime("%Y-%m") + voicetype
+        TTS_type = "WaveNet"
 
-            sound_folder = "sounds"
-            sound_file = "bell.wav"
-            sound_path = os.path.join(sound_folder, sound_file)
-            pygame.mixer.music.load(sound_path)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                pygame.time.Clock().tick(10)
-            
-    if quotaLimit == False:
+    if TTS_type == "Basic" or "Neuro2" or "WaveNet":
         voice = texttospeech.VoiceSelectionParams(
             language_code="en-US",
             name=voicetype,
@@ -198,14 +224,18 @@ def GenerateAudioFile(text):
             print(f"created: {filename}")
             print("")
 
-        # Save the unique ID, filename, voicetype, bytes, character number, and date to the database
+        # Save to the database
+        if TTS_type == "Basic":
+            save_to_database(unique_id, filename, voicetype, len(response.audio_content), len(text))
         quota_db(date_voicetype, len(response.audio_content), len(text))
-        save_to_database(unique_id, filename, voicetype, len(response.audio_content), len(text))
+        if TTS_type != "Basic":
 
+            playAudio(filename)
+            print(f"Deleted file: {filename}\n")
+            print(output_file_path)
+            os.remove(output_file_path)
 
-    elif quotaLimit == True:
-        import tempfile
-        from gtts import gTTS
+    elif TTS_type == "gTTS":
         speech = gTTS(text=text, lang='en')
         with tempfile.NamedTemporaryFile(suffix='.mp3', dir="ttsvoice", delete=False) as fp:
             speech.write_to_fp(fp)
@@ -220,18 +250,6 @@ def GenerateAudioFile(text):
             output_file_path = None
 
     return output_file_path
-
-
-# Function to play audio files
-def playAudio(filenameID):
-    # Construct the absolute path for the audio file
-    abs_path = os.path.abspath(os.path.join("TTSdb/AudioFiles", filenameID))
-    # Load the audio file using pygame mixer
-    sound = pygame.mixer.Sound(abs_path)
-    sound.play()
-    # Wait until the audio finishes playing
-    pygame.time.wait(int(sound.get_length() * 1000))
-
 
 
 def get_char_len_sum_from_quota_db(date_voicetype):
@@ -254,7 +272,7 @@ def get_char_len_sum_from_quota_db(date_voicetype):
 
 # Testing function
 def test_tts():
-    texts = ["Hello, how are you doing right now?", "This is a mmm testing.", "Another sentence for testing."]
+    texts = ["Hello, how are you doing right now?", "This isa a testing.", "Another sentence for testing."]
     
     for text in texts:
         print(f"Generating audio for: {text}")
@@ -263,9 +281,3 @@ def test_tts():
         print()
 
 #test_tts()
-#if __name__ == "__main__":
-#    # Initialize pygame mixer
-#    pygame.mixer.init()
-#
-#    # Run the testing function
-#    test_tts()

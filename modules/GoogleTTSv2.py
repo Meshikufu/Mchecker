@@ -4,15 +4,19 @@ import hashlib
 import sqlite3
 from google.cloud import texttospeech
 import pygame
+from datetime import datetime
 
 pygame.mixer.init()
 
+
+# Function to create a unique ID based on text content
 def create_unique_id(text):
     # Use hashlib to create a unique ID based on the text content
     hash_object = hashlib.md5(text.encode())
     unique_id = hash_object.hexdigest()
     return unique_id
 
+# Function to create and initialize the SQLite database
 def create_database():
     # Create the TTSdb folder if it doesn't exist
     os.makedirs("TTSdb", exist_ok=True)
@@ -28,7 +32,11 @@ def create_database():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sentences (
             unique_id TEXT PRIMARY KEY,
-            filename TEXT
+            filename TEXT,
+            voicetype TEXT,
+            bytes INTEGER,
+            character_number INTEGER,
+            date TEXT
         )
     ''')
 
@@ -36,7 +44,8 @@ def create_database():
     conn.commit()
     conn.close()
 
-def save_to_database(unique_id, filename):
+# Function to save a unique ID, filename, voicetype, bytes, character number, and date to the database
+def save_to_database(unique_id, filename, voicetype, bytes_amount, character_number):
     # Create TTSdb folder if it doesn't exist
     os.makedirs("TTSdb", exist_ok=True)
 
@@ -44,16 +53,12 @@ def save_to_database(unique_id, filename):
     conn = sqlite3.connect('TTSdb/unique_sentences.db')
     cursor = conn.cursor()
 
-    # Create a table if it doesn't exist
+    # Insert the unique ID, filename, voicetype, bytes, character number, and date into the database
+    date_now = datetime.now().strftime("%Y-%m")
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS sentences (
-            unique_id TEXT PRIMARY KEY,
-            filename TEXT
-        )
-    ''')
-
-    # Insert the unique ID and filename into the database
-    cursor.execute('INSERT INTO sentences (unique_id, filename) VALUES (?, ?)', (unique_id, filename))
+        INSERT INTO sentences (unique_id, filename, voicetype, bytes, character_number, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (unique_id, filename, voicetype, bytes_amount, character_number, date_now))
 
     # Commit changes and close connection
     conn.commit()
@@ -81,6 +86,7 @@ def check_if_sentence_exists(text):
 
     return result
 
+# Main function to run
 def GenerateAudioFile(text):
     # Create TTSdb folder and database if they don't exist
     create_database()
@@ -94,13 +100,12 @@ def GenerateAudioFile(text):
         return existing_filename[0]
 
     client = texttospeech.TextToSpeechClient()
-
     input_text = texttospeech.SynthesisInput(text=text)
 
-    voicetype = "std"
-    if voicetype == "neuro2":
+    voicetype = "Basic"
+    if voicetype == "Neuro2":
         voicetype = "en-US-Neural2-H"
-    elif voicetype == "std": 
+    elif voicetype == "Basic": 
         voicetype = "en-US-Standard-H"
 
     voice = texttospeech.VoiceSelectionParams(
@@ -134,24 +139,21 @@ def GenerateAudioFile(text):
         print(f"created: {filename}")
         print("")
 
-    # Save the unique ID and filename to the database
-    save_to_database(unique_id, filename)
+    # Save the unique ID, filename, voicetype, bytes, character number, and date to the database
+    save_to_database(unique_id, filename, voicetype, len(response.audio_content), len(text))
 
     return output_file_path
+
 
 # Function to play audio files
 def playAudio(filenameID):
     # Construct the absolute path for the audio file
     abs_path = os.path.abspath(os.path.join("TTSdb/AudioFiles", filenameID))
-
     # Load the audio file using pygame mixer
     sound = pygame.mixer.Sound(abs_path)
-    # Play the audio file
     sound.play()
     # Wait until the audio finishes playing
     pygame.time.wait(int(sound.get_length() * 1000))
-
-
 
 
 # Testing function

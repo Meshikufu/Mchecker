@@ -62,17 +62,19 @@ class GmailChecker():
 		append = True
 
 		# Check the last modification time of the file
-		if os.path.exists(file_path):
-			last_modified = os.path.getmtime(file_path)
-			current_time = time.time()
-			time_diff = current_time - last_modified
-			time_diff_minutes = time_diff / 60.0
+		on = 0
+		if on == 1:
+			if os.path.exists(file_path):
+				last_modified = os.path.getmtime(file_path)
+				current_time = time.time()
+				time_diff = current_time - last_modified
+				time_diff_minutes = time_diff / 60.0
 
-			# If the last modification was within the last 15 minutes, append to the file
-			if time_diff_minutes < (21 * 60): # minutes after it will delete everything 
-				append = True
-			else:
-				append = False
+				# If the last modification was within the last 15 minutes, append to the file
+				if time_diff_minutes < (21 * 60): # minutes after it will delete everything 
+					append = True
+				else:
+					append = False
 
 		# Read the existing lines from the file
 		lines = []

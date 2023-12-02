@@ -563,9 +563,6 @@ def socketServerTTS():
 		if message is not None and message.strip() != "":
 			if "$tts" in message:
 				message = message.replace("$tts ", "")
-			print("GenerateAudioFile(message)")
-			print("GenerateAudioFile(message)")
-			print("GenerateAudioFile(message)")
 			GenerateAudioFile(message)
 
 		clientsocket.close()

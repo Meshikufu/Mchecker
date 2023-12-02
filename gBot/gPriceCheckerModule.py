@@ -46,7 +46,7 @@ def PriceChecker():
             stock_str = sellerInfo.find('div', class_='offers-top-tittles', string='Stock').find_next('span').text.strip()
             stock_int = int(stock_str.replace(',', '').replace('Mil', ''))
             level_str = sellerInfo.find('div', class_='seller_level-peronal').text
-            price_float = float(sellerInfo.find('span', class_='offer-price-amount').text)
+            price_float = float(sellerInfo.find('span', class_='offer-price-amount').text.replace(',', ''))
             seller_list = {
                 'name': sellerInfo.find('div', class_='seller__name-detail').text,
                 'level': int(level_str.replace('Level ', '')),

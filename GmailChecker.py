@@ -65,7 +65,7 @@ class GmailChecker():
 			time_diff_minutes = time_diff / 60.0
 
 			# If the last modification was within the last 15 minutes, append to the file
-			if time_diff_minutes < (21 * 60): # minutes after it will delete everything 
+			if time_diff_minutes < (41 * 60): # minutes after it will delete everything 
 				append = True
 			else:
 				append = False

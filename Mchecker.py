@@ -33,7 +33,7 @@ from modules.urlScalping import urlScalping
 #from modules.socketserverM import socketServerAndroid
 from gBot.gPriceCheckerModule import PriceChecker
 from bot.ss import SS_OfferChecker
-from modules.GoogleTTSv2 import GenerateAudioFile
+from modules.GoogleTTSv2 import TTSv2
 
 
 import save.controlPanel
@@ -563,7 +563,7 @@ def socketServerTTS():
 		if message is not None and message.strip() != "":
 			if "$tts" in message:
 				message = message.replace("$tts ", "")
-			GenerateAudioFile(message)
+			TTSv2(message)
 
 		clientsocket.close()
 
@@ -595,12 +595,10 @@ def socketServerAndroid(tray, chatMain, TTS):
 		if message == "AndroidSignal":
 			TTS.tts("Android signal recieved!")
 		# $tts Package is ready for pickup!
-		elif "$tts" in message:
-			message = message.replace("$tts ", "")
-			message = message.replace(".", " point ")
-			ttsThread = threading.Thread(target=tts_thread, args=(message,))
-			ttsThread.daemon = True  # Set the thread as a daemon thread
-			ttsThread.start()
+		elif message is not None and message.strip() != "":
+			if "$tts" in message:
+				message = message.replace("$tts ", "")
+			TTSv2(message)
 		
 
 		# Process the received message as needed

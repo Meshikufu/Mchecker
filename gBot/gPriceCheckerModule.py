@@ -301,7 +301,7 @@ def PriceChecker():
                                 # Check if the price is less than or equal to 3 and the decimal part has only one decimal place
                                 rand1 = str(random.randint(8, 9))
                                 rand2 = str(random.randint(97, 99))
-                                rand3 = str(random.randint(6, 9))
+                                rand3 = str(random.randint(9, 9))
                                 if price <= 2 and len(decimal_part) == 1:
                                     decimal_part = str(int(decimal_part) - 1)
                                     reduced_price = float(f"{int_part}.{decimal_part}{rand2}")

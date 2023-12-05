@@ -131,9 +131,7 @@ def check_if_sentence_exists(text, path_tts_db):
     result = cursor.fetchone()
 
     conn.close()
-
     return result
-
 
 # Function to play audio files
 def playAudio(filenameID, path_tts_db):
@@ -144,7 +142,6 @@ def playAudio(filenameID, path_tts_db):
     sound.play()
     # Wait until the audio finishes playing
     pygame.time.wait(int(sound.get_length() * 1000))
-
 
 ### Main function to run
 def TTSv2(text, path=None):

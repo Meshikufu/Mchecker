@@ -19,10 +19,6 @@ def date_Database():
     # Format the time as a string (HH:MM:SS)
     current_time_str = current_time.strftime('%H:%M:%S')
 
-#    # Print the results
-#    print("Time:", current_time_str)
-#    print("Date:", current_day, "-", current_month, "-", current_year)
-#
     # Store the data (date, time, and offer price) in the CSV file
     date_str = f"{current_day} - {current_month} - {current_year}"
     return date_str, current_time_str

@@ -620,11 +620,6 @@ def start_threads():
 	t3.daemon = True
 	t3.start()
 
-	#gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
-	#t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	#t4.daemon = True
-	#t4.start()
-
 	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain, TTS,))
 	tSocketServer.daemon = True
 	tSocketServer.start()

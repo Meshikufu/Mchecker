@@ -106,8 +106,8 @@ def PriceMath(price):
 
 # Full path to the VirtualDesktopAccessor.dll file
 import ctypes
-dll_path = r"C:\Users\Kufu\PythonProjects\Mchecker\VirtualDesktopAccessor.dll"
-vda = ctypes.WinDLL(dll_path)
+VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
+vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
 
 def SileniumChrome(new_decreased_price):
@@ -236,12 +236,12 @@ def SileniumChrome(new_decreased_price):
     except Exception as e:
         print("An error occurred:", e)
         TTSv2("Retrying after 60 seconds...")
+        winsound.Beep(1000, 500)
+        winsound.Beep(1000, 500)
+        winsound.Beep(1000, 500)
         pyautogui.hotkey('ctrl', 'win', 'right')
         pyautogui.hotkey('ctrl', 'r') 
         pyautogui.hotkey('ctrl', 'win', 'left')
-        winsound.Beep(1000, 500)
-        winsound.Beep(1000, 500)
-        winsound.Beep(1000, 500)
         time.sleep(60)
         SileniumChrome(new_decreased_price)
 

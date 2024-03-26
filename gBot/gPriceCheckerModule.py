@@ -104,108 +104,146 @@ def PriceMath(price):
         TTSv2(f"{reduced_price}")
         return reduced_price
 
+# Full path to the VirtualDesktopAccessor.dll file
+import ctypes
+dll_path = r"C:\Users\Kufu\PythonProjects\Mchecker\VirtualDesktopAccessor.dll"
+vda = ctypes.WinDLL(dll_path)
+
+
 def SileniumChrome(new_decreased_price):
-    sleeptimer = 2
-    TTSv2(f"changing price in {2}")
-    time.sleep(sleeptimer)
+    try:
+        sleeptimer = 2
+        TTSv2(f"changing price in {2}")
+        time.sleep(sleeptimer)
 
-    import pygetwindow as gw
-    from selenium import webdriver
-    from selenium.webdriver.common.by import By
+        import winsound
+        import pyautogui
+        import pygetwindow as gw
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
 
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
 
-    from selenium.webdriver.common.keys import Keys
-    from selenium.webdriver.common.action_chains import ActionChains
-    from selenium.common.exceptions import TimeoutException
-    
-    from selenium.webdriver.chrome.options import Options
-
-    autoChangePrice = save.controlPanel.autoChangePrice
-
-    def switch_to_desktop(desktop_name):
-        desktop = gw.getWindowsWithTitle(desktop_name)
-        if desktop:
-            desktop[0].activate()
-
-    if autoChangePrice:
-        myPage = save.controlPanel.gPriceCheckerURL_myPage
-        # new_decreased_price = "your_new_price"  # Replace with your desired price
-
-        # Switch to Desktop 2 (assuming you have Desktop 2)
-        desktop_name = "Desktop 2"
-        switch_to_desktop(desktop_name)
-
-        # Set up Chrome options for connecting to an existing instance
-        chrome_options = Options()
-        chrome_options.debugger_address = "127.0.0.1:9227"  # Use the correct address and port
-        # Run Chrome in headless mode to hide the browser window
-        chrome_options.add_argument("--headless")
-        # Initialize the ChromeDriver with the specified options
-        driver = webdriver.Chrome(options=chrome_options)
+        from selenium.webdriver.common.keys import Keys
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.common.exceptions import TimeoutException
         
+        from selenium.webdriver.chrome.options import Options
 
-        try:
+        autoChangePrice = save.controlPanel.autoChangePrice
 
+        def switch_to_desktop(desktop_name):
+            desktop = gw.getWindowsWithTitle(desktop_name)
+            if desktop:
+                desktop[0].activate()
 
-
-            m1 = 1
-            if m1 == 1:
-                # Get the current window handle
-                original_window_handle = driver.current_window_handle
-
-                # Open the G2G URL in a new tab (can be the current tab)
-                driver.execute_script("window.open('" + myPage + "', '_blank');")
-
-                # Switch back to the original tab
-                driver.switch_to.window(original_window_handle)
-            if m1 == 2:
-                # Navigate to the web page
-                driver.get(myPage)  # Replace with the URL of the webpage you want to edit
-
-
-
-            # Wait for the price element to be present on the page
-            element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
-            )
-
-            # Click on the element to make it editable
-            element.click()
-
-            # Locate the input field for the price
-            input_field = WebDriverWait(driver, 5).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
-            )
-
-            # Clear the existing value and enter the new price
-            input_field.clear()
-            input_field.send_keys(str(new_decreased_price))
-
-            # Locate and click the "Save" button
-            save_button = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
-            )
-
-            save_button.click()
-
-            # Optionally, you can perform further actions on the page after saving the price.
-
-        finally:
-            # Make sure to close the browser, even if there is an exception
-            driver.quit()
+        def desktop_check():
+            # Desktop check
+            num = vda.GetCurrentDesktopNumber()
+            print(num)
+            if num == 1:
+                #pyautogui.hotkey('ctrl', 'win', 'right')
+                pyautogui.hotkey('ctrl', 'r') 
+                pyautogui.hotkey('ctrl', 'win', 'left')
+                print("returning to desktop 0")
+                return num
             
-            time.sleep(4)
-            TTSv2("done")
-
-            time.sleep(1)
-            import pyautogui
-            import pygetwindow as gw
-            pyautogui.hotkey('ctrl', 'win', 'right')
-            time.sleep(0.15)          
-            pyautogui.hotkey('ctrl', 'win', 'left') 
+        def remove_chrome_alert():
+            winsound.Beep(1000, 500)
             time.sleep(0.5)
+            pyautogui.hotkey('ctrl', 'win', 'right')
+            time.sleep(0.2)
+            pyautogui.press('pageup')
+            pyautogui.hotkey('ctrl', 'win', 'left') 
+
+        if autoChangePrice:
+            myPage = save.controlPanel.gPriceCheckerURL_myPage
+
+            # Switch to Desktop 2 (assuming you have Desktop 2)
+            desktop_name = "Desktop 2"
+            switch_to_desktop(desktop_name)
+
+            # Set up Chrome options for connecting to an existing instance
+            chrome_options = Options()
+            chrome_options.debugger_address = "127.0.0.1:9227"  # Use the correct address and port
+            # Run Chrome in headless mode to hide the browser window
+            chrome_options.add_argument("--headless")
+            # Initialize the ChromeDriver with the specified options
+            driver = webdriver.Chrome(options=chrome_options)
+            
+
+            try:
+
+
+
+                m1 = 1
+                if m1 == 1:
+                    # Get the current window handle
+                    original_window_handle = driver.current_window_handle
+
+                    # Open the G2G URL in a new tab (can be the current tab)
+                    driver.execute_script("window.open('" + myPage + "', '_blank');")
+
+                    # Switch back to the original tab
+                    driver.switch_to.window(original_window_handle)
+                if m1 == 2:
+                    # Navigate to the web page
+                    driver.get(myPage)  # Replace with the URL of the webpage you want to edit
+
+
+
+                # Wait for the price element to be present on the page
+                element = WebDriverWait(driver, 1).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
+                )
+                num = desktop_check()
+                if num == 1:
+                    return num
+
+                element.click()
+
+                # Locate the input field for the price
+                input_field = WebDriverWait(driver, 2).until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
+                )
+
+                num = desktop_check()
+                if num == 1:
+                    return num
+                
+                # Clear the existing value and enter the new price
+                input_field.clear()
+                input_field.send_keys(str(new_decreased_price))
+
+                # Locate and click the "Save" button
+                save_button = WebDriverWait(driver, 2).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
+                )
+
+                num = desktop_check()
+                if num == 1:
+                    return num
+                
+                save_button.click()
+
+            finally:
+                driver.quit()
+                TTSv2("done")
+                time.sleep(4.5)
+                remove_chrome_alert()
+                time.sleep(10)
+    except Exception as e:
+        print("An error occurred:", e)
+        TTSv2("Retrying after 60 seconds...")
+        pyautogui.hotkey('ctrl', 'win', 'right')
+        pyautogui.hotkey('ctrl', 'r') 
+        pyautogui.hotkey('ctrl', 'win', 'left')
+        winsound.Beep(1000, 500)
+        winsound.Beep(1000, 500)
+        winsound.Beep(1000, 500)
+        time.sleep(60)
+        SileniumChrome(new_decreased_price)
 
 
 def PriceChecker():

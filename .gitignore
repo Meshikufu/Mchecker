@@ -377,3 +377,7 @@ TTSdb/
 gBot/Test_HTML.txt
 ping_results.db
 ping_results.db-journal
+gBot/Gdata2024.csv
+temp_audio/
+selenium/
+seleniumPath.py

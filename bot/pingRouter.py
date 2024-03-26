@@ -63,7 +63,7 @@ class PingMonitor:
 
         # Close the SQLite connection
         conn.close()
-
+        
     def ping_router(self):
         print("Starting pingRouter")
 

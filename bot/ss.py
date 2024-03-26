@@ -30,9 +30,12 @@ def SS_OfferChecker():
     initialize_database()
     print("ssBot Started")
     time.sleep(15*60)
+    #time.sleep(5)
 
     # List of filter names
     filter_names = save.controlPanel.ss_filter_names
+    filter_price = save.controlPanel.ss_filter_price
+    
 
     priceName = None
 
@@ -81,29 +84,32 @@ def SS_OfferChecker():
                 continue
 
             for filteredName in filter_names:
-                if filteredName in item_info['text'] and item_info['price'] is not None and item_info['price'] < 500:
+                if filteredName in item_info['text'] and item_info['price'] is not None and item_info['price'] < filter_price:
                     new_filtered_items.append(item_info)
 
                     # Insert the filtered item ID into the database
                     insert_filtered_item(item_info['id'])
-        
-        if filteredName == "3080":
-            priceName = "graphic card, rtx " + filteredName
-        elif filteredName == '750w' or '800w' or '850w':
-            priceName = "Power Supply " + filteredName
-        elif filteredName == "ryzen":
-            priceName = "processor " + filteredName
-        else:
-            priceName = None
 
+                    # Assign priceName based on filteredName
+                    if filteredName == "5900":
+                        priceName = "ryzen 9 5900 is selling, " + filteredName
+                    #elif filteredName in ['750w', '800w', '850w']:
+                    elif filteredName in ['850w']:
+                        priceName = "Power Supply " + filteredName
+                    elif filteredName == "ryzen 9":
+                        priceName = "processor " + filteredName
+                    else:
+                        priceName = None
 
+                    print("t2 print")
+                    print(filteredName)
 
         #print("\nNew Filtered Items:")
         for item_info in new_filtered_items:
             print(f"{item_info['id']}: {priceName} - Price: {item_info['price']}")
             Schat(f"$tts New seller: {priceName}, price: {item_info['price']} euro")
             Schat(f"New seller: {priceName}, price: {item_info['price']} euro")
-            Schat(item_info)
+            Schat(str(item_info))  # Convert item_info to a string before passing
             Schat("change_icon_alert")
 
         #print("\nFiltered Items Already in Database:")

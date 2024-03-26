@@ -14,6 +14,8 @@ from tkinter import Tk, PhotoImage
 
 
 
+
+
 #os.chdir('C:/Programming/PythonProjects/Mchecker')
 
 #todo4 this one below doesnt hide message in console
@@ -153,23 +155,44 @@ class ttkgui():
 		self.left_subframe_buttonsMainDown.pack(side=RIGHT, fill=tk.X, expand=True)
 
 		########
-		def yt_whisper_setup(url, model, task, language):
-			desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-			command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
-			subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
-			#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
+		method_ytsubs = 'old'
+		if method_ytsubs == 'old':
+			def yt_whisper_setup(url, model, task, language):
+				desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+				command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
+				subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
+				#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
 
-		def YT_whisper_medium():
-			copytext = pyperclip.paste()
-			if "https://www.youtube.com/watch" in copytext:
-				yt_whisper_setup(copytext, "medium", "translate", "Japanese")
-				root.withdraw()
-			else:
-				print("Not a YouTube URL.")
+			def YT_whisper_medium():
+				copytext = pyperclip.paste()
+				if "https://www.youtube.com/watch" in copytext:
+					yt_whisper_setup(copytext, "medium", "translate", "Japanese")
+					root.withdraw()
+				else:
+					print("Not a YouTube URL.")
 
-		if TopRowButtons_Activation is True:
-			self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
-			self.subs.pack(side=LEFT, padx=5, pady=5)
+			if TopRowButtons_Activation is True:
+				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
+				self.subs.pack(side=LEFT, padx=5, pady=5)
+
+		if method_ytsubs == 'new':
+			def YT_faster_whisper():
+				if "youtube.com/watch" not in pyperclip.paste():
+					print("Not a YouTube URL.")
+					return
+
+				current_directory = os.getcwd()
+
+				# Specify the path to the script
+				script_path = os.path.join(current_directory, "yt_subs", "yt_subs_faster_whisper.py")
+
+				# Execute the command to run the script in a new console window
+				subprocess.Popen(["python", script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+		
+			if TopRowButtons_Activation is True:
+				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_faster_whisper)
+				self.subs.pack(side=LEFT, padx=5, pady=5)
 
 		########
 		#def YT_whisper_large():
@@ -641,11 +664,11 @@ def start_threads():
 	ssBot.daemon = True
 	ssBot.start()
 
-	from bot.pingRouter import PingMonitor
-	ping_monitor_instance = PingMonitor()
-	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
-	PingRouter.daemon = True
-	PingRouter.start()
+#	from bot.pingRouter import PingMonitor
+#	ping_monitor_instance = PingMonitor()
+#	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
+#	PingRouter.daemon = True
+#	PingRouter.start()
 
 
 def start_threads_tts():

@@ -7,6 +7,8 @@ import pygame
 from datetime import datetime
 import tempfile
 from gtts import gTTS
+from google.api_core.exceptions import ResourceExhausted
+
 
 pygame.mixer.init()
 
@@ -35,10 +37,10 @@ def create_database(path_tts_db):
     os.makedirs(rf'{path_tts_db}', exist_ok=True)
 
     # Create the AudioFiles subfolder
-    os.makedirs(rf'{path_tts_db}\AudioFiles', exist_ok=True)
+    os.makedirs(rf'{path_tts_db}/AudioFiles', exist_ok=True)
 
     # Connect to SQLite database (create it if it doesn't exist)
-    conn = sqlite3.connect(rf'{path_tts_db}\unique_sentences.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/unique_sentences.db')
     cursor = conn.cursor()
 
     # Create a table if it doesn't exist
@@ -57,7 +59,7 @@ def create_database(path_tts_db):
     conn.close()
 
     # Connect to SQLite database (create it if it doesn't exist)
-    conn = sqlite3.connect(rf'{path_tts_db}\quota.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/quota.db')
     cursor = conn.cursor()
 
     # Create a table if it doesn't exist
@@ -78,7 +80,7 @@ def save_to_database(unique_id, filename, voicetype, bytes_amount, character_num
     os.makedirs(rf'{path_tts_db}', exist_ok=True)
 
     # Connect to SQLite database (create it if it doesn't exist)
-    conn = sqlite3.connect(rf'{path_tts_db}\unique_sentences.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/unique_sentences.db')
     cursor = conn.cursor()
 
     # Insert the unique ID, filename, voicetype, bytes, character number, and date into the database
@@ -95,7 +97,7 @@ def save_to_database(unique_id, filename, voicetype, bytes_amount, character_num
 
 def quota_db(date_voicetype, bytes_sum, char_len_sum, path_tts_db):
     # Connect to SQLite database (create it if it doesn't exist)
-    conn = sqlite3.connect(rf'{path_tts_db}\quota.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/quota.db')
     cursor = conn.cursor()
 
     # Try to update the existing record
@@ -124,7 +126,7 @@ def check_if_sentence_exists(text, path_tts_db):
     # Create TTSdb folder if it doesn't exist
     os.makedirs(rf'{path_tts_db}', exist_ok=True)
 
-    conn = sqlite3.connect(rf'{path_tts_db}\unique_sentences.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/unique_sentences.db')
     cursor = conn.cursor()
 
     cursor.execute('SELECT filename FROM sentences WHERE unique_id = ?', (unique_id,))
@@ -136,7 +138,7 @@ def check_if_sentence_exists(text, path_tts_db):
 # Function to play audio files
 def playAudio(filenameID, path_tts_db):
     # Construct the absolute path for the audio file
-    abs_path = os.path.abspath(os.path.join(rf'{path_tts_db}\AudioFiles', filenameID))
+    abs_path = os.path.abspath(os.path.join(rf'{path_tts_db}/AudioFiles', filenameID))
     # Load the audio file using pygame mixer
     sound = pygame.mixer.Sound(abs_path)
     sound.play()
@@ -162,7 +164,9 @@ def TTSv2(text, path=None):
         print("Sentence already generated, playing existing audio.")
         print("")
         playAudio(existing_filename[0], path_tts_db)  # Play the existing audio
-        return existing_filename[0], path_tts_db
+        #path_tts_db_audio = rf'{path_tts_db}/AudioFiles/{existing_filename[0]}'
+        abs_path = os.path.abspath(os.path.join(rf'{path_tts_db}/AudioFiles', existing_filename[0]))
+        return abs_path
 
     client = texttospeech.TextToSpeechClient()
     input_text = texttospeech.SynthesisInput(text=text)
@@ -196,49 +200,54 @@ def TTSv2(text, path=None):
         TTS_type = "WaveNet"
 
     if TTS_type == "Basic" or "Neuro2" or "WaveNet":
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            name=voicetype,
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-        )
+        try:
+            voice = texttospeech.VoiceSelectionParams(
+                language_code="en-US",
+                name=voicetype,
+                ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+            )
 
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3,
-            pitch=1,
-            speaking_rate=0.83
-        )
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3,
+                pitch=1,
+                speaking_rate=0.83
+            )
 
-        response = client.synthesize_speech(
-            request={"input": input_text, "voice": voice, "audio_config": audio_config}
-        )
+            response = client.synthesize_speech(
+                request={"input": input_text, "voice": voice, "audio_config": audio_config}
+            )
 
-        # Create a unique ID and filename
-        unique_id = create_unique_id(text)
-        filename = f"{unique_id}.mp3"
-        output_file_path = os.path.join(rf'{path_tts_db}\AudioFiles', filename)
+            # Create a unique ID and filename
+            unique_id = create_unique_id(text)
+            filename = f"{unique_id}.mp3"
+            output_file_path = os.path.join(rf'{path_tts_db}/AudioFiles', filename)
+            abs_path = os.path.abspath(os.path.join(rf'{path_tts_db}/AudioFiles', filename))
 
-        # Ensure the directory exists before writing the audio file
-        os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+            # Ensure the directory exists before writing the audio file
+            os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
-        # The response's audio_content is binary.
-        with open(output_file_path, "wb") as out:
-            out.write(response.audio_content)
-            print(f'Audio content written to file "{output_file_path}"')
-            print(f"created with {TTS_type}: {filename}")
-            print("")
+            # The response's audio_content is binary.
+            with open(output_file_path, "wb") as out:
+                out.write(response.audio_content)
+                print(f'Audio content written to file "{output_file_path}"')
+                print(f"created with {TTS_type}: {filename}")
+                print("")
 
-        # Save to the database
-        if TTS_type == "Basic":
-            save_to_database(unique_id, filename, voicetype, len(response.audio_content), len(text), path_tts_db)
-        quota_db(date_voicetype, len(response.audio_content), len(text), path_tts_db)
-        if TTS_type != "Basic":
+            # Save to the database
+            if TTS_type == "Basic":
+                save_to_database(unique_id, filename, voicetype, len(response.audio_content), len(text), path_tts_db)
+            quota_db(date_voicetype, len(response.audio_content), len(text), path_tts_db)
+            if TTS_type != "Basic":
 
-            playAudio(filename)
-            print(f"Deleted file: {filename}\n")
-            print(output_file_path)
-            os.remove(output_file_path)
+                playAudio(filename)
+                print(f"Deleted file: {filename}\n")
+                print(output_file_path)
+                os.remove(output_file_path)
+        except ResourceExhausted as e:
+            print(f"Caught ResourceExhausted error: {e}")
+            TTS_type = "gTTS"
 
-    elif TTS_type == "gTTS":
+    if TTS_type == "gTTS":
         speech = gTTS(text=text, lang='en')
         with tempfile.NamedTemporaryFile(suffix='.mp3', dir="ttsvoice", delete=False) as fp:
             speech.write_to_fp(fp)
@@ -252,12 +261,12 @@ def TTSv2(text, path=None):
             print(f"Deleted file: {filename}\n")
             output_file_path = None
 
-    return filename, path_tts_db
+    return abs_path
 
 
 def get_char_len_sum_from_quota_db(date_voicetype, path_tts_db):
     # Connect to SQLite database (create it if it doesn't exist)
-    conn = sqlite3.connect(rf'{path_tts_db}\quota.db')
+    conn = sqlite3.connect(rf'{path_tts_db}/quota.db')
     cursor = conn.cursor()
 
     # Fetch the char_len_sum for the given date_voicetype

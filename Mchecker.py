@@ -8,6 +8,7 @@ from ttkbootstrap.constants import *
 import tkinter as tk
 import pyperclip, re
 from tkinter import Tk, PhotoImage
+import psutil
 
 
 
@@ -287,54 +288,69 @@ class ttkgui():
 			if Gmailprocess is not None:  # Check if the subprocess was started
 				Gmailprocess.terminate()
 
-			global Flaskprocess	
-			if Flaskprocess is not None:		
-				import psutil
-				def close_flask_subprocesses():
-					# Get the process ID of the current Python process
-					parent_pid = psutil.Process().pid
+			def list_all_subprocesses():
+				# Get the process ID of the current Python process
+				parent_pid = psutil.Process().pid
 
-					# Set to store the encountered process IDs
-					encountered_pids = set()
+				# Create a recursive function to traverse all child processes
+				def traverse_process_tree(pid):
+					for child in psutil.Process(pid).children(recursive=True):
+						print(f"Subprocess PID: {child.pid}, Name: {child.name()}")
+						traverse_process_tree(child.pid)
 
-					# Set to store the terminated process IDs
-					terminated_pids = set()
+				# Start traversing from the parent process
+				traverse_process_tree(parent_pid)
 
-					# Function to terminate the Flask subprocesses recursively
-					def terminate_flask_subprocesses(pid):
-						try:
-							process = psutil.Process(pid)
-						except psutil.NoSuchProcess:
-							# Process might have already terminated, continue to the next one
-							return
+			# Call the function to list all subprocesses
+			list_all_subprocesses()
 
-						# Terminate the current subprocess if its name matches "Flaskprocess"
-						if process.name() == "Flaskprocess":
-							print(f"Terminating Flask subprocess PID: {pid}, Name: {process.name()}")
-							try:
-								process.terminate()
-							except psutil.NoSuchProcess:
-								# Process might have already terminated, continue to the next one
-								pass
+			try:	
+				if Flaskprocess is not None:
+						print("Starting to murder flask's children and also every one else")	
+						import signal
+						def kill_process_tree(pid, sig=signal.SIGTERM, include_parent=True, timeout=None, on_terminate=None):
+							"""Kill a process tree (including grandchildren) with signal
+							"sig" and return a (gone, still_alive) tuple.
+							"on_terminate", if specified, is a callback function which is
+							called as soon as a child terminates.
+							"""
+							assert pid != os.getpid(), "Won't kill myself"
+							parent = psutil.Process(pid)
+							children = parent.children(recursive=True)
+							if include_parent:
+								children.append(parent)
+							for p in children:
+								try:
+									p.send_signal(sig)
+								except psutil.NoSuchProcess:
+									pass
+							gone, alive = psutil.wait_procs(children, timeout=timeout, callback=on_terminate)
+							return (gone, alive)
 
-							# Add the terminated process ID to the set
-							terminated_pids.add(pid)
+						def kill_unique_child_processes():
+							current_process = psutil.Process(os.getpid())
+							unique_pids = set()
+							
+							for proc in current_process.children(recursive=True):
+								if proc.pid not in unique_pids:
+									print(f"Killing child process {proc.pid} (Name: {proc.name()})")
+									kill_process_tree(proc.pid)
+									unique_pids.add(proc.pid)
 
-						# Iterate over child processes
-						for child in process.children(recursive=True):
-							child_pid = child.pid
-							if child_pid not in encountered_pids:
-								# Add the child PID to the encountered set
-								encountered_pids.add(child_pid)
-								# Recursively terminate child processes
-								terminate_flask_subprocesses(child_pid)
+						def kill_all_subprocesses():
+							current_process = psutil.Process(os.getpid())
+							for proc in current_process.children(recursive=True):
+								print(f"Killing subprocess {proc.pid} (Name: {proc.name()})")
+								kill_process_tree(proc.pid)
 
-					# Start terminating from the parent process
-					terminate_flask_subprocesses(parent_pid)
 
-				# Call the function to close all Flask subprocesses
-				close_flask_subprocesses()
-
+						# First kill unique child processes
+						kill_unique_child_processes()
+						
+						# Then kill all subprocesses
+						kill_all_subprocesses()
+			except Exception as e:
+				print(e)
 
 			root.destroy()
 
@@ -749,7 +765,7 @@ if __name__ == "__main__":
 	start_threads_tts()
 	Gmail_Checker()
 	Flask_app()
-	#Flaskprocess = []
+
 
 
 

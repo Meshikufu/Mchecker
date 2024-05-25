@@ -19,17 +19,17 @@ def handle_connect():
     print('Client connected')  # Print a message to the server console
 
     try:
-        with open('temp/sellerList.json', 'r') as json_file:
+        with open('temp/SellerList.json', 'r') as json_file:
             loaded_data = json.load(json_file)
         socketio.emit('update_sellerList', loaded_data)
         
-        start_timer_sellerList()
+        start_timer_SellerList()
 
-        #socketio.emit('starts_time_sellerList')
+        #socketio.emit('starts_time_SellerList')
         emit_json_data()
 
     except Exception as e:
-        print('sellerList.json doesnt exist')
+        print('SellerList.json doesnt exist')
 
 def emit_json_data():
     try:
@@ -39,11 +39,11 @@ def emit_json_data():
     except Exception as e:
         print('Error reading control_panel.json:', e)
 
-def start_timer_sellerList():
+def start_timer_SellerList():
     try:
-        stat = os.stat('temp/sellerList.json')
+        stat = os.stat('temp/SellerList.json')
         modification_time = stat.st_mtime  # Modification time in seconds since epoch
-        socketio.emit('starts_time_sellerList', {'startTime': modification_time})
+        socketio.emit('starts_time_SellerList', {'startTime': modification_time})
     except FileNotFoundError:
         print("File not found")
     except Exception as e:
@@ -69,14 +69,14 @@ def handle_update_value(data):
 
 @socketio.on('message') # receiving
 def handle_message(msg):
-    if "sellerList" in msg:
+    if "SellerList" in msg:
         data = json.loads(msg)
-        unwrapped_data = data["sellerList"]
+        unwrapped_data = data["SellerList"]
 
         if not os.path.exists('temp'):
             os.makedirs('temp')
         json_data = json.dumps(unwrapped_data)
-        with open('temp/sellerList.json', 'w') as json_file:
+        with open('temp/SellerList.json', 'w') as json_file:
             json_file.write(json_data)
 
         current_datetime = datetime.now()
@@ -84,7 +84,7 @@ def handle_message(msg):
         #print(unwrapped_data)
         socketio.emit('update_sellerList', unwrapped_data)
 
-        start_timer_sellerList()
+        start_timer_SellerList()
 
         disconnect()
     else:

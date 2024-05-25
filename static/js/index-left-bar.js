@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
-    socket.on('starts_time_sellerList', function(data) {
+    socket.on('starts_time_SellerList', function(data) {
         startTimer(data ? data.startTime : null); // Call the startTimer function with the modification time if available
     });
     function startTimer(startTime) {
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Socket event handler to start the timer
-    socket.on('starts_time_sellerList', function(data) {
+    socket.on('starts_time_SellerList', function(data) {
         startTimer(data ? data.startTime : null); // Call the startTimer function with the modification time if available
     });
 

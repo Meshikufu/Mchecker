@@ -6,7 +6,7 @@
     background-color: var(--bg-dark-color-theme);
 }
 
-.sellerList{
+.SellerList{
     width: auto; /* Adjust as needed */
     padding: 10px;
     border: 1px solid #ccc;
@@ -17,7 +17,7 @@
     background-color: var(--bg-dark-color-theme);
 }
 
-.sellerList-header {
+.SellerList-header {
     min-width: 180px;
     display: grid;
     grid-template-columns: auto 1fr; /* Two equal columns */
@@ -29,23 +29,23 @@
     background-color: var(--bg-dark-color-theme);
 }
 
-.sellerList-header-name {
+.SellerList-header-name {
     grid-column: 1; /* This element occupies the second column */
     grid-row: 1;
 }
 
-.sellerList-header-timer {
+.SellerList-header-timer {
     grid-column: 2; /* This element occupies the first column */
     grid-row: 1;
 }
 
-.sellerList-header-name h2 {
+.SellerList-header-name h2 {
     margin-block-start: 0em;
     margin-block-end: 0em;
     font-size: 1.5em;
 }
 
-.sellerList-header-timer h3 {
+.SellerList-header-timer h3 {
     text-align: left;
     font-size: 1.5em;
     margin-block-start: 0em;
@@ -53,7 +53,7 @@
 }
 
 /* Style for the list */
-.sellerList-sellers ul {
+.SellerList-sellers ul {
     list-style-type: none;
     padding: 0px;
     margin-block-start: 0em;
@@ -61,7 +61,7 @@
 }
 
 /* Style for list items */
-.sellerList-sellers li {
+.SellerList-sellers li {
     margin-bottom: 5px;
     color: var(--text-dark-color-theme);
 }

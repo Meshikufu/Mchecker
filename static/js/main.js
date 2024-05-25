@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Function to send a custom event to the server
     function sendCustomEvent() {
         socket.emit('custom_event', {data: 'Test data'});  // Emit custom event with data
-        socket.send('Test socket message!');
+        //socket.send('Test socket message!');
     }
 
     // Add event listener to the button to send a custom event when clicked

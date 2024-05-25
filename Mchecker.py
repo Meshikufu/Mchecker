@@ -748,8 +748,8 @@ if __name__ == "__main__":
 	start_threads()
 	start_threads_tts()
 	Gmail_Checker()
-	#Flask_app()
-	Flaskprocess = []
+	Flask_app()
+	#Flaskprocess = []
 
 
 

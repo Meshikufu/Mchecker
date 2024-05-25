@@ -1,4 +1,4 @@
-import time, os
+import time, os, json
 import ssl
 from simplegmail import Gmail
 from simplegmail.query import construct_query
@@ -15,9 +15,28 @@ import save.controlPanel
 ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 
-from save.twitchfilter import negatives_list
-from save.twitchfilter import positives_list
+#from save.twitchfilter import negatives_list
+#from save.twitchfilter import positives_list
+def TwitchList_json():
+	with open('save/twitchfilter.json') as f:
+		twitch_list_json = json.load(f)
+		
+	return {
+		'subject_list': twitch_list_json['subject_list'],
+		'snippet_list': twitch_list_json['snippet_list'],
+		'negatives_list': twitch_list_json['negatives_list'],
+		'positives_list': twitch_list_json['positives_list']
+	}
 
+def refresh_twitchJson_variables(): # variables are getting refreshed but querry params are not f
+    global subject_list_twitchJson, snippet_list_twitchJson, negatives_list_twitchJson, positives_list_twitchJson
+    LIST = TwitchList_json()
+    subject_list_twitchJson = LIST['subject_list']
+    snippet_list_twitchJson = LIST['snippet_list']
+    negatives_list_twitchJson = LIST['negatives_list']
+    positives_list_twitchJson = LIST['positives_list']
+
+refresh_twitchJson_variables()
 
 class GmailChecker():
 	def __init__(self):
@@ -28,15 +47,35 @@ class GmailChecker():
 		self.icon_idle = True
 		self.trigger_thread = None
 
-		from save.twitchfilter import subject_list
-		from save.twitchfilter import snippet_list
+		#from save.twitchfilter import subject_list
+		#from save.twitchfilter import snippet_list
 
-		self.subject_list = subject_list
-		self.snippet_list = snippet_list
+		#self.subject_list = subject_list
+		#self.snippet_list = snippet_list
+
+
+#		self.query_params = self.query_params_refresh()
+#
+#		def query_params_refresh(self):
+#			# Refresh query_params using global variables or wherever you store the lists
+#			exact_phrase = subject_list_twitchJson + snippet_list_twitchJson + positives_list_twitchJson
+#			query_params = {
+#				"labels": ["Twitch"],
+#				"exact_phrase": exact_phrase,
+#				"newer_than": (22, "hour"),
+#				"unread": True
+#			}
+#			return query_params
+#
+#		def refresh_and_get_messages(self):
+#			# Refresh query_params
+#			self.query_params = self.query_params_refresh()
+#			# Use the refreshed query_params to get messages
+#		refresh_and_get_messages()
 
 		self.query_params = {
 			"labels": ["Twitch"],
-			"exact_phrase": subject_list + snippet_list + positives_list,
+			"exact_phrase": subject_list_twitchJson + snippet_list_twitchJson + positives_list_twitchJson,
 			"newer_than": (22, "hour"),
 			"unread": True
 		}
@@ -168,13 +207,13 @@ class GmailChecker():
 				matched_keywords_filter = []
 
 				# Check if any keyword from negatives_list is present in snippet_lower
-				if any(keyword.lower() in snippet_lower for keyword in negatives_list):
+				if any(keyword.lower() in snippet_lower for keyword in negatives_list_twitchJson):
 					matched_keywords_filter.append("Potentially shit ")
 					change_icon = False
 					print("change_icon = False")
 
 				# Check if any keyword from positives_list is present in snippet_lower
-				for keyword in positives_list:
+				for keyword in positives_list_twitchJson:
 					if keyword.lower() in snippet_lower:
 						matched_keywords_filter.append(keyword.capitalize() + ".")
 
@@ -286,6 +325,7 @@ class GmailChecker():
 			#	# Code to handle the ConnectionAbortedError
 			#	print("Connection was aborted by the software on the host machine.")
 			time.sleep(ProgressBarSleepDuration2 + 0.1)
+			refresh_twitchJson_variables()
 
 if __name__ == "__main__":
     checker = GmailChecker()

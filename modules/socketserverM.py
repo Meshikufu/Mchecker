@@ -1,7 +1,7 @@
 import socket
 from modules.SocketClient import Schat
 #from modules.GoogleTTS import tts
-from save.myip import myip
+
 
 def socketServer(tray, chatMain, TTS):
 	chatMain = chatMain
@@ -47,7 +47,8 @@ def socketServer(tray, chatMain, TTS):
 def socketServerAndroid(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
-	HOST = myip #socket.gethostname()
+	local_ip = socket.gethostbyname(socket.gethostname())
+	HOST = local_ip #socket.gethostname()
 	PORT = 59621
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

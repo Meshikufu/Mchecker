@@ -1,11 +1,47 @@
-import time, requests, random, csv, os
+import time, requests, random, csv, os, time
 from bs4 import BeautifulSoup
 from datetime import datetime
+import json
+import socket, socketio
 
 from modules.SocketClient import Schat
 from modules.SocketClientTTS import SchatTTS
 import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
+import threading
+
+
+
+#def jsonCP(variable):
+#    with open('save/control_panel.json') as f:
+#        json_control_panel = json.load(f)
+#        return json_control_panel.get(variable)
+    
+def Refresh_ControlPanel_json():
+    with open('save/control_panel.json') as f:
+        json_control_panel = json.load(f)
+        
+    return {
+        'testingPhase': json_control_panel['testingPhase'],
+        'tts_ON': json_control_panel.get('tts_ON', False),
+        'tts_NewSeller': json_control_panel['tts_NewSeller'],
+        'tts_ChangeManually': json_control_panel['tts_ChangeManually'],
+        'tts_Matched': json_control_panel['tts_Matched'],
+        'tts_SlightyHigher': json_control_panel['tts_SlightyHigher'],
+        'tts_SoldStock': json_control_panel['tts_SoldStock'],
+        'tts_Pos2GotHigher': json_control_panel['tts_Pos2GotHigher'],
+        'tts_Pos2LoweredPrice': json_control_panel['tts_Pos2LoweredPrice'],
+        'tts_RaisedPrice': json_control_panel['tts_RaisedPrice'],
+        'tts_LoweredPrice': json_control_panel['tts_LoweredPrice'],
+        'tts_ChangingPrice': json_control_panel['tts_ChangingPrice'],
+        'tts_ChangingPriceIN': json_control_panel['tts_ChangingPriceIN'],
+        'tts_Done': json_control_panel['tts_Done'],
+        'tts_RetringIn60': json_control_panel['tts_RetringIn60'],
+        'autoChangePrice': json_control_panel['autoChangePrice'],
+        'desktop_swap_wait_timer': json_control_panel['desktop_swap_wait_timer'],
+        'IterationSleepTime': json_control_panel['IterationSleepTime'],
+        'msgClientWebpage': json_control_panel['msgClientWebpage']
+    }
 
 
 def date_Database():
@@ -26,7 +62,7 @@ def date_Database():
     return date_str, current_time_str
 
 
-def PriceMath(price):
+def PriceMath(price, tts_ON, tts_NewPrice):
     from decimal import Decimal
 
     price = Decimal(str(price))  # Convert the price to a Decimal
@@ -88,7 +124,6 @@ def PriceMath(price):
     #    reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
         reduced_price = str(reduced_price)
 
-
     reduced_price = str(reduced_price)
     if '.' in reduced_price:
         print("if isinstance(reduced_price, float):")
@@ -96,12 +131,15 @@ def PriceMath(price):
         reduced_price_tts = round(reduced_price_float, 2)
         reduced_price_tts = str(reduced_price_tts).replace('.', ' ')
         print(reduced_price_tts)
-        TTSv2(f"new price is:")
-        TTSv2(f"{reduced_price_tts}")
+        #ttsoff
+        if tts_ON and tts_NewPrice:
+            TTSv2(f"new price is:")
+            TTSv2(f"{reduced_price_tts}")
         return reduced_price
     else:
-        TTSv2(f"new price is:")
-        TTSv2(f"{reduced_price}")
+        if tts_ON and tts_NewPrice:
+            TTSv2(f"new price is:")
+            TTSv2(f"{reduced_price}")
         return reduced_price
 
 # Full path to the VirtualDesktopAccessor.dll file
@@ -113,7 +151,9 @@ vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 def SileniumChrome(new_decreased_price):
     try:
         sleeptimer = 2
-        TTSv2(f"changing price in {2}")
+        CPjson = Refresh_ControlPanel_json()
+        if CPjson['tts_ON'] and CPjson['tts_ChangingPriceIN']:
+            TTSv2(f"changing price in {2}")
         time.sleep(sleeptimer)
 
         import winsound
@@ -131,7 +171,6 @@ def SileniumChrome(new_decreased_price):
         
         from selenium.webdriver.chrome.options import Options
 
-        autoChangePrice = save.controlPanel.autoChangePrice
 
         def switch_to_desktop(desktop_name):
             desktop = gw.getWindowsWithTitle(desktop_name)
@@ -139,7 +178,6 @@ def SileniumChrome(new_decreased_price):
                 desktop[0].activate()
 
         def desktop_check():
-            # Desktop check
             num = vda.GetCurrentDesktopNumber()
             print(num)
             if num == 1:
@@ -151,13 +189,14 @@ def SileniumChrome(new_decreased_price):
             
         def remove_chrome_alert():
             winsound.Beep(1000, 500)
+            winsound.Beep(1000, 500)
             time.sleep(0.5)
             pyautogui.hotkey('ctrl', 'win', 'right')
-            time.sleep(0.2)
+            time.sleep(CPjson['desktop_swap_wait_timer'])
             pyautogui.press('pageup')
             pyautogui.hotkey('ctrl', 'win', 'left') 
 
-        if autoChangePrice:
+        if CPjson['autoChangePrice']:
             myPage = save.controlPanel.gPriceCheckerURL_myPage
 
             # Switch to Desktop 2 (assuming you have Desktop 2)
@@ -171,6 +210,8 @@ def SileniumChrome(new_decreased_price):
             chrome_options.add_argument("--headless")
             # Initialize the ChromeDriver with the specified options
             driver = webdriver.Chrome(options=chrome_options)
+            #chromedriverPathBeta = save.controlPanel.chromedriverPathBeta
+            #driver = webdriver.Chrome(executable_path=chromedriverPathBeta, options=chrome_options)
             
 
             try:
@@ -229,13 +270,16 @@ def SileniumChrome(new_decreased_price):
 
             finally:
                 driver.quit()
-                TTSv2("done")
+                print("done")
+                if CPjson['tts_ON'] and CPjson['tts_Done']:
+                    TTSv2("done")
                 time.sleep(4.5)
                 remove_chrome_alert()
                 time.sleep(10)
     except Exception as e:
         print("An error occurred:", e)
-        TTSv2("Retrying after 60 seconds...")
+        if CPjson['tts_ON'] and CPjson['tts_RetringIn60']:
+            TTSv2("Retrying after 60 seconds...")
         winsound.Beep(1000, 500)
         winsound.Beep(1000, 500)
         winsound.Beep(1000, 500)
@@ -249,6 +293,11 @@ def SileniumChrome(new_decreased_price):
 def PriceChecker():
     print("gPriceChecker started")
     testingPhase = save.controlPanel.testingPhase
+
+    with open('save\control_panel.json') as f:
+        json_control_panel = json.load(f)
+        
+        testingPhase = json_control_panel['testingPhase']
 
     if testingPhase:
         testimeStart = save.controlPanel.testimeStart
@@ -274,7 +323,7 @@ def PriceChecker():
                 'name': sellerInfo.find('div', class_='seller__name-detail').text,
                 'level': int(level_str.replace('Level ', '')),
                 'stock': min(stock_int, 999), # Cap stock at 999
-                'price': min(price_float, 15),
+                'price': min(price_float, 20),
                 'time': current_time_str,
                 'date': date_str
             }
@@ -301,7 +350,10 @@ def PriceChecker():
 
 
         while True:
-
+            CPJ = Refresh_ControlPanel_json()
+            testingPhase = CPJ['testingPhase']
+            IterationSleepTime = CPJ['IterationSleepTime']
+            
             if testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
                 response = requests.get(url)
@@ -335,23 +387,23 @@ def PriceChecker():
                         print(f"S[{i}]: {Seller[i]}")
 
                         if testingPhase is True:
-                        #    if i == 1:
-                        #        Seller[i]['price'] = save.controlPanel.tsp1
-                        #    elif i == 2:
-                        #        Seller[i]['price'] = save.controlPanel.tsp2
-                        #    elif i == 3:
-                        #        Seller[i]['price'] = save.controlPanel.tsp3
-                        #    elif i == 4:
-                        #        Seller[i]['price'] = save.controlPanel.tsp4
-                        #    #if Seller[1]['name'] is not my_name and i == 1:
-                        #    #    Seller[1]['name'] = my_name
-                        #    print("modded verison below")
-                        #    print(f"S[{i}]: {Seller[i]}")
-                            if i == 6:
+                            testingPhase_first_sellers_price_change = save.controlPanel.testingPhase_first_sellers_price_change
+                            if testingPhase_first_sellers_price_change is True:
+                                if i == 1:
+                                    Seller[i]['price'] = save.controlPanel.tsp1
+                                elif i == 2:
+                                    Seller[i]['price'] = save.controlPanel.tsp2
+                                elif i == 3:
+                                    Seller[i]['price'] = save.controlPanel.tsp3
+                                elif i == 4:
+                                    Seller[i]['price'] = save.controlPanel.tsp4
+                                print("modded verison below")
+                                print(f"S[{i}]: {Seller[i]}")
+                            my_name_positon = save.controlPanel.my_name_positon
+                            if i == my_name_positon:
                                 Seller[i]['name'] = my_name
                                 print("modded verison below")
                                 print(f"S[{i}]: {Seller[i]}")
-
 
                         if CurrentlySellingFlag is False:
                             if Seller[i]['name'] == my_name:
@@ -387,35 +439,70 @@ def PriceChecker():
                         print(f"Seller number: {i-1}")
                         OutOfRangePosition = i
                         break
+                
+
+                #if CurrentlySellingFlag is False:
+
+                def packSellerInfo():
+                    seller_data = []
+
+                    try:
+                        for i in range(1, 11):
+                            seller_data.append(Seller[i])
+                    except IndexError:
+                        pass
+
+                    wrapped_data = {"SellerList": seller_data}
+                    json_data = json.dumps(wrapped_data)
+
+                    return json_data
+
+                def MSG_socketIO():
+                    try:
+                        sio = socketio.Client()
+
+                        @sio.event
+                        def connect():
+                            
+                            print('Connection established')
+                            send_message()
+
+                        @sio.event
+                        def disconnect():
+                            print('Disconnected from server')
+
+                        @sio.on('message')
+                        def on_message(data):
+                            print('Message from server:', data)
+
+                        @sio.on('response')
+                        def on_custom_response(data):
+                            print('Custom response from server:', data['data'])
+
+                        def send_message():
+                            json_data = packSellerInfo()
+                            sio.send(json_data)
+
+
+                        ip_address = socket.gethostbyname(socket.gethostname())
+                        sio.connect(f'http://{ip_address}:8080')
+                    except Exception as e:
+                        print("MSG_socketIO has failed")
+                        print(e)
+
+                if CPJ['msgClientWebpage'] is True:
+                    MSG_socketIO()
+                    #MSG_socketIOthread = threading.Thread(target=MSG_socketIO)
+                    #MSG_socketIOthread.start()
+                    #MSG_socketIO = threading.Thread(target=MSG_socketIO())
+                    #MSG_socketIO.daemon = True
+                    #MSG_socketIO.start()
+                
+
+
 
             if dict_filled and CurrentlySelling is False and CurrentlySellingOld is True:
-                TTSv2("Offline!")
-
-            #    try:
-            #        skipOnlineCheck = True
-            #        if testingPhase is False:
-            #            myNameRange = range(1, 6)
-            #        elif testingPhase is True:
-            #            myNameRange = save.controlPanel.dict_rangeTest
-            #        for i in myNameRange:
-            #            if Seller[i]['name'] == my_name:
-            #                CurrentlySelling = True
-            #                #my_pos = i
-            #                #print("CurrentlySelling = True")
-            #                if dict_filled and CurrentlySellingOld is False:
-            #                    print(f"currently selling old is: {CurrentlySellingOld}")
-            #                    TTSv2("Back online!")
-            #                CurrentlySellingOld = True
-            #                skipOnlineCheck = False
-            #                break
-            #        if skipOnlineCheck is True:
-            #            print("test 21323")
-            #            CurrentlySelling = False
-            #            CurrentlySellingOld = False
-            #            #print("CurrentlySellingOld = False")
-            #    except IndexError:
-            #        break
-                
+                TTSv2("Offline!")  
             elif pre_checkout_sls_offer_div is None:
                 TTSv2("Price Checker items are none")
 
@@ -538,7 +625,9 @@ def PriceChecker():
                             else:
                                 message = f"{Seller[1]['name']} lowered price by {final_price:.2f} Euro"
                             
-                            TTSv2(message)
+                            #ttsoff
+                            if CPJ['tts_ON'] and CPJ['tts_NewSeller']:
+                                TTSv2(message)
 
                             ### main price change fucntion
                             from decimal import Decimal
@@ -581,7 +670,7 @@ def PriceChecker():
                                 
                                 return reduced_price
 
-                            new_decreased_price = PriceMath(NewPrice)
+                            new_decreased_price = PriceMath(NewPrice, CPJ['tts_ON'], CPJ['tts_NewPrice'])
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
                             Schat(f"New price is {new_decreased_price}")
@@ -600,85 +689,19 @@ def PriceChecker():
                             print(f"price diff is: {priceDiff}")
 
                             if priceDiff <= thresholdPercentage or Seller[1]['price'] == Seller[3]['price']:
-                                #TTSv2(f"changing price")
-                                #TTSv2(f"{new_decreased_price}")
+                                if CPJ['tts_ON'] and CPJ['tts_ChangingPrice']:
+                                    TTSv2(f"changing price")
+                                    TTSv2(f"{new_decreased_price}")
                                 Schat(f"changing price")
                                 Schat(f"Time: {Seller[1]['time']}")
-                                
+                            
 
-                                import pygetwindow as gw
-                                from selenium import webdriver
-                                from selenium.webdriver.common.by import By
+                                SileniumChrome(new_decreased_price)
 
-                                from selenium.webdriver.support.ui import WebDriverWait
-                                from selenium.webdriver.support import expected_conditions as EC
-
-                                from selenium.webdriver.common.keys import Keys
-                                from selenium.webdriver.common.action_chains import ActionChains
-                                from selenium.common.exceptions import TimeoutException
-
-                                browser = "chrome"
-                                if browser == "chrome":
-                                    SileniumChrome(new_decreased_price)
-
-
-                                elif browser == "firefox":
-                                    from selenium.webdriver.firefox.options import Options
-                                    autoChangePrice = save.controlPanel.autoChangePrice
-
-                                    def switch_to_desktop(desktop_name):
-                                        desktop = gw.getWindowsWithTitle(desktop_name)
-                                        if desktop:
-                                            desktop[0].activate()
-
-                                    if autoChangePrice:
-                                        myPage = save.controlPanel.gPriceCheckerURL_myPage
-
-                                        desktop_name = "Desktop 2"
-                                        switch_to_desktop(desktop_name)
-
-                                        firefox_options = Options()
-                                        firefox_options.headless = True  # Run Firefox in headless mode
-
-                                        # Set the profile path of the existing Firefox instance
-                                        firefox_profile_path = r"C:\Users\Kufu\AppData\Roaming\Mozilla\Firefox\Profiles\pdtl2u9d.default-release"
-                                        firefox_options.add_argument(f"--profile={firefox_profile_path}")
-
-                                        # Add the following argument to connect to the existing Firefox instance
-                                        firefox_options.add_argument("--no-remote")
-                                        firefox_options.add_argument("--marionette")
-
-                                        driver = webdriver.Firefox(options=firefox_options)
-
-                                        try:
-                                            original_window_handle = driver.current_window_handle
-                                            driver.execute_script("window.open('" + myPage + "', '_blank');")
-                                            driver.switch_to.window(original_window_handle)
-
-                                            element = WebDriverWait(driver, 10).until(
-                                                EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
-                                            )
-
-                                            element.click()
-
-                                            input_field = WebDriverWait(driver, 5).until(
-                                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
-                                            )
-
-                                            input_field.clear()
-                                            input_field.send_keys(str(new_decreased_price))
-
-                                            save_button = WebDriverWait(driver, 5).until(
-                                                EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
-                                            )
-
-                                            save_button.click()
-
-                                        finally:
-                                            driver.quit()
                                 
                             elif priceDiff > thresholdPercentage:
-                                TTSv2(f"change price manually")
+                                if CPJ['tts_ON'] and CPJ['tts_ChangeManually']:
+                                    TTSv2(f"change price manually")
                                 Schat(f"change price manually")
                                 Schat(f"Time: {Seller[1]['time']}")
                                 price_matched = False
@@ -688,8 +711,8 @@ def PriceChecker():
                         elif Seller[2]['name'] == my_name or Seller[3]['name'] == my_name and price_matched is False and Seller[1]['price'] == Seller[2]['price']:
                             if Seller[1]['name'] != OldSeller[1]['name'] or Seller[2]['name'] != OldSeller[2]['name']:
                                 if Seller[1]['price'] == Seller[2]['price']:
-                                    Schat(f"Matched!")
-                                    TTSv2(f"Matched!")
+                                    if CPJ['tts_ON'] and CPJ['tts_Matched']:
+                                        TTSv2(f"Matched!")
                                     print(f"price matched!")
 
                                     
@@ -718,7 +741,8 @@ def PriceChecker():
                                 message = f"price got higher by {final_price_int} cent"
                             else:
                                 message = f"price got higher by {final_price:.2f} Euro"
-                            TTSv2(message)
+                            if CPJ['tts_ON'] and CPJ['tts_SlightyHigher']:
+                                TTSv2(message)
                             print(f"### price change  message is: {message}")
 
                         ### part of stock sold
@@ -726,7 +750,8 @@ def PriceChecker():
                             if skip is False:
                                 if NewName == OldName and NewPrice == OldPrice and NewStock < OldStock:
                                     message = f"{NewName} sold {OldStock - NewStock} divines"
-                                    TTSv2(message)
+                                    if CPJ['tts_ON'] and CPJ['tts_SoldStock']:
+                                        TTSv2(message)
                                     print(message)
                                     skip = True
                         else:
@@ -806,7 +831,8 @@ def PriceChecker():
                         result =  OldSeller[2]['price'] - Seller[1]['price']
                         if result > 0.02:
                             positionTwoPriceDifference = OldSeller[2]['price'] - Seller[1]['price']
-                            TTSv2(f"position 2 price got higher. Difference {positionTwoPriceDifference:.2f}")
+                            if CPJ['tts_ON'] and CPJ['tts_Pos2GotHigher']:
+                                TTSv2(f"position 2 price got higher. Difference {positionTwoPriceDifference:.2f}")
 
                             NewPrice = Seller[2]['price']
                             decimal_value = NewPrice
@@ -816,8 +842,8 @@ def PriceChecker():
                             new_decimal_str = whole_part + '.' + new_decimal_part
                             new_decreased_price = float(new_decimal_str)
 
-                            Schat(f"New pos2 lowered price to copy: {new_decreased_price}")
-                            TTSv2(f"New pos2 lowered price to copy: {new_decreased_price}")
+                            if CPJ['tts_ON'] and CPJ['tts_Pos2LoweredPrice']:    
+                                TTSv2(f"New pos2 lowered price to copy: {new_decreased_price}")
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
 
@@ -855,12 +881,14 @@ def PriceChecker():
                                     if target_price_new > target_price_old:
                                         message = f"{target_name} raised price"
                                         print(message)
-                                        TTSv2(message)
+                                        if CPJ['tts_ON'] and CPJ['tts_RaisedPrice']:
+                                            TTSv2(message)
                                         break
                                     elif target_price_new < target_price_old:
                                         message = f"{target_name} lowered price"
                                         print(message)
-                                        Schat(message)
+                                        if CPJ['tts_ON'] and CPJ['tts_LoweredPrice']:
+                                            TTSv2(message)
                                         break
                                     else:
                                         print(f"{target_name} has same price")
@@ -889,9 +917,15 @@ def PriceChecker():
             print("")
             dict_filled = True
 
-            IterationSleepTime = save.controlPanel.IterationSleepTime
+            #print("iteration time")
+            #print(IterationSleepTime)
+            fluctuation_percentage = random.uniform(-0.05, 0.05)
+            IterationSleepTime = IterationSleepTime * (1 + fluctuation_percentage)
             if testingPhase is True:
                 IterationSleepTime = save.controlPanel.TEST_IterationSleepTime
+            #print("iteration time")
+            #print(IterationSleepTime)
+            #IterationSleepTime = 1000
             time.sleep(IterationSleepTime)
     except Exception as e:
         import traceback

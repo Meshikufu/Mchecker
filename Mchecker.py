@@ -16,6 +16,8 @@ from tkinter import Tk, PhotoImage
 
 
 
+
+
 #os.chdir('C:/Programming/PythonProjects/Mchecker')
 
 #todo4 this one below doesnt hide message in console
@@ -284,6 +286,56 @@ class ttkgui():
 			global Gmailprocess  # Use the global process variable
 			if Gmailprocess is not None:  # Check if the subprocess was started
 				Gmailprocess.terminate()
+
+			global Flaskprocess	
+			if Flaskprocess is not None:		
+				import psutil
+				def close_flask_subprocesses():
+					# Get the process ID of the current Python process
+					parent_pid = psutil.Process().pid
+
+					# Set to store the encountered process IDs
+					encountered_pids = set()
+
+					# Set to store the terminated process IDs
+					terminated_pids = set()
+
+					# Function to terminate the Flask subprocesses recursively
+					def terminate_flask_subprocesses(pid):
+						try:
+							process = psutil.Process(pid)
+						except psutil.NoSuchProcess:
+							# Process might have already terminated, continue to the next one
+							return
+
+						# Terminate the current subprocess if its name matches "Flaskprocess"
+						if process.name() == "Flaskprocess":
+							print(f"Terminating Flask subprocess PID: {pid}, Name: {process.name()}")
+							try:
+								process.terminate()
+							except psutil.NoSuchProcess:
+								# Process might have already terminated, continue to the next one
+								pass
+
+							# Add the terminated process ID to the set
+							terminated_pids.add(pid)
+
+						# Iterate over child processes
+						for child in process.children(recursive=True):
+							child_pid = child.pid
+							if child_pid not in encountered_pids:
+								# Add the child PID to the encountered set
+								encountered_pids.add(child_pid)
+								# Recursively terminate child processes
+								terminate_flask_subprocesses(child_pid)
+
+					# Start terminating from the parent process
+					terminate_flask_subprocesses(parent_pid)
+
+				# Call the function to close all Flask subprocesses
+				close_flask_subprocesses()
+
+
 			root.destroy()
 
 		self.exit = ttk.Button(self.right_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
@@ -489,7 +541,7 @@ class ttkgui():
 import socket
 #from modules.SocketClient import Schat
 #from modules.GoogleTTS import tts
-from save.myip import myip
+
 
 
 def tts_thread(message):
@@ -596,7 +648,8 @@ def socketServerTTS():
 def socketServerAndroid(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
-	HOST = myip #socket.gethostname()
+	local_ip = socket.gethostbyname(socket.gethostname())
+	HOST = local_ip #socket.gethostname()
 	PORT = 59621
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -678,10 +731,13 @@ def start_threads_tts():
 
 
 def Gmail_Checker():
-    global Gmailprocess  # Use the global process variable
+    global Gmailprocess
     script_path = "GmailChecker.py"
     Gmailprocess = subprocess.Popen(["python", script_path]) 
-	# to kill process: Schat("StartSleepBar2")
+
+def Flask_app():
+	global Flaskprocess
+	Flaskprocess = subprocess.Popen(["python", "FlaskApp.py"]) 
 
 someValue = True
 if __name__ == "__main__":
@@ -692,6 +748,8 @@ if __name__ == "__main__":
 	start_threads()
 	start_threads_tts()
 	Gmail_Checker()
+	#Flask_app()
+	Flaskprocess = []
 
 
 

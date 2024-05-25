@@ -1,9 +1,10 @@
 import socket
 import time , ssl
-from save.myip import myip
+
 
 def SchatWork(message):
-	HOST = myip
+	local_ip = socket.gethostbyname(socket.gethostname())
+	HOST = local_ip
 	PORT = 4589
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

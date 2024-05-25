@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-left-bar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-right-bar.css') }}">
+
+    <style>
+        :root {
+            --primary-color: #007bff; /* Blue */
+            --bg-dark-color-theme: #323239; /* Gray */
+            --text-dark-color-theme: #efeff1; /* Yellow */
+        }
+
+        /* Set body and html to take up entire viewport */
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Optional: Prevents scrollbars */
+
+            background-color: var(--bg-dark-color-theme);
+            display: grid;
+            grid-template-columns: minmax(180px, auto) 1fr auto;
+            grid-template-rows: auto;
+            grid-template-areas: 
+                "leftbar main RightContainer ";
+
+            width: 100vw; /* Full width of the viewport */
+            height: 100vh; /* Full height of the viewport */
+            
+        }
+
+
+
+        .main-container {
+            grid-area: main;
+            background-color: var(--bg-dark-color-theme);
+        }
+
+        #sendCustomEvent {
+
+            margin: 20px;
+        }
+
+
+    </style>
+
+    <!-- Import Socket.IO library from a CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index-left-bar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index-right-bar.js') }}"></script>
+</head>
+<body>
+    <div class="left-bar">
+        <div class="sellerList">
+            <div class="sellerList-header">
+                <div class="sellerList-header-name"> 
+                    <h2>Seller List</h2>
+                </div>
+    
+                <div class="sellerList-header-timer">
+                    <h3 id="startTimer"></h3>
+                </div>
+            </div>
+            <div class="sellerList-sellers">
+                <ul id="sellerList">
+                    <!-- Items will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+        <button id="sendCustomEvent">Refresh List</button>  <!-- Button to trigger custom event -->
+    </div>
+    <div class="main-container">
+
+    </div>
+    <div class="right-bar">
+        <button class="toggle-button-CPJ" id="toggleButtonsShow_CPJ">Show Buttons</button>
+        <div class="right-block hidden" id="toggleButtonsHide_CPJ"></div>
+    </div> 
+</body>
+</html>

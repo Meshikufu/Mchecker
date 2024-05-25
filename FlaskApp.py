@@ -24,8 +24,6 @@ def handle_connect():
         socketio.emit('update_sellerList', loaded_data)
         
         start_timer_SellerList()
-
-        #socketio.emit('starts_time_SellerList')
         emit_json_data()
 
     except Exception as e:
@@ -57,8 +55,6 @@ def handle_update_value(data):
         
         # Update the JSON data with the received data
         json_data[data['key']] = data['value']
-
-        # Save the updated JSON data
         with open('save/control_panel.json', 'w') as json_file:
             json.dump(json_data, json_file, indent=4)
 

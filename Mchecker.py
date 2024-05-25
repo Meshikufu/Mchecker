@@ -8,18 +8,9 @@ from ttkbootstrap.constants import *
 import tkinter as tk
 import pyperclip, re
 from tkinter import Tk, PhotoImage
-import psutil
+import psutil, socket
 
 
-
-
-
-
-
-
-
-
-#os.chdir('C:/Programming/PythonProjects/Mchecker')
 
 #todo4 this one below doesnt hide message in console
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
@@ -31,11 +22,8 @@ current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 from modules.GoogleTTS import TTS
 from modules.SocketClient import Schat
-#from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
-#from modules.socketserverM import socketServer
-#from modules.socketserverM import socketServerAndroid
 from gBot.gPriceCheckerModule import PriceChecker
 from bot.ss import SS_OfferChecker
 from modules.GoogleTTSv2 import TTSv2
@@ -54,11 +42,7 @@ TopRowButtons_Activation = save.controlPanel.top_row_buttons
 
 
 def on_hotkey():
-
-	# get the text from the clipboard
 	copytext = pyperclip.paste()
-
-	# convert the text to speech
 	TTS.tts(copytext)
 
 
@@ -554,12 +538,6 @@ class ttkgui():
 
 
 
-import socket
-#from modules.SocketClient import Schat
-#from modules.GoogleTTS import tts
-
-
-
 def tts_thread(message):
     TTS.tts(message)
 
@@ -581,13 +559,7 @@ def socketServer(tray, chatMain, TTS):
 
 	while True:
 		clientsocket, address = s.accept()
-		#print(f"Connection from {address} has been established!")
-
-		# Receive the message from the client
 		message = clientsocket.recv(1024).decode("utf-8")
-		#print(message)
-		#print("this was message above")
-#
 		if message != "StartSleepBar2" and message != "change_icon_alert":
 
 			print(f"socketServer-Received message: {message}")
@@ -607,14 +579,10 @@ def socketServer(tray, chatMain, TTS):
 		elif message == "RestartingGmailChecker":
 			time.sleep(5)
 			Gmail_Checker()
-		#elif message == "StartSleepBar2":
-		#	chatMain.start_sleep_bar2()
 		elif message == "StartSleepBar2":
 			threadSleepBar2 = threading.Thread(target=start_sleep_bar2_daemon)
 			threadSleepBar2.daemon = True  # Set the thread as a daemon thread
 			threadSleepBar2.start()
-			#print("starting")
-			#print(current_time)
 		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")

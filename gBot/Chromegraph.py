@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 directory = r"C:\Users\Kufu\PythonProjects\Mchecker\gBot"
-data_file = os.path.join(directory, "Gdata2023.csv")
+data_file = os.path.join(directory, "Gdata2024.csv")
 
 with open(data_file, 'r') as file:
     lines = file.readlines()

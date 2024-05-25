@@ -8,13 +8,9 @@ from ttkbootstrap.constants import *
 import tkinter as tk
 import pyperclip, re
 from tkinter import Tk, PhotoImage
+import psutil, socket
 
 
-
-
-
-
-#os.chdir('C:/Programming/PythonProjects/Mchecker')
 
 #todo4 this one below doesnt hide message in console
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
@@ -26,14 +22,11 @@ current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
 from modules.GoogleTTS import TTS
 from modules.SocketClient import Schat
-#from modules.GmailChecker import GmailChecker
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
-#from modules.socketserverM import socketServer
-#from modules.socketserverM import socketServerAndroid
 from gBot.gPriceCheckerModule import PriceChecker
 from bot.ss import SS_OfferChecker
-from modules.GoogleTTSv2 import GenerateAudioFile
+from modules.GoogleTTSv2 import TTSv2
 
 
 import save.controlPanel
@@ -49,11 +42,7 @@ TopRowButtons_Activation = save.controlPanel.top_row_buttons
 
 
 def on_hotkey():
-
-	# get the text from the clipboard
 	copytext = pyperclip.paste()
-
-	# convert the text to speech
 	TTS.tts(copytext)
 
 
@@ -153,23 +142,44 @@ class ttkgui():
 		self.left_subframe_buttonsMainDown.pack(side=RIGHT, fill=tk.X, expand=True)
 
 		########
-		def yt_whisper_setup(url, model, task, language):
-			desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-			command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
-			subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
-			#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
+		method_ytsubs = 'old'
+		if method_ytsubs == 'old':
+			def yt_whisper_setup(url, model, task, language):
+				desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+				command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
+				subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
+				#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
 
-		def YT_whisper_medium():
-			copytext = pyperclip.paste()
-			if "https://www.youtube.com/watch" in copytext:
-				yt_whisper_setup(copytext, "medium", "translate", "Japanese")
-				root.withdraw()
-			else:
-				print("Not a YouTube URL.")
+			def YT_whisper_medium():
+				copytext = pyperclip.paste()
+				if "https://www.youtube.com/watch" in copytext:
+					yt_whisper_setup(copytext, "medium", "translate", "Japanese")
+					root.withdraw()
+				else:
+					print("Not a YouTube URL.")
 
-		if TopRowButtons_Activation is True:
-			self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
-			self.subs.pack(side=LEFT, padx=5, pady=5)
+			if TopRowButtons_Activation is True:
+				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
+				self.subs.pack(side=LEFT, padx=5, pady=5)
+
+		if method_ytsubs == 'new':
+			def YT_faster_whisper():
+				if "youtube.com/watch" not in pyperclip.paste():
+					print("Not a YouTube URL.")
+					return
+
+				current_directory = os.getcwd()
+
+				# Specify the path to the script
+				script_path = os.path.join(current_directory, "yt_subs", "yt_subs_faster_whisper.py")
+
+				# Execute the command to run the script in a new console window
+				subprocess.Popen(["python", script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+		
+			if TopRowButtons_Activation is True:
+				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_faster_whisper)
+				self.subs.pack(side=LEFT, padx=5, pady=5)
 
 		########
 		#def YT_whisper_large():
@@ -261,6 +271,71 @@ class ttkgui():
 			global Gmailprocess  # Use the global process variable
 			if Gmailprocess is not None:  # Check if the subprocess was started
 				Gmailprocess.terminate()
+
+			def list_all_subprocesses():
+				# Get the process ID of the current Python process
+				parent_pid = psutil.Process().pid
+
+				# Create a recursive function to traverse all child processes
+				def traverse_process_tree(pid):
+					for child in psutil.Process(pid).children(recursive=True):
+						print(f"Subprocess PID: {child.pid}, Name: {child.name()}")
+						traverse_process_tree(child.pid)
+
+				# Start traversing from the parent process
+				traverse_process_tree(parent_pid)
+
+			# Call the function to list all subprocesses
+			list_all_subprocesses()
+
+			try:	
+				if Flaskprocess is not None:
+						print("Starting to murder flask's children and also every one else")	
+						import signal
+						def kill_process_tree(pid, sig=signal.SIGTERM, include_parent=True, timeout=None, on_terminate=None):
+							"""Kill a process tree (including grandchildren) with signal
+							"sig" and return a (gone, still_alive) tuple.
+							"on_terminate", if specified, is a callback function which is
+							called as soon as a child terminates.
+							"""
+							assert pid != os.getpid(), "Won't kill myself"
+							parent = psutil.Process(pid)
+							children = parent.children(recursive=True)
+							if include_parent:
+								children.append(parent)
+							for p in children:
+								try:
+									p.send_signal(sig)
+								except psutil.NoSuchProcess:
+									pass
+							gone, alive = psutil.wait_procs(children, timeout=timeout, callback=on_terminate)
+							return (gone, alive)
+
+						def kill_unique_child_processes():
+							current_process = psutil.Process(os.getpid())
+							unique_pids = set()
+							
+							for proc in current_process.children(recursive=True):
+								if proc.pid not in unique_pids:
+									print(f"Killing child process {proc.pid} (Name: {proc.name()})")
+									kill_process_tree(proc.pid)
+									unique_pids.add(proc.pid)
+
+						def kill_all_subprocesses():
+							current_process = psutil.Process(os.getpid())
+							for proc in current_process.children(recursive=True):
+								print(f"Killing subprocess {proc.pid} (Name: {proc.name()})")
+								kill_process_tree(proc.pid)
+
+
+						# First kill unique child processes
+						kill_unique_child_processes()
+						
+						# Then kill all subprocesses
+						kill_all_subprocesses()
+			except Exception as e:
+				print(e)
+
 			root.destroy()
 
 		self.exit = ttk.Button(self.right_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
@@ -463,12 +538,6 @@ class ttkgui():
 
 
 
-import socket
-#from modules.SocketClient import Schat
-#from modules.GoogleTTS import tts
-from save.myip import myip
-
-
 def tts_thread(message):
     TTS.tts(message)
 
@@ -490,13 +559,7 @@ def socketServer(tray, chatMain, TTS):
 
 	while True:
 		clientsocket, address = s.accept()
-		#print(f"Connection from {address} has been established!")
-
-		# Receive the message from the client
 		message = clientsocket.recv(1024).decode("utf-8")
-		#print(message)
-		#print("this was message above")
-#
 		if message != "StartSleepBar2" and message != "change_icon_alert":
 
 			print(f"socketServer-Received message: {message}")
@@ -516,14 +579,10 @@ def socketServer(tray, chatMain, TTS):
 		elif message == "RestartingGmailChecker":
 			time.sleep(5)
 			Gmail_Checker()
-		#elif message == "StartSleepBar2":
-		#	chatMain.start_sleep_bar2()
 		elif message == "StartSleepBar2":
 			threadSleepBar2 = threading.Thread(target=start_sleep_bar2_daemon)
 			threadSleepBar2.daemon = True  # Set the thread as a daemon thread
 			threadSleepBar2.start()
-			#print("starting")
-			#print(current_time)
 		elif "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")
@@ -563,7 +622,7 @@ def socketServerTTS():
 		if message is not None and message.strip() != "":
 			if "$tts" in message:
 				message = message.replace("$tts ", "")
-			GenerateAudioFile(message)
+			TTSv2(message)
 
 		clientsocket.close()
 
@@ -573,7 +632,8 @@ def socketServerTTS():
 def socketServerAndroid(tray, chatMain, TTS):
 	chatMain = chatMain
 	tray = tray
-	HOST = myip #socket.gethostname()
+	local_ip = socket.gethostbyname(socket.gethostname())
+	HOST = local_ip #socket.gethostname()
 	PORT = 59621
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -595,12 +655,10 @@ def socketServerAndroid(tray, chatMain, TTS):
 		if message == "AndroidSignal":
 			TTS.tts("Android signal recieved!")
 		# $tts Package is ready for pickup!
-		elif "$tts" in message:
-			message = message.replace("$tts ", "")
-			message = message.replace(".", " point ")
-			ttsThread = threading.Thread(target=tts_thread, args=(message,))
-			ttsThread.daemon = True  # Set the thread as a daemon thread
-			ttsThread.start()
+		elif message is not None and message.strip() != "":
+			if "$tts" in message:
+				message = message.replace("$tts ", "")
+			TTSv2(message)
 		
 
 		# Process the received message as needed
@@ -621,11 +679,6 @@ def start_threads():
 	t3 = threading.Thread(target=url_scalping.manga_checker)
 	t3.daemon = True
 	t3.start()
-
-	#gmail_checker = GmailChecker(tray, chatMain, TTS)  # Gmail API 
-	#t4 = threading.Thread(target=gmail_checker.twitch_live_announcer)
-	#t4.daemon = True
-	#t4.start()
 
 	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain, TTS,))
 	tSocketServer.daemon = True
@@ -648,11 +701,11 @@ def start_threads():
 	ssBot.daemon = True
 	ssBot.start()
 
-	from bot.pingRouter import PingMonitor
-	ping_monitor_instance = PingMonitor()
-	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
-	PingRouter.daemon = True
-	PingRouter.start()
+#	from bot.pingRouter import PingMonitor
+#	ping_monitor_instance = PingMonitor()
+#	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
+#	PingRouter.daemon = True
+#	PingRouter.start()
 
 
 def start_threads_tts():
@@ -662,10 +715,13 @@ def start_threads_tts():
 
 
 def Gmail_Checker():
-    global Gmailprocess  # Use the global process variable
+    global Gmailprocess
     script_path = "GmailChecker.py"
     Gmailprocess = subprocess.Popen(["python", script_path]) 
-	# to kill process: Schat("StartSleepBar2")
+
+def Flask_app():
+	global Flaskprocess
+	Flaskprocess = subprocess.Popen(["python", "FlaskApp.py"]) 
 
 someValue = True
 if __name__ == "__main__":
@@ -676,6 +732,8 @@ if __name__ == "__main__":
 	start_threads()
 	start_threads_tts()
 	Gmail_Checker()
+	Flask_app()
+
 
 
 

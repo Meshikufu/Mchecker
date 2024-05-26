@@ -3,6 +3,27 @@ document.addEventListener("DOMContentLoaded", function() {
     var socket = io();
     var timerInterval;
 
+
+    // Function to send a custom event to the server
+    function refreshSellerList() {
+        const button = document.getElementById("refreshSellerList");
+        button.disabled = true;  // Disable the button
+        button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
+        button.style.opacity = "0.6";  // Dim the button
+    
+        socket.emit('refresh_sellerList');  // Emit custom event with data
+    
+        // Re-enable the button after 10 seconds
+        setTimeout(() => {
+            button.disabled = false;  // Re-enable the button
+            button.style.cursor = "pointer";  // Reset the cursor
+            button.style.opacity = "1";  // Restore the button appearance
+        }, 10000);  // 10000 milliseconds = 10 seconds
+    }
+
+    // Add event listener to the button to send a custom event when clicked
+    document.getElementById("refreshSellerList").addEventListener("click", refreshSellerList);
+
     // Handle the update_sellerList event
     socket.on('update_sellerList', function(data) {
         const productList = document.getElementById('sellerList');

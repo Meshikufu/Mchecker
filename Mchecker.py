@@ -56,6 +56,7 @@ def hotkey_listener():
 class buttons_actions():
 	def hide_app(self):
 		root.withdraw()
+		
 
 	def openLastChapterLink(self, url):
 		webbrowser.open(url)
@@ -729,12 +730,10 @@ if __name__ == "__main__":
 	root = ttk.Window()
 	tray = IconTray(root)
 	chatMain = ttkgui(root, tray, TTS, someValue) 
+
 	start_threads()
 	start_threads_tts()
 	Gmail_Checker()
 	Flask_app()
-
-
-
 
 	root.mainloop()

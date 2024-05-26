@@ -89,10 +89,18 @@ def handle_message(msg):
         print('disconnecting client!')
         disconnect()
         
-@socketio.on('custom_event')
+@socketio.on('refresh_sellerList')
 def handle_custom_event(data):
-    print('Custom event received with data: ' + str(data))  # Print the received data to the server console
-    emit('response', {'data': 'Custom event response'}, broadcast=True)  # Send a response to all clients
+
+    prep_found = False
+    with open("temp/interrupt_signal.txt", "r") as file:
+        for line in file:
+            if "prep" in line:
+                prep_found = True
+                break
+    if prep_found is False:
+        with open("temp/interrupt_signal.txt", "w") as signal_file:
+            signal_file.write("interrupt")
 
 @socketio.on('disconnect')
 def handle_disconnect():

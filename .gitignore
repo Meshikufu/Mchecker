@@ -381,3 +381,5 @@ gBot/Gdata2024.csv
 temp_audio/
 selenium/
 seleniumPath.py
+temp/SellerList.json
+temp/interrupt_signal.txt

@@ -8,6 +8,7 @@ from modules.SocketClient import Schat
 from modules.SocketClientTTS import SchatTTS
 import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
+from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 import threading
 
 
@@ -16,32 +17,8 @@ import threading
 #    with open('save/control_panel.json') as f:
 #        json_control_panel = json.load(f)
 #        return json_control_panel.get(variable)
-    
-def Refresh_ControlPanel_json():
-    with open('save/control_panel.json') as f:
-        json_control_panel = json.load(f)
-        
-    return {
-        'testingPhase': json_control_panel['testingPhase'],
-        'tts_ON': json_control_panel.get('tts_ON', False),
-        'tts_NewSeller': json_control_panel['tts_NewSeller'],
-        'tts_ChangeManually': json_control_panel['tts_ChangeManually'],
-        'tts_Matched': json_control_panel['tts_Matched'],
-        'tts_SlightyHigher': json_control_panel['tts_SlightyHigher'],
-        'tts_SoldStock': json_control_panel['tts_SoldStock'],
-        'tts_Pos2GotHigher': json_control_panel['tts_Pos2GotHigher'],
-        'tts_Pos2LoweredPrice': json_control_panel['tts_Pos2LoweredPrice'],
-        'tts_RaisedPrice': json_control_panel['tts_RaisedPrice'],
-        'tts_LoweredPrice': json_control_panel['tts_LoweredPrice'],
-        'tts_ChangingPrice': json_control_panel['tts_ChangingPrice'],
-        'tts_ChangingPriceIN': json_control_panel['tts_ChangingPriceIN'],
-        'tts_Done': json_control_panel['tts_Done'],
-        'tts_RetringIn60': json_control_panel['tts_RetringIn60'],
-        'autoChangePrice': json_control_panel['autoChangePrice'],
-        'desktop_swap_wait_timer': json_control_panel['desktop_swap_wait_timer'],
-        'IterationSleepTime': json_control_panel['IterationSleepTime'],
-        'msgClientWebpage': json_control_panel['msgClientWebpage']
-    }
+
+PriceChecker_sleep_interrupt_thread = None
 
 
 def date_Database():
@@ -291,19 +268,37 @@ def SileniumChrome(new_decreased_price):
 
 
 def PriceChecker():
-    print("gPriceChecker started")
+    
     testingPhase = save.controlPanel.testingPhase
+
+    CPJ = Refresh_ControlPanel_json()
+    testingPhase = CPJ['testingPhase']
+    IterationSleepTime = CPJ['IterationSleepTime']
+
+    print("gPriceChecker started")
 
     with open('save\control_panel.json') as f:
         json_control_panel = json.load(f)
         
         testingPhase = json_control_panel['testingPhase']
 
+
+    if not os.path.exists("temp/interrupt_signal.txt"):
+        with open("temp/interrupt_signal.txt", "w"):
+            pass
+
+    with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+            clear_signal_file.write("prep")
+
+
     if testingPhase:
         testimeStart = save.controlPanel.testimeStart
         time.sleep(testimeStart)
     else:
-        time.sleep(5*12)
+        time.sleep(CPJ['PriceChecker_loop_start_time'])
+
+    with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+            clear_signal_file.write("")
     try:
 
         def process_sellerInfo(sellerInfo):
@@ -348,11 +343,51 @@ def PriceChecker():
         my_name = save.controlPanel.my_name
         target_name = save.controlPanel.target_name
 
+        #interupt_sleep_priceChecker = threading.Event()
+
+
+        # Event to signal the interrupt listener thread to stop
+        interupt_sleep_priceChecker = threading.Event()
+        stop_event = threading.Event()
+
+        # Define the thread variable in a broader scope
+        
+
+        def listen_for_interrupt():
+            if not os.path.exists("temp/interrupt_signal.txt"):
+                with open("temp/interrupt_signal.txt", "w"):
+                    pass
+            while not stop_event.is_set():
+                try:
+                    with open("temp/interrupt_signal.txt", "r") as signal_file:
+                        signal = signal_file.read().strip()
+                        if signal == "interrupt":
+                            print("Refresh SellerList")
+                            interupt_sleep_priceChecker.set()
+                            with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                                clear_signal_file.write("")
+                except KeyboardInterrupt:
+                    break
+
+        def listen_and_run():
+            listen_for_interrupt()
+
+        def start_listen_for_interrupt():
+            global PriceChecker_sleep_interrupt_thread
+            if PriceChecker_sleep_interrupt_thread is not None:
+                if PriceChecker_sleep_interrupt_thread.is_alive():
+                    print("Stopping previous thread...")
+                    stop_event.set()
+                    PriceChecker_sleep_interrupt_thread.join()
+
+            stop_event.clear()  # Clear the event for the next iteration
+
+            PriceChecker_sleep_interrupt_thread = threading.Thread(target=listen_and_run, daemon=True)
+            PriceChecker_sleep_interrupt_thread.start()
+
 
         while True:
-            CPJ = Refresh_ControlPanel_json()
-            testingPhase = CPJ['testingPhase']
-            IterationSleepTime = CPJ['IterationSleepTime']
+
             
             if testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
@@ -926,7 +961,28 @@ def PriceChecker():
             #print("iteration time")
             #print(IterationSleepTime)
             #IterationSleepTime = 1000
-            time.sleep(IterationSleepTime)
+
+            def print_active_threads():
+                # Get a list of all active threads
+                active_threads = threading.enumerate()
+                
+                # Print information about each thread
+                print(f"Total active threads: {len(active_threads)}\n")
+                for thread in active_threads:
+                    print(f"Thread Name: {thread.name}")
+                    print(f"Thread ID: {thread.ident}")
+                    print(f"Is Alive: {thread.is_alive()}")
+                    print(f"Daemon: {thread.daemon}\n")
+            
+            #print_active_threads()
+
+            start_listen_for_interrupt()            
+            interrupted_priceChecker = interupt_sleep_priceChecker.wait(timeout=IterationSleepTime)
+            if interrupted_priceChecker:
+                interupt_sleep_priceChecker.clear()
+            #time.sleep(IterationSleepTime)
+            
+            # interupt_sleep_priceChecker.set() to interupt sleep
     except Exception as e:
         import traceback
         traceback.print_exc()  # Print the traceback to see the error details

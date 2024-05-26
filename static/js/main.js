@@ -18,27 +18,5 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log('Custom event response: ' + data.data);  // Log response to the console
     });
 
-    // Function to send a custom event to the server
-    function refreshSellerList() {
-        socket.emit('refresh_sellerList', {data: 'Test data'});  // Emit custom event with data
-        //socket.send('Test socket message!');
-    }
-
-    // Add event listener to the button to send a custom event when clicked
-    document.getElementById("refreshSellerList").addEventListener("click", refreshSellerList);
-
-    // Handle the update_sellerList event
-    socket.on('update_sellerList', function(data) {
-        const productList = document.getElementById('sellerList');
-        productList.innerHTML = '';  // Clear the list before adding new items
-
-        data.forEach(item => {
-            const listItem = document.createElement('li');
-            listItem.textContent = `${item.name} - $${item.price}`;
-            productList.appendChild(listItem);
-        });
-    });
-
-
 
 });

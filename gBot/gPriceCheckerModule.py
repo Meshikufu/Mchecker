@@ -527,14 +527,6 @@ def PriceChecker():
 
                 if CPJ['msgClientWebpage'] is True:
                     MSG_socketIO()
-                    #MSG_socketIOthread = threading.Thread(target=MSG_socketIO)
-                    #MSG_socketIOthread.start()
-                    #MSG_socketIO = threading.Thread(target=MSG_socketIO())
-                    #MSG_socketIO.daemon = True
-                    #MSG_socketIO.start()
-                
-
-
 
             if dict_filled and CurrentlySelling is False and CurrentlySellingOld is True:
                 TTSv2("Offline!")  

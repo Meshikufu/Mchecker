@@ -90,7 +90,7 @@ def handle_message(msg):
         disconnect()
         
 @socketio.on('refresh_sellerList')
-def handle_custom_event(data):
+def handle_custom_event():
 
     prep_found = False
     with open("temp/interrupt_signal.txt", "r") as file:

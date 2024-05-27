@@ -388,7 +388,8 @@ def PriceChecker():
 
 
         while True:
-
+            with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                clear_signal_file.write("working")
             
             if testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
@@ -980,6 +981,8 @@ def PriceChecker():
             
             #print_active_threads()
 
+            with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                clear_signal_file.write("sleep")
             start_listen_for_interrupt()            
             interrupted_priceChecker = interupt_sleep_priceChecker.wait(timeout=IterationSleepTime)
             if interrupted_priceChecker:

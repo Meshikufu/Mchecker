@@ -3,7 +3,8 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit, disconnect
 
 from datetime import datetime
-import json, os, time
+import json, os
+from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
@@ -28,6 +29,34 @@ def handle_connect():
 
     except Exception as e:
         print('SellerList.json doesnt exist')
+
+    RefreshList_button_delay()
+
+def RefreshList_button_delay():
+    with open("temp/interrupt_signal.txt", "r") as signal_file:
+        signal = signal_file.read().strip()
+        if signal == "prep" or signal == "working":
+            socketio.emit('buttonEnable', "off")
+        elif signal == "sleep":
+            socketio.emit('buttonEnable', "on")
+        else:
+            socketio.emit('killCat')
+
+@socketio.on('waitForButton')
+def waitForButtonEnable(buttonState):
+    initial_mtime = os.path.getmtime('temp/SellerList.json')
+    
+    while True:
+        # Check if the modification time has changed
+        current_mtime = os.path.getmtime('temp/SellerList.json')
+        if current_mtime != initial_mtime:
+            socketio.emit('buttonEnable', "on")
+            print('json updated!')
+            break
+        socketio.sleep(0.5)
+
+
+
 
 def emit_json_data():
     try:

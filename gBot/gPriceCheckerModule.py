@@ -10,6 +10,7 @@ import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 import threading
+from requests.exceptions import ConnectionError, Timeout, RequestException
 
 
 
@@ -391,7 +392,18 @@ def PriceChecker():
             
             if testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
-                response = requests.get(url)
+                max_retries = 5
+                backoff_factor = 1
+                for attempt in range(max_retries):
+                    try:        
+                        response = requests.get(url)
+                    except (ConnectionError, Timeout) as e:
+                        print(f"Attempt {attempt + 1} failed: {e}")
+                        time.sleep(backoff_factor * (2 ** attempt))  # Exponential backoff
+                    except RequestException as e:
+                        print(f"An error occurred: {e}")
+                        time.sleep(2)
+                        break
                 html_content = response.text
             elif testingPhase is True:
                 with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:

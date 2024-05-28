@@ -75,6 +75,7 @@ def handle_message(msg):
         socketio.emit('update_sellerList', unwrapped_data)
 
         onConnect_start_timer_SellerList()
+        socketio.emit('refreshButtonState', "on")
 
         disconnect()
     else:
@@ -82,6 +83,9 @@ def handle_message(msg):
         print(msg)
         print('disconnecting client!')
         disconnect()
+
+
+        
         
 @socketio.on('disconnect')
 def handle_disconnect():

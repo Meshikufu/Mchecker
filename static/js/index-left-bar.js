@@ -11,16 +11,16 @@ document.addEventListener("DOMContentLoaded", function() {
         gif.style.display = "none";
     });
 
-    socket.on('buttonEnable', function(buttonState) {
+    socket.on('refreshButtonState', function(buttonState) {
         if (buttonState === "on"){
-            const button = document.getElementById("refreshSellerList");
+            const button = document.getElementById("buttonRefreshSellerList");
             const gif = document.getElementById("catGif");
             button.disabled = false;  // Re-enable the button
             button.style.cursor = "pointer";  // Reset the cursor
             button.style.opacity = "1";  // Restore the button appearance
             gif.style.display = "none";
         } else if (buttonState === "off") {
-            const button = document.getElementById("refreshSellerList");
+            const button = document.getElementById("buttonRefreshSellerList");
             const gif = document.getElementById("catGif");
             button.disabled = true;  // Disable the button
             button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
@@ -31,8 +31,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // Function to send a custom event to the server
-    function refreshSellerList() {
-        const button = document.getElementById("refreshSellerList");
+    function buttonRefreshSellerList() {
+        const button = document.getElementById("buttonRefreshSellerList");
         button.disabled = true;  // Disable the button
         button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
         button.style.opacity = "0.6";  // Dim the button
@@ -40,17 +40,15 @@ document.addEventListener("DOMContentLoaded", function() {
         gif.style.display = "Inline";
     
         socket.emit('refresh_sellerList');  // Emit custom event with data
-
-
         // call function emit to it
-        const buttonState = "off";
-        socket.emit('waitForButton', buttonState);
+
+        socket.emit('waitFor_ButtonRefreshSellerList');
     
 
     }
 
     // Add event listener to the button to send a custom event when clicked
-    document.getElementById("refreshSellerList").addEventListener("click", refreshSellerList);
+    document.getElementById("buttonRefreshSellerList").addEventListener("click", buttonRefreshSellerList);
 
     // Handle the update_sellerList event
     socket.on('update_sellerList', function(data) {
@@ -92,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Socket event handler to start the timer
-    socket.on('starts_time_SellerList', function(data) {
+    socket.on('onConnect_starts_time_SellerList', function(data) {
         startTimer(data ? data.startTime : null); // Call the startTimer function with the modification time if available
     });
 

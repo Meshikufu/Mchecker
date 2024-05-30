@@ -8,12 +8,11 @@
 
     <style>
         :root {
-            --primary-color: #007bff; /* Blue */
-            --bg-dark-color-theme: #323239; /* Gray */
-            --text-dark-color-theme: #efeff1; /* Yellow */
+            --primary-color: #007bff;
+            --bg-dark-color-theme: #323239;
+            --text-dark-color-theme: #efeff1;
         }
 
-        /* Set body and html to take up entire viewport */
         body, html {
             width: 100%;
             height: 100%;
@@ -33,13 +32,10 @@
             
         }
 
-
-
         .main-container {
             grid-area: main;
             background-color: var(--bg-dark-color-theme);
         }
-
 
     </style>
 
@@ -48,6 +44,9 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-left-bar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-right-bar.js') }}"></script>
+    <script>
+
+    </script>
 </head>
 <body>
     <div class="left-bar">
@@ -74,7 +73,7 @@
 
     </div>
     <div class="right-bar">
-        <button class="toggle-button-CPJ" id="toggleButtonsShow_CPJ">Show Buttons</button>
+        <button class="show-buttons-CPJ" id="toggleButtonsShow_CPJ">Show Buttons</button>
         <div class="right-block hidden" id="toggleButtonsHide_CPJ"></div>
     </div> 
 </body>

@@ -367,6 +367,7 @@ def PriceChecker():
                             interupt_sleep_priceChecker.set()
                             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
                                 clear_signal_file.write("")
+                    time.sleep(1) # without this it was easting 10% cpu WHAT
                 except KeyboardInterrupt:
                     break
 

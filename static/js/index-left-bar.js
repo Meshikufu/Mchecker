@@ -1,50 +1,51 @@
-// todo - rename shit i dont understand what i wrote few hours ago does
-
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialize the socket object
     var socket = io();
     var timerInterval;
 
 
-    socket.on('killCat', function() {
+    //socket.on('killCat', function() {
+    //    const gif = document.getElementById("catGif");
+    //    gif.style.display = "none";
+   // });
+
+
+
+    function refreshButtonStateOn(){
+        const button = document.getElementById("buttonRefreshSellerList");
         const gif = document.getElementById("catGif");
+        button.disabled = false;  // Re-enable the button
+        button.classList.add("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
+        button.style.cursor = "pointer";  // Reset the cursor
+        button.style.opacity = "1";  // Restore the button appearance
         gif.style.display = "none";
-    });
+    };
+
+    function refreshButtonStateOff(){
+        const button = document.getElementById("buttonRefreshSellerList");
+        const gif = document.getElementById("catGif");
+        button.disabled = true;  // Disable the button
+        button.classList.remove("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
+        button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
+        button.style.opacity = "0.6";  // Dim the button
+        gif.style.display = "Inline";
+    };
+
 
     socket.on('refreshButtonState', function(buttonState) {
         if (buttonState === "on"){
-            const button = document.getElementById("buttonRefreshSellerList");
-            const gif = document.getElementById("catGif");
-            button.disabled = false;  // Re-enable the button
-            button.style.cursor = "pointer";  // Reset the cursor
-            button.style.opacity = "1";  // Restore the button appearance
-            gif.style.display = "none";
+            refreshButtonStateOn()
         } else if (buttonState === "off") {
-            const button = document.getElementById("buttonRefreshSellerList");
-            const gif = document.getElementById("catGif");
-            button.disabled = true;  // Disable the button
-            button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
-            button.style.opacity = "0.6";  // Dim the button
-            gif.style.display = "Inline";
+            refreshButtonStateOff()
         }
     });
 
 
     // Function to send a custom event to the server
     function buttonRefreshSellerList() {
-        const button = document.getElementById("buttonRefreshSellerList");
-        button.disabled = true;  // Disable the button
-        button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
-        button.style.opacity = "0.6";  // Dim the button
-        const gif = document.getElementById("catGif");
-        gif.style.display = "Inline";
-    
-        socket.emit('refresh_sellerList');  // Emit custom event with data
-        // call function emit to it
-
+        socket.emit('refresh_sellerList');
+        socket.emit('checkStateOf_sellerList');
+        refreshButtonStateOff();
         socket.emit('waitFor_ButtonRefreshSellerList');
-    
-
     }
 
     // Add event listener to the button to send a custom event when clicked

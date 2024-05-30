@@ -16,14 +16,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 button.textContent = key;
 
                 if (typeof value === 'boolean') {
-                    button.className = 'boolean-button-CPJ ' + value;
+                    button.className = 'boolean-buttons-CPJ ' + value;
                     button.addEventListener('click', function() {
                         var newValue = !data[this.textContent];
                         socket.emit('update_CPJ_value', { key: this.textContent, value: newValue });
                     });
                 } else {
                     button.textContent = key + ' - ' + value;  // Display name and value for non-boolean
-                    button.className = 'value-button-CPJ';
+                    button.className = 'value-buttons-CPJ';
                     button.addEventListener('click', function() {
                         var currentKey = this.textContent.split(' - ')[0];
                         var currentValue = data[currentKey];

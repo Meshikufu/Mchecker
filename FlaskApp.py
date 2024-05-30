@@ -53,8 +53,8 @@ def SellerList_CheckRefreshButtonState():
             socketio.emit('refreshButtonState', "off")
         elif signal == "sleep":
             socketio.emit('refreshButtonState', "on")
-        else:
-            socketio.emit('killCat')
+        #else:
+        #    socketio.emit('killCat')
 
 
 @socketio.on('message') # receiving
@@ -123,6 +123,11 @@ def handle_update_value(data):
         create_buttons_ControlPanelJson()
     except Exception as e:
         print('Error updating control_panel.json:', e)
+
+
+@socketio.on('checkStateOf_sellerList')
+def checkStateOf_sellerList():
+    SellerList_CheckRefreshButtonState()
 
 @socketio.on('refresh_sellerList')
 def handle_custom_event():

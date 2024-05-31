@@ -3,7 +3,8 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit, disconnect
 
 from datetime import datetime
-import json, os, time
+import json, os
+from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
@@ -17,19 +18,27 @@ def index():
 @socketio.on('connect') # when some one connects
 def handle_connect():
     print('Client connected')  # Print a message to the server console
-
     try:
         with open('temp/SellerList.json', 'r') as json_file:
             loaded_data = json.load(json_file)
         socketio.emit('update_sellerList', loaded_data)
-        
-        start_timer_SellerList()
-        emit_json_data()
-
+        onConnect_start_timer_SellerList()
+        create_buttons_ControlPanelJson()
     except Exception as e:
         print('SellerList.json doesnt exist')
+    SellerList_CheckRefreshButtonState()
 
-def emit_json_data():
+def onConnect_start_timer_SellerList():
+    try:
+        stat = os.stat('temp/SellerList.json')
+        modification_time = stat.st_mtime  # Modification time in seconds since epoch
+        socketio.emit('onConnect_starts_time_SellerList', {'startTime': modification_time})
+    except FileNotFoundError:
+        print("File not found")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def create_buttons_ControlPanelJson():
     try:
         with open('save/control_panel.json', 'r') as json_file:
             json_data = json.load(json_file)
@@ -37,31 +46,16 @@ def emit_json_data():
     except Exception as e:
         print('Error reading control_panel.json:', e)
 
-def start_timer_SellerList():
-    try:
-        stat = os.stat('temp/SellerList.json')
-        modification_time = stat.st_mtime  # Modification time in seconds since epoch
-        socketio.emit('starts_time_SellerList', {'startTime': modification_time})
-    except FileNotFoundError:
-        print("File not found")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+def SellerList_CheckRefreshButtonState():
+    with open("temp/interrupt_signal.txt", "r") as signal_file:
+        signal = signal_file.read().strip()
+        if signal == "prep" or signal == "working":
+            socketio.emit('refreshButtonState', "off")
+        elif signal == "sleep":
+            socketio.emit('refreshButtonState', "on")
+        #else:
+        #    socketio.emit('killCat')
 
-@socketio.on('update_CPJ_value')
-def handle_update_value(data):
-    try:
-        with open('save/control_panel.json', 'r') as json_file:
-            json_data = json.load(json_file)
-        
-        # Update the JSON data with the received data
-        json_data[data['key']] = data['value']
-        with open('save/control_panel.json', 'w') as json_file:
-            json.dump(json_data, json_file, indent=4)
-
-        # Emit updated data to all clients
-        emit_json_data()
-    except Exception as e:
-        print('Error updating control_panel.json:', e)
 
 @socketio.on('message') # receiving
 def handle_message(msg):
@@ -80,7 +74,8 @@ def handle_message(msg):
         #print(unwrapped_data)
         socketio.emit('update_sellerList', unwrapped_data)
 
-        start_timer_SellerList()
+        onConnect_start_timer_SellerList()
+        socketio.emit('refreshButtonState', "on")
 
         disconnect()
     else:
@@ -88,7 +83,52 @@ def handle_message(msg):
         print(msg)
         print('disconnecting client!')
         disconnect()
+
+
         
+        
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')  # when client disconnects
+
+
+
+
+
+@socketio.on('waitFor_ButtonRefreshSellerList')
+def waitForButtonEnable():
+    initial_mtime = os.path.getmtime('temp/SellerList.json')
+    
+    while True:
+        # Check if the modification time has changed
+        current_mtime = os.path.getmtime('temp/SellerList.json')
+        if current_mtime != initial_mtime:
+            socketio.emit('refreshButtonState', "on")
+            print('json updated!')
+            break
+        socketio.sleep(0.5)
+
+@socketio.on('update_CPJ_value')
+def handle_update_value(data):
+    try:
+        with open('save/control_panel.json', 'r') as json_file:
+            json_data = json.load(json_file)
+        
+        # Update the JSON data with the received data
+        json_data[data['key']] = data['value']
+        with open('save/control_panel.json', 'w') as json_file:
+            json.dump(json_data, json_file, indent=4)
+
+        # Emit updated data to all clients
+        create_buttons_ControlPanelJson()
+    except Exception as e:
+        print('Error updating control_panel.json:', e)
+
+
+@socketio.on('checkStateOf_sellerList')
+def checkStateOf_sellerList():
+    SellerList_CheckRefreshButtonState()
+
 @socketio.on('refresh_sellerList')
 def handle_custom_event():
 
@@ -101,10 +141,6 @@ def handle_custom_event():
     if prep_found is False:
         with open("temp/interrupt_signal.txt", "w") as signal_file:
             signal_file.write("interrupt")
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')  # when client disconnects
 
 
 # Get the local IPv4 address

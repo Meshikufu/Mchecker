@@ -1,28 +1,55 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialize the socket object
     var socket = io();
     var timerInterval;
 
 
-    // Function to send a custom event to the server
-    function refreshSellerList() {
-        const button = document.getElementById("refreshSellerList");
+    //socket.on('killCat', function() {
+    //    const gif = document.getElementById("catGif");
+    //    gif.style.display = "none";
+   // });
+
+
+
+    function refreshButtonStateOn(){
+        const button = document.getElementById("buttonRefreshSellerList");
+        const gif = document.getElementById("catGif");
+        button.disabled = false;  // Re-enable the button
+        button.classList.add("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
+        button.style.cursor = "pointer";  // Reset the cursor
+        button.style.opacity = "1";  // Restore the button appearance
+        gif.style.display = "none";
+    };
+
+    function refreshButtonStateOff(){
+        const button = document.getElementById("buttonRefreshSellerList");
+        const gif = document.getElementById("catGif");
         button.disabled = true;  // Disable the button
+        button.classList.remove("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
         button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
         button.style.opacity = "0.6";  // Dim the button
-    
-        socket.emit('refresh_sellerList');  // Emit custom event with data
-    
-        // Re-enable the button after 10 seconds
-        setTimeout(() => {
-            button.disabled = false;  // Re-enable the button
-            button.style.cursor = "pointer";  // Reset the cursor
-            button.style.opacity = "1";  // Restore the button appearance
-        }, 10000);  // 10000 milliseconds = 10 seconds
+        gif.style.display = "Inline";
+    };
+
+
+    socket.on('refreshButtonState', function(buttonState) {
+        if (buttonState === "on"){
+            refreshButtonStateOn()
+        } else if (buttonState === "off") {
+            refreshButtonStateOff()
+        }
+    });
+
+
+    // Function to send a custom event to the server
+    function buttonRefreshSellerList() {
+        socket.emit('refresh_sellerList');
+        socket.emit('checkStateOf_sellerList');
+        refreshButtonStateOff();
+        socket.emit('waitFor_ButtonRefreshSellerList');
     }
 
     // Add event listener to the button to send a custom event when clicked
-    document.getElementById("refreshSellerList").addEventListener("click", refreshSellerList);
+    document.getElementById("buttonRefreshSellerList").addEventListener("click", buttonRefreshSellerList);
 
     // Handle the update_sellerList event
     socket.on('update_sellerList', function(data) {
@@ -36,10 +63,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-
-    socket.on('starts_time_SellerList', function(data) {
-        startTimer(data ? data.startTime : null); // Call the startTimer function with the modification time if available
-    });
     function startTimer(startTime) {
         if (!startTime) {
             startTime = Date.now() / 1000; // Use current time if startTime is not provided
@@ -55,6 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Convert elapsed time to seconds
             const seconds = Math.floor(elapsedTime / 1000);
+            //console.log(seconds)
 
             // Update the timer value in the <h3> element
             document.getElementById('startTimer').textContent = seconds + 's';
@@ -67,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Socket event handler to start the timer
-    socket.on('starts_time_SellerList', function(data) {
+    socket.on('onConnect_starts_time_SellerList', function(data) {
         startTimer(data ? data.startTime : null); // Call the startTimer function with the modification time if available
     });
 

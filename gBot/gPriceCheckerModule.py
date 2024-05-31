@@ -10,6 +10,7 @@ import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 import threading
+from requests.exceptions import ConnectionError, Timeout, RequestException
 
 
 
@@ -366,6 +367,7 @@ def PriceChecker():
                             interupt_sleep_priceChecker.set()
                             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
                                 clear_signal_file.write("")
+                    time.sleep(1) # without this it was easting 10% cpu WHAT
                 except KeyboardInterrupt:
                     break
 
@@ -387,11 +389,23 @@ def PriceChecker():
 
 
         while True:
-
+            with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                clear_signal_file.write("working")
             
             if testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
-                response = requests.get(url)
+                max_retries = 5
+                backoff_factor = 1
+                for attempt in range(max_retries):
+                    try:        
+                        response = requests.get(url)
+                    except (ConnectionError, Timeout) as e:
+                        print(f"Attempt {attempt + 1} failed: {e}")
+                        time.sleep(backoff_factor * (2 ** attempt))  # Exponential backoff
+                    except RequestException as e:
+                        print(f"An error occurred: {e}")
+                        time.sleep(2)
+                        break
                 html_content = response.text
             elif testingPhase is True:
                 with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:
@@ -968,6 +982,8 @@ def PriceChecker():
             
             #print_active_threads()
 
+            with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                clear_signal_file.write("sleep")
             start_listen_for_interrupt()            
             interrupted_priceChecker = interupt_sleep_priceChecker.wait(timeout=IterationSleepTime)
             if interrupted_priceChecker:

@@ -484,7 +484,7 @@ def PriceChecker():
 
                     except IndexError:
                         # Handle the case where the index is out of range
-                        print(f"Error: Seller in position {i} doesn't exist.")
+                        print(f"Seller in position {i} doesn't exist.")
                         print(f"Seller number: {i-1}")
                         OutOfRangePosition = i
                         break

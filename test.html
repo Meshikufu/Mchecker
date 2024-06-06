@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Layout</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left-sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Take the remaining space */
+        }
+
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .content-area {
+            display: flex;
+            flex: 1; /* Take the remaining space */
+        }
+
+        .content {
+            padding: 20px;
+            background-color: #fff;
+            flex: 1; /* Take the remaining space */
+        }
+
+        .right-sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-sidebar">Left Sidebar</div>
+        <div class="main-content">
+            <div class="navbar">Navbar</div>
+            <div class="content-area">
+                <div class="content">Main Content</div>
+                <div class="right-sidebar">Right Sidebar</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

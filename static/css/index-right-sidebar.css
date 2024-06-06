@@ -1,0 +1,12 @@
+.right-sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
+.right-sidebar-CPJ {
+    display: flex;
+    flex-direction: column; /* Make buttons display vertically */
+    padding: 10px;
+
+    background-color: var(--bg-dark-color-theme);
+}

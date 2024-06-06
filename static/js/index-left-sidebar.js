@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    var socket = io();
+    const socket = io();
     var timerInterval;
 
 

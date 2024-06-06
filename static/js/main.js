@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 
     // Establish connection with the server
-    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
 
     // Handle connection event
     socket.on('connect', function() {

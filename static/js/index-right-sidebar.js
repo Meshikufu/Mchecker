@@ -1,22 +1,36 @@
 document.addEventListener("DOMContentLoaded", function() {
     const socket = io();
     // CPJ = control_panel.json
-    const buttonContainer_CPJ = document.getElementById('toggleButtonsHide_CPJ');
-    const toggleButton_CPJ = document.getElementById('toggleButtonsShow_CPJ');
 
     // Load and apply the saved state from Local Storage
-    const buttonContainerState = localStorage.getItem('buttonContainerState_CPJ');
-    if (buttonContainerState === 'visible') {
-        buttonContainer_CPJ.classList.remove('hidden');
-        toggleButton_CPJ.textContent = 'Hide Buttons';
-    } else {
-        buttonContainer_CPJ.classList.add('hidden');
-        toggleButton_CPJ.textContent = 'Show Buttons';
+    var navbarRightButtons;
+    const maxSearch = 10; // Maximum iterations to avoid infinite loop
+    for (let i = 0; i < localStorage.length && i < maxSearch; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('containerR')) {
+            navbarRightButtons = localStorage.getItem(key);
+            //console.log(navbarRightButtons);
+            //console.log(key);
+            const element = document.getElementById(key);
+            //console.log(element)
+            if (element) {
+                element.classList.remove('hidden');
+                element.classList.add('active');
+                // Hide all other containers
+                document.querySelectorAll('.right-sidebar-content.containerR').forEach(container => {
+                    if (container.id !== key) {
+                        container.classList.remove('active');
+                        container.classList.add('hidden');
+                    }
+                });
+            }
+            break; // Assuming there's only one such item, exit loop once found
+        }
     }
 
     // Listen for the create_buttons_CPJ event to create buttons dynamically
     socket.on('create_buttons_CPJ', function(data) {
-        const container = document.getElementById('toggleButtonsHide_CPJ');
+        const container = document.getElementById('containerR1');
         container.innerHTML = '';  // Clear existing buttons
 
         for (const key in data) {
@@ -54,15 +68,51 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    toggleButton_CPJ.addEventListener('click', function() {
-        if (buttonContainer_CPJ.classList.contains('hidden')) {
-            buttonContainer_CPJ.classList.remove('hidden');
-            toggleButton_CPJ.textContent = 'Hide Buttons';
-            localStorage.setItem('buttonContainerState_CPJ', 'visible');
-        } else {
-            buttonContainer_CPJ.classList.add('hidden');
-            toggleButton_CPJ.textContent = 'Show Buttons';
-            localStorage.setItem('buttonContainerState_CPJ', 'hidden');
-        }
+
+    // Get all buttons with the class navbarRightButtons
+    const buttons = document.querySelectorAll('.navbarRightButtons');
+
+    // Add click event listener to each button
+    buttons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const buttonId = this.id;
+            const containerNumber = buttonId.replace('navbarRightButton', '');
+            toggleContainer(containerNumber);
+        });
     });
+
+    function toggleContainer(containerNumber) {
+        const selectedContainer = document.getElementById('containerR' + containerNumber);
+        if (selectedContainer) {
+            const isActive = selectedContainer.classList.contains('active');
+            if (isActive) {
+                // If the container is active, hide it
+                selectedContainer.classList.remove('active');
+                selectedContainer.classList.add('hidden');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes('containerR')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+            } else {
+                // Otherwise, hide all containers and show the selected one
+                const containers = document.querySelectorAll('.containerR');
+                containers.forEach(function(containerR) {
+                    containerR.classList.remove('active');
+                    containerR.classList.add('hidden');
+                });
+                selectedContainer.classList.remove('hidden');
+                selectedContainer.classList.add('active');
+                //console.log(selectedContainer);
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes('containerR')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                localStorage.setItem('containerR' + containerNumber, 'true');
+            }
+        }
+    }
 });

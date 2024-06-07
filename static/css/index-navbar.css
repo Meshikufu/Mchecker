@@ -17,7 +17,7 @@
     display: none;
 }
 
-.show-buttons-CPJ {
+.navbarRightButtons {
     height: 20px; /* Adjust height as needed */
     width: auto;
     margin: 1px;
@@ -34,7 +34,7 @@
     border-radius: 3px; /* Apply border-radius to match hover state */
 }
 
-.show-buttons-CPJ:hover {
+.navbarRightButtons:hover {
     border-color: #04AA6D;
 }
 

@@ -1,0 +1,43 @@
+.navbar-area {
+    padding: 5px; 
+    display: flex;
+}
+
+.navbar-left {
+    display: flex;
+    flex: 1;
+}
+
+.navbar-right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.hidden {
+    display: none;
+}
+
+.navbarRightButtons {
+    height: 20px; /* Adjust height as needed */
+    width: auto;
+    margin: 1px;
+    padding: 3px;
+    cursor: pointer;
+
+
+
+    background-color: var(--bg-dark-color-theme);
+    color: var(--text-dark-color-theme);
+    border: none; /* Ensure no border initially */
+
+    border: 1px solid transparent; /* Invisible border */
+    border-radius: 3px; /* Apply border-radius to match hover state */
+}
+
+.navbarRightButtons:hover {
+    border-color: #04AA6D;
+}
+
+.boolean-buttons-CPJ.true { background-color: #04AA6D; margin-bottom: 4px; color: var(--text-dark-color-theme); cursor: pointer; }
+.boolean-buttons-CPJ.false { background-color: #C41E3A; margin-bottom: 4px; color: var(--text-dark-color-theme); cursor: pointer; }
+.value-buttons-CPJ { background-color: #008CBA; margin-bottom: 4px; color: var(--text-dark-color-theme); cursor: pointer; }

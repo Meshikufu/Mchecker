@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-left-bar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-right-bar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-left-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-right-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-navbar.css') }}">
 
     <style>
         :root {
@@ -21,11 +22,10 @@
             overflow: hidden; /* Optional: Prevents scrollbars */
 
             background-color: var(--bg-dark-color-theme);
-            display: grid;
-            grid-template-columns: minmax(180px, auto) 1fr auto;
-            grid-template-rows: auto;
-            grid-template-areas: 
-                "leftbar main RightContainer ";
+
+
+
+            display: flex;
 
             width: 100vw; /* Full width of the viewport */
             height: 100vh; /* Full height of the viewport */
@@ -33,23 +33,37 @@
         }
 
         .main-container {
-            grid-area: main;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
             background-color: var(--bg-dark-color-theme);
         }
+
+        .content-area {
+            display: flex;
+            flex: 1;
+        }
+
+        .content {
+            display: flex;
+            flex: 1;
+        }
+
+
 
     </style>
 
     <!-- Import Socket.IO library from a CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index-left-bar.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index-right-bar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index-left-sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index-right-sidebar.js') }}"></script>
     <script>
 
     </script>
 </head>
 <body>
-    <div class="left-bar">
+    <div class="left-sidebar">
         <div class="SellerList">
             <div class="SellerList-header">
                 <div class="SellerList-header-name"> 
@@ -70,11 +84,28 @@
         <img id="catGif" src="https://cdn.7tv.app/emote/6612730475ef6d87d686fca1/2x.webp" alt="GIF">
     </div>
     <div class="main-container">
+        <div class="navbar-area">
+            <div class="navbar-left">
+
+            </div>
+            <div class="navbar-right">
+                
+                <button class="navbarRightButtons hidden" id="navbarRightButton3">containerR3</button>
+                <button class="navbarRightButtons hidden" id="navbarRightButton2">containerR2</button>
+                <button class="navbarRightButtons" id="navbarRightButton1">show CPJ</button>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="content">
+
+            </div>
+            <div class="right-sidebar">
+                <div class="right-sidebar-content hidden containerR" id="containerR1">Content for Container 1</div>
+                <div class="right-sidebar-content hidden containerR" id="containerR2">Content for Container 2</div>
+                <div class="right-sidebar-content hidden containerR" id="containerR3">Content for Container 3</div>
+            </div> 
+        </div>
 
     </div>
-    <div class="right-bar">
-        <button class="show-buttons-CPJ" id="toggleButtonsShow_CPJ">Show Buttons</button>
-        <div class="right-block hidden" id="toggleButtonsHide_CPJ"></div>
-    </div> 
 </body>
 </html>

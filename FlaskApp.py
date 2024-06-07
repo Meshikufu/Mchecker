@@ -1,14 +1,15 @@
 import socket
 from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit, disconnect
-
 from datetime import datetime
 import json, os
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
-socketio = SocketIO(app)
+
+# Increase the ping timeout and interval
+socketio = SocketIO(app, ping_timeout=60, ping_interval=25)
 
 # Define a route to serve the main page
 @app.route('/')
@@ -25,7 +26,7 @@ def handle_connect():
         onConnect_start_timer_SellerList()
         create_buttons_ControlPanelJson()
     except Exception as e:
-        print('SellerList.json doesnt exist')
+        print(f'Error during connect: {e}')
     SellerList_CheckRefreshButtonState()
 
 def onConnect_start_timer_SellerList():
@@ -44,69 +45,70 @@ def create_buttons_ControlPanelJson():
             json_data = json.load(json_file)
         socketio.emit('create_buttons_CPJ', json_data)
     except Exception as e:
-        print('Error reading control_panel.json:', e)
+        print(f'Error reading control_panel.json: {e}')
 
 def SellerList_CheckRefreshButtonState():
-    with open("temp/interrupt_signal.txt", "r") as signal_file:
-        signal = signal_file.read().strip()
-        if signal == "prep" or signal == "working":
-            socketio.emit('refreshButtonState', "off")
-        elif signal == "sleep":
-            socketio.emit('refreshButtonState', "on")
-        #else:
-        #    socketio.emit('killCat')
-
+    try:
+        with open("temp/interrupt_signal.txt", "r") as signal_file:
+            signal = signal_file.read().strip()
+            if signal == "prep" or signal == "working":
+                socketio.emit('refreshButtonState', "off")
+            elif signal == "sleep":
+                socketio.emit('refreshButtonState', "on")
+            #else:
+            #   socketio.emit('killCat')
+    except Exception as e:
+        print(f'Error checking refresh button state: {e}')
 
 @socketio.on('message') # receiving
 def handle_message(msg):
-    if "SellerList" in msg:
-        data = json.loads(msg)
-        unwrapped_data = data["SellerList"]
+    try:
+        if "SellerList" in msg:
+            data = json.loads(msg)
+            unwrapped_data = data["SellerList"]
 
-        if not os.path.exists('temp'):
-            os.makedirs('temp')
-        json_data = json.dumps(unwrapped_data)
-        with open('temp/SellerList.json', 'w') as json_file:
-            json_file.write(json_data)
+            if not os.path.exists('temp'):
+                os.makedirs('temp')
+            json_data = json.dumps(unwrapped_data)
+            with open('temp/SellerList.json', 'w') as json_file:
+                json_file.write(json_data)
 
-        current_datetime = datetime.now()
-        print(current_datetime)
-        #print(unwrapped_data)
-        socketio.emit('update_sellerList', unwrapped_data)
+            current_datetime = datetime.now()
+            print(current_datetime)
+            socketio.emit('update_sellerList', unwrapped_data)
 
-        onConnect_start_timer_SellerList()
-        socketio.emit('refreshButtonState', "on")
+            onConnect_start_timer_SellerList()
+            socketio.emit('refreshButtonState', "on")
 
+            disconnect()
+        else:
+            print('Received unknown message:')
+            print(msg)
+            print('Disconnecting client!')
+            disconnect()
+    except Exception as e:
+        print(f'Error handling message: {e}')
         disconnect()
-    else:
-        print('recieved unknown message:')
-        print(msg)
-        print('disconnecting client!')
-        disconnect()
 
-
-        
-        
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')  # when client disconnects
 
-
-
-
-
 @socketio.on('waitFor_ButtonRefreshSellerList')
 def waitForButtonEnable():
-    initial_mtime = os.path.getmtime('temp/SellerList.json')
-    
-    while True:
-        # Check if the modification time has changed
-        current_mtime = os.path.getmtime('temp/SellerList.json')
-        if current_mtime != initial_mtime:
-            socketio.emit('refreshButtonState', "on")
-            print('json updated!')
-            break
-        socketio.sleep(0.5)
+    try:
+        initial_mtime = os.path.getmtime('temp/SellerList.json')
+        
+        while True:
+            # Check if the modification time has changed
+            current_mtime = os.path.getmtime('temp/SellerList.json')
+            if current_mtime != initial_mtime:
+                socketio.emit('refreshButtonState', "on")
+                print('json updated!')
+                break
+            socketio.sleep(0.5)
+    except Exception as e:
+        print(f'Error in waitForButtonEnable: {e}')
 
 @socketio.on('update_CPJ_value')
 def handle_update_value(data):
@@ -122,8 +124,7 @@ def handle_update_value(data):
         # Emit updated data to all clients
         create_buttons_ControlPanelJson()
     except Exception as e:
-        print('Error updating control_panel.json:', e)
-
+        print(f'Error updating control_panel.json: {e}')
 
 @socketio.on('checkStateOf_sellerList')
 def checkStateOf_sellerList():
@@ -131,17 +132,18 @@ def checkStateOf_sellerList():
 
 @socketio.on('refresh_sellerList')
 def handle_custom_event():
-
-    prep_found = False
-    with open("temp/interrupt_signal.txt", "r") as file:
-        for line in file:
-            if "prep" in line:
-                prep_found = True
-                break
-    if prep_found is False:
-        with open("temp/interrupt_signal.txt", "w") as signal_file:
-            signal_file.write("interrupt")
-
+    try:
+        prep_found = False
+        with open("temp/interrupt_signal.txt", "r") as file:
+            for line in file:
+                if "prep" in line:
+                    prep_found = True
+                    break
+        if prep_found is False:
+            with open("temp/interrupt_signal.txt", "w") as signal_file:
+                signal_file.write("interrupt")
+    except Exception as e:
+        print(f'Error handling refresh_sellerList: {e}')
 
 # Get the local IPv4 address
 ip_address = socket.gethostbyname(socket.gethostname())

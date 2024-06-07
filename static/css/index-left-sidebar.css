@@ -1,5 +1,6 @@
-.left-bar {
-    grid-area: leftbar;
+.left-sidebar {
+    display: flex;
+    flex-direction: column;
     height: 100%;
     border: 2px;
     border-color: var(--bg-dark-color-theme);
@@ -19,24 +20,16 @@
 
 .SellerList-header {
     min-width: 180px;
-    display: grid;
-    grid-template-columns: auto 1fr; /* Two equal columns */
-    grid-column-gap: 20px; /* Adjust gap as needed */
+
     padding-top: 5px;
     padding-bottom: 15px;
     color: var(--text-dark-color-theme);
     border-color: var(--bg-dark-color-theme);
     background-color: var(--bg-dark-color-theme);
-}
 
-.SellerList-header-name {
-    grid-column: 1; /* This element occupies the second column */
-    grid-row: 1;
-}
-
-.SellerList-header-timer {
-    grid-column: 2; /* This element occupies the first column */
-    grid-row: 1;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
 }
 
 .SellerList-header-name h2 {
@@ -120,4 +113,10 @@
 .buttonRefreshSellerList-active:active {
     box-shadow: #D6D6E7 0 3px 7px inset;
     transform: translateY(2px);
+}
+
+
+
+#catGif {
+    display: none;
 }

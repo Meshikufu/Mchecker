@@ -1,0 +1,38 @@
+.right-sidebar {
+    display: flex;
+    flex-direction: column;
+}
+
+.right-sidebar-content.active {
+    display: flex;
+    flex-direction: column; /* Make buttons display vertically */
+    padding: 10px;
+    background-color: var(--bg-dark-color-theme);
+}
+
+
+
+.hidden {
+    display: none !important;
+}
+
+.right-sidebar-test1 {
+    background-color: blueviolet;
+    display: flex;
+    width: 200px;
+    flex: 1;
+}
+
+#containerR2 {
+    background-color: brown;
+    display: flex;
+    flex: 1;
+
+}
+
+#containerR3 {
+    background-color: dimgray;
+    display: flex;
+    flex: 1;
+
+}

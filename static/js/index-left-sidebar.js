@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
-    var socket = io();
+    const socket = io();
     var timerInterval;
-
 
     //socket.on('killCat', function() {
     //    const gif = document.getElementById("catGif");

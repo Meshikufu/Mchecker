@@ -5,14 +5,12 @@ document.addEventListener("DOMContentLoaded", function() {
     // Load and apply the saved state from Local Storage
     var navbarRightButtons;
     const maxSearch = 10; // Maximum iterations to avoid infinite loop
+    let containerFound = false; // Flag to check if a container is found in localStorage
     for (let i = 0; i < localStorage.length && i < maxSearch; i++) {
         const key = localStorage.key(i);
         if (key.startsWith('containerR')) {
             navbarRightButtons = localStorage.getItem(key);
-            //console.log(navbarRightButtons);
-            //console.log(key);
             const element = document.getElementById(key);
-            //console.log(element)
             if (element) {
                 element.classList.remove('hidden');
                 element.classList.add('active');
@@ -23,9 +21,18 @@ document.addEventListener("DOMContentLoaded", function() {
                         container.classList.add('hidden');
                     }
                 });
+                containerFound = true; // Set the flag to true
             }
             break; // Assuming there's only one such item, exit loop once found
         }
+    }
+    
+    // If no container is found, hide all containers
+    if (!containerFound) {
+        document.querySelectorAll('.right-sidebar-content.containerR').forEach(container => {
+            container.classList.remove('active');
+            container.classList.add('hidden');
+        });
     }
 
     // Listen for the create_buttons_CPJ event to create buttons dynamically

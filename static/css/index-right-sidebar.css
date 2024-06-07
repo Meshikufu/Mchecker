@@ -10,9 +10,7 @@
     background-color: var(--bg-dark-color-theme);
 }
 
-.right-sidebar-content {
-    display: none;
-}
+
 
 .hidden {
     display: none !important;

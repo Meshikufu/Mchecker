@@ -126,10 +126,11 @@ VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
 vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
 
-def SileniumChrome(new_decreased_price):
+def SileniumChrome(new_decreased_price, CPJ):
     try:
         sleeptimer = 2
-        CPjson = Refresh_ControlPanel_json()
+        #CPjson = Refresh_ControlPanel_json()
+        CPjson = CPJ
         if CPjson['tts_ON'] and CPjson['tts_ChangingPriceIN']:
             TTSv2(f"changing price in {2}")
         time.sleep(sleeptimer)
@@ -265,7 +266,7 @@ def SileniumChrome(new_decreased_price):
         pyautogui.hotkey('ctrl', 'r') 
         pyautogui.hotkey('ctrl', 'win', 'left')
         time.sleep(60)
-        SileniumChrome(new_decreased_price)
+        SileniumChrome(new_decreased_price, CPJ)
 
 
 def PriceChecker():
@@ -389,6 +390,11 @@ def PriceChecker():
 
 
         while True:
+            CPJ = Refresh_ControlPanel_json()
+            testingPhase = CPJ['testingPhase']
+            IterationSleepTime = CPJ['IterationSleepTime']
+
+            
             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
                 clear_signal_file.write("working")
             
@@ -737,7 +743,7 @@ def PriceChecker():
                                 Schat(f"Time: {Seller[1]['time']}")
                             
 
-                                SileniumChrome(new_decreased_price)
+                                SileniumChrome(new_decreased_price, CPJ)
 
                                 
                             elif priceDiff > thresholdPercentage:
@@ -982,6 +988,7 @@ def PriceChecker():
             
             #print_active_threads()
 
+            print(IterationSleepTime)
             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
                 clear_signal_file.write("sleep")
             start_listen_for_interrupt()            

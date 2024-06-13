@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     button.addEventListener('click', function() {
                         const currentKey = this.textContent.split(' - ')[0];
                         const currentValue = data[currentKey];
-                        const newValue = prompt("Enter new value for " + currentKey, currentValue);
+                        let newValue = prompt("Enter new value for " + currentKey, currentValue);
 
                         if (newValue !== null) {
                             // Try to convert to original type

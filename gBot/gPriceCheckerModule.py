@@ -44,20 +44,14 @@ def PriceMath(price, tts_ON, tts_NewPrice):
     from decimal import Decimal
 
     price = Decimal(str(price))  # Convert the price to a Decimal
-
     price_str = str(price)
 
-    # Check if there is a '.' in the string representation of the price
     if '.' not in price_str:
         price_str += '.0'  # Append '.0' if there is no decimal part
 
     int_part, decimal_part = price_str.split('.')
-
-    # Calculate the minimum reduction based on the length of the decimal part
-    min_reduction = Decimal('1e-{0}'.format(len(decimal_part)))
-    
-    # Calculate the reduced price
-    reduced_price = price - min_reduction
+    min_reduction = Decimal('1e-{0}'.format(len(decimal_part))) # Calculate the minimum reduction based on the length of the decimal part
+    reduced_price = price - min_reduction # Calculate the reduced price
     
     # Check if the price is less than or equal to 3 and the decimal part has only one decimal place
     rand1 = str(random.randint(8, 9))
@@ -69,37 +63,25 @@ def PriceMath(price, tts_ON, tts_NewPrice):
     elif price <= 1 and len(decimal_part) == 2:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-        #reduced_price = str(reduced_price)
     elif price <= 1 and len(decimal_part) == 3:
-        #reduced_price = str(reduced_price)
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
     elif price <= 1 and len(decimal_part) > 3:
         reduced_price = str(reduced_price)
-        #decimal_part = str(int(decimal_part) - 1)
-        #reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-    
     elif price <= 2 and len(decimal_part) == 1:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand2}")
     elif price <= 2 and len(decimal_part) == 2:
-        #decimal_part = str(int(decimal_part) - 1)
-        #reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
         reduced_price = str(reduced_price)
     elif price <= 2 and len(decimal_part) >= 3:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-
     elif price <= 3 and len(decimal_part) == 1:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
     elif price <= 3 and len(decimal_part) == 2:
-    #    decimal_part = str(int(decimal_part) - 1)
-    #    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
         reduced_price = str(reduced_price)
     else:
-    #    decimal_part = str(int(decimal_part) - 1)
-    #    reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
         reduced_price = str(reduced_price)
 
     reduced_price = str(reduced_price)
@@ -184,38 +166,28 @@ def SileniumChrome(new_decreased_price, CPJ):
             def remove_flashing_state(window_title):
                 chrome_handle = find_chrome_window(window_title)
                 if chrome_handle:
-                    retry_count = 3  # Number of times to retry setting foreground
+                    retry_count = 3
                     while retry_count > 0:
                         if retry_count <= 2:
                             time.sleep(0.5)
                         try:
-                            # Attempt to bring the window to the foreground
                             win32gui.SetForegroundWindow(chrome_handle)
-
-                            # Optional: If you know how to send specific messages to Chrome windows, you could attempt to clear the flashing state here.
-                            # However, manipulating browser tabs' internal states like flashing usually requires browser-level APIs.
-
-                            # Example of how to remove flashing state using win32gui:
                             win32gui.FlashWindow(chrome_handle, False)  # This example is for illustration, may not directly work with browser tabs.
-
-                            break  # Exit loop if successful
-
+                            break
                         except pywintypes.error as e:
                             print(f"Error occurred while setting foreground window: {e}")
                             TTSv2(f"Error occurred while setting foreground window")
                             retry_count -= 1
                             if retry_count > 0:
                                 print(f"Retrying... {retry_count} attempts left.")
-                                time.sleep(1)  # Wait before retrying
-
+                                time.sleep(1)
                     if retry_count == 0:
                         print("Failed to set foreground window after retries.")
                 else:
                     print("Chrome window not found.")
 
 
-            # Usage example:
-            window_title = "Free Listing & access to millions of Users Globally - Google Chrome"
+            window_title = save.controlPanel.window_title
             remove_flashing_state(window_title)
 
             # Continuously monitor desktopNum and execute pyautogui.hotkey('ctrl', 'win', 'left') when desktopNum is 1
@@ -226,7 +198,7 @@ def SileniumChrome(new_decreased_price, CPJ):
                     pyautogui.hotkey('ctrl', 'win', 'left')
                     print(sleepReruns)
                     break
-                time.sleep(0.004)  # Adjust the sleep duration as needed to balance performance and responsiveness
+                time.sleep(0.004)
                 sleepReruns = sleepReruns + 1
                 print(sleepReruns)
 

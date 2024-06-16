@@ -100,6 +100,7 @@
     font-size: 18px;
     width: 70%;
     margin: 0 auto;
+    margin-bottom: 5px;
 }
 
 .buttonRefreshSellerList-focus:focus,

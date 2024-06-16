@@ -1,4 +1,4 @@
-import time, requests, random, csv, os, time
+import time, requests, random, csv, os, time, win32gui, pywintypes
 from bs4 import BeautifulSoup
 from datetime import datetime
 import json
@@ -164,16 +164,72 @@ def SileniumChrome(new_decreased_price, CPJ):
                 pyautogui.hotkey('ctrl', 'r') 
                 pyautogui.hotkey('ctrl', 'win', 'left')
                 print("returning to desktop 0")
-                return num
+
             
         def remove_chrome_alert():
-            winsound.Beep(1000, 500)
-            winsound.Beep(1000, 500)
-            time.sleep(0.5)
-            pyautogui.hotkey('ctrl', 'win', 'right')
-            time.sleep(CPjson['desktop_swap_wait_timer'])
-            pyautogui.press('pageup')
-            pyautogui.hotkey('ctrl', 'win', 'left') 
+            def get_current_desktop_number():
+                # Call GetCurrentDesktopNumber from VirtualDesktopAccessor.dll
+                return vda.GetCurrentDesktopNumber()
+
+            def find_chrome_window(window_title):
+                chrome_handle = None
+                top_windows = []
+                win32gui.EnumWindows(lambda hwnd, top_windows: top_windows.append((hwnd, win32gui.GetWindowText(hwnd))), top_windows)
+                for hwnd, window_text in top_windows:
+                    if window_title in window_text:
+                        chrome_handle = hwnd
+                        break
+                return chrome_handle
+
+            def remove_flashing_state(window_title):
+                chrome_handle = find_chrome_window(window_title)
+                if chrome_handle:
+                    retry_count = 3  # Number of times to retry setting foreground
+                    while retry_count > 0:
+                        if retry_count <= 2:
+                            time.sleep(0.5)
+                        try:
+                            # Attempt to bring the window to the foreground
+                            win32gui.SetForegroundWindow(chrome_handle)
+
+                            # Optional: If you know how to send specific messages to Chrome windows, you could attempt to clear the flashing state here.
+                            # However, manipulating browser tabs' internal states like flashing usually requires browser-level APIs.
+
+                            # Example of how to remove flashing state using win32gui:
+                            win32gui.FlashWindow(chrome_handle, False)  # This example is for illustration, may not directly work with browser tabs.
+
+                            break  # Exit loop if successful
+
+                        except pywintypes.error as e:
+                            print(f"Error occurred while setting foreground window: {e}")
+                            TTSv2(f"Error occurred while setting foreground window")
+                            retry_count -= 1
+                            if retry_count > 0:
+                                print(f"Retrying... {retry_count} attempts left.")
+                                time.sleep(1)  # Wait before retrying
+
+                    if retry_count == 0:
+                        print("Failed to set foreground window after retries.")
+                else:
+                    print("Chrome window not found.")
+
+
+            # Usage example:
+            window_title = "Free Listing & access to millions of Users Globally - Google Chrome"
+            remove_flashing_state(window_title)
+
+            # Continuously monitor desktopNum and execute pyautogui.hotkey('ctrl', 'win', 'left') when desktopNum is 1
+            sleepReruns = 0
+            while True:
+                desktopNum = get_current_desktop_number()
+                if desktopNum == 1:
+                    pyautogui.hotkey('ctrl', 'win', 'left')
+                    print(sleepReruns)
+                    break
+                time.sleep(0.004)  # Adjust the sleep duration as needed to balance performance and responsiveness
+                sleepReruns = sleepReruns + 1
+                print(sleepReruns)
+
 
         if CPjson['autoChangePrice']:
             myPage = save.controlPanel.gPriceCheckerURL_myPage
@@ -217,9 +273,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                 element = WebDriverWait(driver, 1).until(
                     EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
                 )
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
 
                 element.click()
 
@@ -228,9 +283,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                     EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
                 )
 
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
                 
                 # Clear the existing value and enter the new price
                 input_field.clear()
@@ -241,9 +295,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
                 )
 
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
                 
                 save_button.click()
 
@@ -252,9 +305,9 @@ def SileniumChrome(new_decreased_price, CPJ):
                 print("done")
                 if CPjson['tts_ON'] and CPjson['tts_Done']:
                     TTSv2("done")
-                time.sleep(4.5)
+                #time.sleep(4.5)
                 remove_chrome_alert()
-                time.sleep(10)
+                #time.sleep(10)
     except Exception as e:
         print("An error occurred:", e)
         if CPjson['tts_ON'] and CPjson['tts_RetringIn60']:
@@ -717,7 +770,7 @@ def PriceChecker():
                                 
                                 return reduced_price
 
-                            new_decreased_price = PriceMath(NewPrice, CPJ['tts_ON'], CPJ['tts_NewPrice'])
+                            new_decreased_price = PriceMath(NewPrice, CPJ.get('tts_ON'), CPJ.get('tts_NewPrice'))
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
                             Schat(f"New price is {new_decreased_price}")

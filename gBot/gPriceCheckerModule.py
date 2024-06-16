@@ -204,6 +204,7 @@ def SileniumChrome(new_decreased_price, CPJ):
 
 
         if CPjson['autoChangePrice']:
+
             myPage = save.controlPanel.gPriceCheckerURL_myPage
 
             # Switch to Desktop 2 (assuming you have Desktop 2)
@@ -414,6 +415,39 @@ def PriceChecker():
             PriceChecker_sleep_interrupt_thread.start()
 
 
+        def MSG_socketIO(msg):
+            try:
+                sio = socketio.Client()
+
+                @sio.event
+                def connect():
+                    
+                    print('Connection established')
+                    send_message()
+
+                @sio.event
+                def disconnect():
+                    print('Disconnected from server')
+
+                @sio.on('message')
+                def on_message(data):
+                    print('Message from server:', data)
+
+                @sio.on('response')
+                def on_custom_response(data):
+                    print('Custom response from server:', data['data'])
+
+                def send_message():
+                    sio.send(msg)
+
+
+                ip_address = socket.gethostbyname(socket.gethostname())
+                sio.connect(f'http://{ip_address}:8080')
+            except Exception as e:
+                print("MSG_socketIO has failed")
+                print(e)
+
+
         while True:
             CPJ = Refresh_ControlPanel_json()
             testingPhase = CPJ['testingPhase']
@@ -439,6 +473,7 @@ def PriceChecker():
                         break
                 html_content = response.text
             elif testingPhase is True:
+                time.sleep(2)
                 with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:
                     html_content = html.read()
 
@@ -523,55 +558,28 @@ def PriceChecker():
 
                 #if CurrentlySellingFlag is False:
 
-                def packSellerInfo():
-                    seller_data = []
-
-                    try:
-                        for i in range(1, 11):
-                            seller_data.append(Seller[i])
-                    except IndexError:
-                        pass
-
-                    wrapped_data = {"SellerList": seller_data}
-                    json_data = json.dumps(wrapped_data)
-
-                    return json_data
-
-                def MSG_socketIO():
-                    try:
-                        sio = socketio.Client()
-
-                        @sio.event
-                        def connect():
-                            
-                            print('Connection established')
-                            send_message()
-
-                        @sio.event
-                        def disconnect():
-                            print('Disconnected from server')
-
-                        @sio.on('message')
-                        def on_message(data):
-                            print('Message from server:', data)
-
-                        @sio.on('response')
-                        def on_custom_response(data):
-                            print('Custom response from server:', data['data'])
-
-                        def send_message():
-                            json_data = packSellerInfo()
-                            sio.send(json_data)
 
 
-                        ip_address = socket.gethostbyname(socket.gethostname())
-                        sio.connect(f'http://{ip_address}:8080')
-                    except Exception as e:
-                        print("MSG_socketIO has failed")
-                        print(e)
+            #here!
+            
+            def packSellerInfo():
+                seller_data = []
 
-                if CPJ['msgClientWebpage'] is True:
-                    MSG_socketIO()
+                try:
+                    for i in range(1, 11):
+                        seller_data.append(Seller[i])
+                except IndexError:
+                    pass
+
+                wrapped_data = {"SellerList": seller_data}
+                json_data = json.dumps(wrapped_data)
+
+                MSG_socketIO(json_data)
+
+            if CPJ['msgClientWebpage'] is True:
+                packSellerInfo()
+
+
 
             if dict_filled and CurrentlySelling is False and CurrentlySellingOld is True:
                 TTSv2("Offline!")  
@@ -988,6 +996,9 @@ def PriceChecker():
 
             print("")
             dict_filled = True
+
+
+            
 
             #print("iteration time")
             #print(IterationSleepTime)

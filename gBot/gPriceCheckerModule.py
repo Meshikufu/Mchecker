@@ -108,7 +108,7 @@ VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
 vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
 
-def SileniumChrome(new_decreased_price, CPJ):
+def SeleniumChrome(new_decreased_price, CPJ):
     try:
         sleeptimer = 2
         #CPjson = Refresh_ControlPanel_json()
@@ -292,7 +292,7 @@ def SileniumChrome(new_decreased_price, CPJ):
         pyautogui.hotkey('ctrl', 'r') 
         pyautogui.hotkey('ctrl', 'win', 'left')
         time.sleep(60)
-        SileniumChrome(new_decreased_price, CPJ)
+        SeleniumChrome(new_decreased_price, CPJ)
 
 
 def PriceChecker():
@@ -776,7 +776,7 @@ def PriceChecker():
                                 Schat(f"Time: {Seller[1]['time']}")
                             
 
-                                SileniumChrome(new_decreased_price, CPJ)
+                                SeleniumChrome(new_decreased_price, CPJ)
 
                                 
                             elif priceDiff > thresholdPercentage:
@@ -802,7 +802,7 @@ def PriceChecker():
                                     new_decreased_price = PriceMath(NewPrice)
 
                                     if matchSellers == False:
-                                        SileniumChrome(new_decreased_price)
+                                        SeleniumChrome(new_decreased_price)
 
                                     Schat(f"Price to copy: {new_decreased_price}")
                                     import pyperclip

@@ -8,8 +8,9 @@ import win32gui
 VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
 vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
-def SileniumChrome(new_decreased_price):
+def SeleniumChrome(new_decreased_price):
     try:
+        print("starting2")
         import winsound
         import pygetwindow as gw
         from selenium import webdriver
@@ -132,7 +133,7 @@ def SileniumChrome(new_decreased_price):
         pyautogui.hotkey('ctrl', 'r') 
         pyautogui.hotkey('ctrl', 'win', 'left')
         time.sleep(60)
-        SileniumChrome(new_decreased_price)
+        SeleniumChrome(new_decreased_price)
 
 
 
@@ -206,7 +207,7 @@ def chromeNotificationRemover():
 
 
 def times():
-    SileniumChrome(1.23)
+    SeleniumChrome(1.23)
     chromeNotificationRemover()
 
 #times()

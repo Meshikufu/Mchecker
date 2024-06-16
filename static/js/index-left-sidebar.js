@@ -9,25 +9,43 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-    function refreshButtonStateOn(){
-        const button = document.getElementById("buttonRefreshSellerList");
-        const gif = document.getElementById("catGif");
-        button.disabled = false;  // Re-enable the button
-        button.classList.add("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
-        button.style.cursor = "pointer";  // Reset the cursor
-        button.style.opacity = "1";  // Restore the button appearance
-        gif.style.display = "none";
-    };
+    function refreshButtonStateOn() {
+        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "catGif"];
 
-    function refreshButtonStateOff(){
-        const button = document.getElementById("buttonRefreshSellerList");
-        const gif = document.getElementById("catGif");
-        button.disabled = true;  // Disable the button
-        button.classList.remove("buttonRefreshSellerList-hover", "buttonRefreshSellerList-active", "buttonRefreshSellerList-focus");
-        button.style.cursor = "not-allowed";  // Change the cursor to not-allowed
-        button.style.opacity = "0.6";  // Dim the button
-        gif.style.display = "Inline";
-    };
+        elementIds.forEach(id => {
+            const element = document.getElementById(id);
+            
+            if (element) {
+                if (id.startsWith("button")) {
+                    element.disabled = false;
+                    element.classList.add(`${id}-hover`, `${id}-active`, `${id}-focus`);
+                    element.style.cursor = "pointer";
+                    element.style.opacity = "1";
+                } else if (id === "catGif") {
+                    element.style.display = "none";
+                }
+            }
+        });
+    }
+
+    function refreshButtonStateOff() {
+        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "catGif"];
+
+        elementIds.forEach(id => {
+            const element = document.getElementById(id);
+            
+            if (element) {
+                if (id.startsWith("button")) {
+                    element.disabled = true;
+                    element.classList.remove(`${id}-hover`, `${id}-active`, `${id}-focus`);
+                    element.style.cursor = "not-allowed";
+                    element.style.opacity = "0.6";
+                } else if (id === "catGif") {
+                    element.style.display = "inline";
+                }
+            }
+        });
+    }
 
 
     socket.on('refreshButtonState', function(buttonState) {
@@ -49,6 +67,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Add event listener to the button to send a custom event when clicked
     document.getElementById("buttonRefreshSellerList").addEventListener("click", buttonRefreshSellerList);
+
+
+    function buttonNewPrice(){
+        let newPrice = prompt("Enter new price");
+        if (newPrice !== null) {
+            console.log(newPrice);
+            socket.emit('buttonNewPrice', parseFloat(newPrice));
+        }
+    }
+
+    document.getElementById("buttonNewPrice").addEventListener("click", buttonNewPrice);
 
     // Handle the update_sellerList event
     socket.on('update_sellerList', function(data) {

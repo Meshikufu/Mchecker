@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, send, emit, disconnect
 from datetime import datetime
 import json, os
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
+from gBot.SeleniumNewPrice import SeleniumChrome
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
@@ -104,6 +105,12 @@ def handle_message(msg):
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')  # when client disconnects
+
+@socketio.on('buttonNewPrice')
+def buttonNewPrice(newPrice):
+    CPJ = Refresh_ControlPanel_json()
+    SeleniumChrome(newPrice, CPJ)
+
 
 @socketio.on('waitFor_ButtonRefreshSellerList')
 def waitForButtonEnable():

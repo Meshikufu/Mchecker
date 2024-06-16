@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, send, emit, disconnect
 from datetime import datetime
 import json, os
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
+from gBot.SeleniumNewPrice import SeleniumChrome
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
@@ -55,8 +56,6 @@ def SellerList_CheckRefreshButtonState():
                 socketio.emit('refreshButtonState', "off")
             elif signal == "sleep":
                 socketio.emit('refreshButtonState', "on")
-            #else:
-            #   socketio.emit('killCat')
     except Exception as e:
         print(f'Error checking refresh button state: {e}')
 
@@ -76,8 +75,21 @@ def handle_message(msg):
             current_datetime = datetime.now()
             print(current_datetime)
             socketio.emit('update_sellerList', unwrapped_data)
-
             onConnect_start_timer_SellerList()
+
+            while True: # delay until everything is done on the whole loop
+                try:
+                    with open("temp/interrupt_signal.txt", "r") as signal_file:
+                        signal = signal_file.read().strip()
+                        if signal == "prep" or signal == "working":
+                            socketio.emit('refreshButtonState', "off")
+                        elif signal == "sleep":
+                            socketio.emit('refreshButtonState', "on")
+                            break
+                        socketio.sleep(0.1)
+                except Exception as e:
+                    print(f'Error checking refresh button state: {e}')
+
             socketio.emit('refreshButtonState', "on")
 
             disconnect()
@@ -93,6 +105,18 @@ def handle_message(msg):
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')  # when client disconnects
+
+@socketio.on('buttonNewPrice')
+def buttonNewPrice(newPrice):
+    CPJ = Refresh_ControlPanel_json()
+    socketio.emit('refreshButtonState', "off")
+    socketio.sleep(0.1)
+    SeleniumChrome(newPrice, CPJ)
+    socketio.sleep(0.1)
+    socketio.emit('refreshButtonState', "on")
+    socketio.sleep(0.1)
+    SellerList_CheckRefreshButtonState()
+
 
 @socketio.on('waitFor_ButtonRefreshSellerList')
 def waitForButtonEnable():

@@ -1,4 +1,4 @@
-import time, requests, random, csv, os, time
+import time, requests, random, csv, os, time, win32gui, pywintypes
 from bs4 import BeautifulSoup
 from datetime import datetime
 import json
@@ -44,20 +44,14 @@ def PriceMath(price, tts_ON, tts_NewPrice):
     from decimal import Decimal
 
     price = Decimal(str(price))  # Convert the price to a Decimal
-
     price_str = str(price)
 
-    # Check if there is a '.' in the string representation of the price
     if '.' not in price_str:
         price_str += '.0'  # Append '.0' if there is no decimal part
 
     int_part, decimal_part = price_str.split('.')
-
-    # Calculate the minimum reduction based on the length of the decimal part
-    min_reduction = Decimal('1e-{0}'.format(len(decimal_part)))
-    
-    # Calculate the reduced price
-    reduced_price = price - min_reduction
+    min_reduction = Decimal('1e-{0}'.format(len(decimal_part))) # Calculate the minimum reduction based on the length of the decimal part
+    reduced_price = price - min_reduction # Calculate the reduced price
     
     # Check if the price is less than or equal to 3 and the decimal part has only one decimal place
     rand1 = str(random.randint(8, 9))
@@ -69,37 +63,25 @@ def PriceMath(price, tts_ON, tts_NewPrice):
     elif price <= 1 and len(decimal_part) == 2:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-        #reduced_price = str(reduced_price)
     elif price <= 1 and len(decimal_part) == 3:
-        #reduced_price = str(reduced_price)
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
     elif price <= 1 and len(decimal_part) > 3:
         reduced_price = str(reduced_price)
-        #decimal_part = str(int(decimal_part) - 1)
-        #reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-    
     elif price <= 2 and len(decimal_part) == 1:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand2}")
     elif price <= 2 and len(decimal_part) == 2:
-        #decimal_part = str(int(decimal_part) - 1)
-        #reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
         reduced_price = str(reduced_price)
     elif price <= 2 and len(decimal_part) >= 3:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-
     elif price <= 3 and len(decimal_part) == 1:
         decimal_part = str(int(decimal_part) - 1)
         reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
     elif price <= 3 and len(decimal_part) == 2:
-    #    decimal_part = str(int(decimal_part) - 1)
-    #    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
         reduced_price = str(reduced_price)
     else:
-    #    decimal_part = str(int(decimal_part) - 1)
-    #    reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
         reduced_price = str(reduced_price)
 
     reduced_price = str(reduced_price)
@@ -126,7 +108,7 @@ VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
 vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
 
-def SileniumChrome(new_decreased_price, CPJ):
+def SeleniumChrome(new_decreased_price, CPJ):
     try:
         sleeptimer = 2
         #CPjson = Refresh_ControlPanel_json()
@@ -164,18 +146,65 @@ def SileniumChrome(new_decreased_price, CPJ):
                 pyautogui.hotkey('ctrl', 'r') 
                 pyautogui.hotkey('ctrl', 'win', 'left')
                 print("returning to desktop 0")
-                return num
+
             
         def remove_chrome_alert():
-            winsound.Beep(1000, 500)
-            winsound.Beep(1000, 500)
-            time.sleep(0.5)
-            pyautogui.hotkey('ctrl', 'win', 'right')
-            time.sleep(CPjson['desktop_swap_wait_timer'])
-            pyautogui.press('pageup')
-            pyautogui.hotkey('ctrl', 'win', 'left') 
+            def get_current_desktop_number():
+                # Call GetCurrentDesktopNumber from VirtualDesktopAccessor.dll
+                return vda.GetCurrentDesktopNumber()
+
+            def find_chrome_window(window_title):
+                chrome_handle = None
+                top_windows = []
+                win32gui.EnumWindows(lambda hwnd, top_windows: top_windows.append((hwnd, win32gui.GetWindowText(hwnd))), top_windows)
+                for hwnd, window_text in top_windows:
+                    if window_title in window_text:
+                        chrome_handle = hwnd
+                        break
+                return chrome_handle
+
+            def remove_flashing_state(window_title):
+                chrome_handle = find_chrome_window(window_title)
+                if chrome_handle:
+                    retry_count = 10
+                    while retry_count > 0:
+                        if retry_count <= 2:
+                            time.sleep(0.5)
+                        try:
+                            win32gui.SetForegroundWindow(chrome_handle)
+                            win32gui.FlashWindow(chrome_handle, False)  # This example is for illustration, may not directly work with browser tabs.
+                            break
+                        except pywintypes.error as e:
+                            print(f"Error occurred while setting foreground window: {e}")
+                            TTSv2(f"Error occurred while setting foreground window")
+                            retry_count -= 1
+                            if retry_count > 0:
+                                print(f"Retrying... {retry_count} attempts left.")
+                                time.sleep(1)
+                    if retry_count == 0:
+                        print("Failed to set foreground window after retries.")
+                else:
+                    print("Chrome window not found.")
+
+
+            window_title = save.controlPanel.window_title
+            remove_flashing_state(window_title)
+
+            # Continuously monitor desktopNum and execute pyautogui.hotkey('ctrl', 'win', 'left') when desktopNum is 1
+            sleepReruns = 0
+            while True:
+                desktopNum = get_current_desktop_number()
+                if desktopNum == 1:
+                    pyautogui.hotkey('ctrl', 'win', 'left')
+                    print(sleepReruns)
+                    break
+                time.sleep(0.004)
+                sleepReruns = sleepReruns + 1
+                print(sleepReruns)
+
 
         if CPjson['autoChangePrice']:
+
             myPage = save.controlPanel.gPriceCheckerURL_myPage
 
             # Switch to Desktop 2 (assuming you have Desktop 2)
@@ -217,9 +246,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                 element = WebDriverWait(driver, 1).until(
                     EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
                 )
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
 
                 element.click()
 
@@ -228,9 +256,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                     EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
                 )
 
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
                 
                 # Clear the existing value and enter the new price
                 input_field.clear()
@@ -241,9 +268,8 @@ def SileniumChrome(new_decreased_price, CPJ):
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
                 )
 
-                num = desktop_check()
-                if num == 1:
-                    return num
+                desktop_check()
+
                 
                 save_button.click()
 
@@ -252,9 +278,9 @@ def SileniumChrome(new_decreased_price, CPJ):
                 print("done")
                 if CPjson['tts_ON'] and CPjson['tts_Done']:
                     TTSv2("done")
-                time.sleep(4.5)
+                #time.sleep(4.5)
                 remove_chrome_alert()
-                time.sleep(10)
+                #time.sleep(10)
     except Exception as e:
         print("An error occurred:", e)
         if CPjson['tts_ON'] and CPjson['tts_RetringIn60']:
@@ -266,7 +292,7 @@ def SileniumChrome(new_decreased_price, CPJ):
         pyautogui.hotkey('ctrl', 'r') 
         pyautogui.hotkey('ctrl', 'win', 'left')
         time.sleep(60)
-        SileniumChrome(new_decreased_price, CPJ)
+        SeleniumChrome(new_decreased_price, CPJ)
 
 
 def PriceChecker():
@@ -389,6 +415,39 @@ def PriceChecker():
             PriceChecker_sleep_interrupt_thread.start()
 
 
+        def MSG_socketIO(msg):
+            try:
+                sio = socketio.Client()
+
+                @sio.event
+                def connect():
+                    
+                    print('Connection established')
+                    send_message()
+
+                @sio.event
+                def disconnect():
+                    print('Disconnected from server')
+
+                @sio.on('message')
+                def on_message(data):
+                    print('Message from server:', data)
+
+                @sio.on('response')
+                def on_custom_response(data):
+                    print('Custom response from server:', data['data'])
+
+                def send_message():
+                    sio.send(msg)
+
+
+                ip_address = socket.gethostbyname(socket.gethostname())
+                sio.connect(f'http://{ip_address}:8080')
+            except Exception as e:
+                print("MSG_socketIO has failed")
+                print(e)
+
+
         while True:
             CPJ = Refresh_ControlPanel_json()
             testingPhase = CPJ['testingPhase']
@@ -414,6 +473,7 @@ def PriceChecker():
                         break
                 html_content = response.text
             elif testingPhase is True:
+                time.sleep(2)
                 with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:
                     html_content = html.read()
 
@@ -498,55 +558,28 @@ def PriceChecker():
 
                 #if CurrentlySellingFlag is False:
 
-                def packSellerInfo():
-                    seller_data = []
-
-                    try:
-                        for i in range(1, 11):
-                            seller_data.append(Seller[i])
-                    except IndexError:
-                        pass
-
-                    wrapped_data = {"SellerList": seller_data}
-                    json_data = json.dumps(wrapped_data)
-
-                    return json_data
-
-                def MSG_socketIO():
-                    try:
-                        sio = socketio.Client()
-
-                        @sio.event
-                        def connect():
-                            
-                            print('Connection established')
-                            send_message()
-
-                        @sio.event
-                        def disconnect():
-                            print('Disconnected from server')
-
-                        @sio.on('message')
-                        def on_message(data):
-                            print('Message from server:', data)
-
-                        @sio.on('response')
-                        def on_custom_response(data):
-                            print('Custom response from server:', data['data'])
-
-                        def send_message():
-                            json_data = packSellerInfo()
-                            sio.send(json_data)
 
 
-                        ip_address = socket.gethostbyname(socket.gethostname())
-                        sio.connect(f'http://{ip_address}:8080')
-                    except Exception as e:
-                        print("MSG_socketIO has failed")
-                        print(e)
+            #here!
+            
+            def packSellerInfo():
+                seller_data = []
 
-                if CPJ['msgClientWebpage'] is True:
-                    MSG_socketIO()
+                try:
+                    for i in range(1, 11):
+                        seller_data.append(Seller[i])
+                except IndexError:
+                    pass
+
+                wrapped_data = {"SellerList": seller_data}
+                json_data = json.dumps(wrapped_data)
+
+                MSG_socketIO(json_data)
+
+            if CPJ['msgClientWebpage'] is True:
+                packSellerInfo()
+
+
 
             if dict_filled and CurrentlySelling is False and CurrentlySellingOld is True:
                 TTSv2("Offline!")  
@@ -717,7 +750,7 @@ def PriceChecker():
                                 
                                 return reduced_price
 
-                            new_decreased_price = PriceMath(NewPrice, CPJ['tts_ON'], CPJ['tts_NewPrice'])
+                            new_decreased_price = PriceMath(NewPrice, CPJ.get('tts_ON'), CPJ.get('tts_NewPrice'))
                             import pyperclip
                             pyperclip.copy(str(new_decreased_price))
                             Schat(f"New price is {new_decreased_price}")
@@ -743,7 +776,7 @@ def PriceChecker():
                                 Schat(f"Time: {Seller[1]['time']}")
                             
 
-                                SileniumChrome(new_decreased_price, CPJ)
+                                SeleniumChrome(new_decreased_price, CPJ)
 
                                 
                             elif priceDiff > thresholdPercentage:
@@ -769,7 +802,7 @@ def PriceChecker():
                                     new_decreased_price = PriceMath(NewPrice)
 
                                     if matchSellers == False:
-                                        SileniumChrome(new_decreased_price)
+                                        SeleniumChrome(new_decreased_price)
 
                                     Schat(f"Price to copy: {new_decreased_price}")
                                     import pyperclip
@@ -963,6 +996,9 @@ def PriceChecker():
 
             print("")
             dict_filled = True
+
+
+            
 
             #print("iteration time")
             #print(IterationSleepTime)

@@ -109,7 +109,13 @@ def handle_disconnect():
 @socketio.on('buttonNewPrice')
 def buttonNewPrice(newPrice):
     CPJ = Refresh_ControlPanel_json()
+    socketio.emit('refreshButtonState', "off")
+    socketio.sleep(0.1)
     SeleniumChrome(newPrice, CPJ)
+    socketio.sleep(0.1)
+    socketio.emit('refreshButtonState', "on")
+    socketio.sleep(0.1)
+    SellerList_CheckRefreshButtonState()
 
 
 @socketio.on('waitFor_ButtonRefreshSellerList')

@@ -69,7 +69,7 @@ def SeleniumChrome(new_decreased_price, CPJ):
             def remove_flashing_state(window_title):
                 chrome_handle = find_chrome_window(window_title)
                 if chrome_handle:
-                    retry_count = 3
+                    retry_count = 10
                     while retry_count > 0:
                         if retry_count <= 2:
                             time.sleep(0.5)
@@ -79,7 +79,7 @@ def SeleniumChrome(new_decreased_price, CPJ):
                             break
                         except pywintypes.error as e:
                             print(f"Error occurred while setting foreground window: {e}")
-                            TTSv2(f"Error occurred while setting foreground window")
+                            #TTSv2(f"Error occurred while setting foreground window")
                             retry_count -= 1
                             if retry_count > 0:
                                 print(f"Retrying... {retry_count} attempts left.")

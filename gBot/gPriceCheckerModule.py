@@ -176,7 +176,7 @@ def SeleniumChrome(new_decreased_price, CPJ):
                             break
                         except pywintypes.error as e:
                             print(f"Error occurred while setting foreground window: {e}")
-                            TTSv2(f"Error occurred while setting foreground window")
+                            #TTSv2(f"Error occurred while setting foreground window")
                             retry_count -= 1
                             if retry_count > 0:
                                 print(f"Retrying... {retry_count} attempts left.")
@@ -452,6 +452,13 @@ def PriceChecker():
             CPJ = Refresh_ControlPanel_json()
             testingPhase = CPJ['testingPhase']
             IterationSleepTime = CPJ['IterationSleepTime']
+
+            while True:
+                with open("temp/interrupt_signal.txt", "r") as clear_signal_file:
+                    content = clear_signal_file.read().strip()
+                    if content != "working":
+                        break
+                time.sleep(0.3)
 
             
             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:

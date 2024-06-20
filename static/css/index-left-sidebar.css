@@ -62,16 +62,9 @@
 
 
 
-
-
-
-
-
-
 /* CSS */
 /* CSS for #refreshSellerList */
-#buttonRefreshSellerList,
-#buttonNewPrice {
+#buttonRefreshSellerList, #buttonNewPrice, #buttonOnline, #buttonOffline {
     align-items: center;
     appearance: none;
     background-color: #FCFCFD;
@@ -103,23 +96,19 @@
     margin-bottom: 5px;
 }
 
-.buttonRefreshSellerList-focus:focus,
-.buttonNewPrice-focus:focus {
+.buttonRefreshSellerList-focus:focus, .buttonNewPrice-focus:focus, .buttonOnline-focus:focus, .buttonOffline-focus:focus {
     box-shadow: #D6D6E7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
 }
 
-.buttonRefreshSellerList-hover:hover,
-.buttonNewPrice-hover:hover {
+.buttonRefreshSellerList-hover:hover, .buttonNewPrice-hover:hover, .buttonOnline-hover:hover, .buttonOffline-hover:hover {
     box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
     transform: translateY(-2px);
 }
 
-.buttonRefreshSellerList-active:active,
-.buttonNewPrice-active:active {
+.buttonRefreshSellerList-active:active, .buttonNewPrice-active:active, .buttonOnline-active:active, .buttonOffline-active:active {
     box-shadow: #D6D6E7 0 3px 7px inset;
     transform: translateY(2px);
 }
-
 
 
 #catGif {

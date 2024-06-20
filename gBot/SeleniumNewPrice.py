@@ -3,15 +3,37 @@ import time
 import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
 #from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
-
+change_price1 = save.controlPanel.change_price1
+change_price2 = save.controlPanel.change_price2
+change_price3 = save.controlPanel.change_price3
+change_to_online1 = save.controlPanel.change_to_online1
+change_to_online2 = save.controlPanel.change_to_online2
+change_to_offline1 = save.controlPanel.change_to_offline1
+change_to_offline2 = save.controlPanel.change_to_offline2
 
 
 VirtualDesktopAccessor_path = save.controlPanel.VirtualDesktopAccessor_path
 vda = ctypes.WinDLL(VirtualDesktopAccessor_path)
 
 
-def SeleniumChrome(new_decreased_price, CPJ):
+
+def SeleniumChrome(new_decreased_price, CPJ, option):
     try:
+        errorCondition = False
+        change_price = False
+        change_to_online = False
+        change_to_offline = False
+
+        if option == 'change_price':
+            change_price = True
+        elif option == 'change_to_online':
+            change_to_online = True
+        elif option == 'change_to_offline':
+            change_to_offline = True
+
+        with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+            clear_signal_file.write("working")
+
         sleeptimer = 2
         CPjson = CPJ
         CPjson['autoChangePrice'] = True
@@ -51,7 +73,7 @@ def SeleniumChrome(new_decreased_price, CPJ):
                 print("returning to desktop 0")
 
             
-        def remove_chrome_alert():
+        def remove_chrome_alert(errorCondition):
             def get_current_desktop_number():
                 # Call GetCurrentDesktopNumber from VirtualDesktopAccessor.dll
                 return vda.GetCurrentDesktopNumber()
@@ -98,6 +120,8 @@ def SeleniumChrome(new_decreased_price, CPJ):
             while True:
                 desktopNum = get_current_desktop_number()
                 if desktopNum == 1:
+                    if errorCondition:
+                        pyautogui.hotkey('ctrl', 'r') 
                     pyautogui.hotkey('ctrl', 'win', 'left')
                     print(sleepReruns)
                     break
@@ -140,59 +164,72 @@ def SeleniumChrome(new_decreased_price, CPJ):
                     # Switch back to the original tab
                     driver.switch_to.window(original_window_handle)
                 if m1 == 2:
-                    # Navigate to the web page
-                    driver.get(myPage)  # Replace with the URL of the webpage you want to edit
+                    driver.get(myPage)
 
 
+                # first step
+                if change_price:
+                    locator = (By.CLASS_NAME, change_price1)
+                elif change_to_online:
+                    locator = (By.XPATH, change_to_online1)
+                elif change_to_offline:
+                    locator = (By.XPATH, change_to_offline1)
+                if change_price or change_to_online or change_to_offline:
+                    element = WebDriverWait(driver, 1).until(EC.presence_of_element_located(locator))
+                    desktop_check()
+                    element.click()
 
-                # Wait for the price element to be present on the page
-                element = WebDriverWait(driver, 1).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, 'g2g_products_price'))
-                )
-                desktop_check()
+                if change_price:
+                    locator = (By.CSS_SELECTOR, change_price2)
+                if change_price:
+                    # Locate the input field for the price
+                    input_field = WebDriverWait(driver, 2).until(EC.visibility_of_element_located(locator))
+                    desktop_check()
+                    # Clear the existing value and enter the new price
+                    input_field.clear()
+                    input_field.send_keys(str(new_decreased_price))
 
-
-                element.click()
-
-                # Locate the input field for the price
-                input_field = WebDriverWait(driver, 2).until(
-                    EC.visibility_of_element_located((By.CSS_SELECTOR, 'input.input-large'))
-                )
-
-                desktop_check()
-
-                
-                # Clear the existing value and enter the new price
-                input_field.clear()
-                input_field.send_keys(str(new_decreased_price))
-
-                # Locate and click the "Save" button
-                save_button = WebDriverWait(driver, 2).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'button.btn.btn--green.editable-submit'))
-                )
-
-                desktop_check()
-
-                
-                save_button.click()
+                # last step
+                if change_price:
+                    locator = (By.CSS_SELECTOR, change_price3)
+                elif change_to_online:
+                    locator = (By.XPATH, change_to_online2)
+                elif change_to_offline:
+                    locator = (By.XPATH, change_to_offline2)
+                if change_price or change_to_online or change_to_offline:
+                    final_confirm_button = WebDriverWait(driver, 2).until(EC.presence_of_element_located(locator))
+                    desktop_check()
+                    final_confirm_button.click()
 
             finally:
                 driver.quit()
-                print("done")
+                #time.sleep(4.5)
+                remove_chrome_alert(errorCondition)
                 if CPjson['tts_ON'] and CPjson['tts_Done']:
                     TTSv2("done")
-                #time.sleep(4.5)
-                remove_chrome_alert()
+                print("done")
+
+                with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
+                    clear_signal_file.write("sleep")
+                #TTSv2("done")
                 #time.sleep(10)
     except Exception as e:
+        errorCondition = True
         print("An error occurred:", e)
         if CPjson['tts_ON'] and CPjson['tts_RetringIn60']:
             TTSv2("Retrying after 60 seconds...")
+        time.sleep(5)
         winsound.Beep(1000, 500)
         winsound.Beep(1000, 500)
         winsound.Beep(1000, 500)
-        pyautogui.hotkey('ctrl', 'win', 'right')
-        pyautogui.hotkey('ctrl', 'r') 
-        pyautogui.hotkey('ctrl', 'win', 'left')
+        #pyautogui.hotkey('ctrl', 'win', 'right')
+        #pyautogui.hotkey('ctrl', 'r') 
+        #pyautogui.hotkey('ctrl', 'win', 'left')
+        remove_chrome_alert(errorCondition)
         time.sleep(60)
         SeleniumChrome(new_decreased_price, CPJ)
+
+
+#new_price = 5
+#wan = Refresh_ControlPanel_json()
+#SeleniumChrome(new_price, wan, 'change_to_online')

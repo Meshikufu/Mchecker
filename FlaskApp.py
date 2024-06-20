@@ -106,18 +106,6 @@ def handle_message(msg):
 def handle_disconnect():
     print('Client disconnected')  # when client disconnects
 
-@socketio.on('buttonNewPrice')
-def buttonNewPrice(newPrice):
-    CPJ = Refresh_ControlPanel_json()
-    socketio.emit('refreshButtonState', "off")
-    socketio.sleep(0.1)
-    SeleniumChrome(newPrice, CPJ)
-    socketio.sleep(0.1)
-    socketio.emit('refreshButtonState', "on")
-    socketio.sleep(0.1)
-    SellerList_CheckRefreshButtonState()
-
-
 @socketio.on('waitFor_ButtonRefreshSellerList')
 def waitForButtonEnable():
     try:
@@ -154,7 +142,10 @@ def handle_update_value(data):
 def checkStateOf_sellerList():
     SellerList_CheckRefreshButtonState()
 
-@socketio.on('refresh_sellerList')
+
+### Seller List buttons 
+
+@socketio.on('buttonRefresh_sellerList')
 def handle_custom_event():
     try:
         prep_found = False
@@ -168,6 +159,18 @@ def handle_custom_event():
                 signal_file.write("interrupt")
     except Exception as e:
         print(f'Error handling refresh_sellerList: {e}')
+
+@socketio.on('buttonSellerList')
+def ButtonsSellerList(option , newPrice):
+    CPJ = Refresh_ControlPanel_json()
+    socketio.emit('refreshButtonState', "off")
+    socketio.sleep(0.1)
+    SeleniumChrome(newPrice, CPJ, option)
+    socketio.sleep(0.1)
+    socketio.emit('refreshButtonState', "on")
+    socketio.sleep(0.1)
+    SellerList_CheckRefreshButtonState()
+
 
 # Get the local IPv4 address
 ip_address = socket.gethostbyname(socket.gethostname())

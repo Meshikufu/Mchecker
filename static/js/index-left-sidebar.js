@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     function refreshButtonStateOn() {
-        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "catGif"];
+        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "buttonOnline", "buttonOffline", "catGif"];
 
         elementIds.forEach(id => {
             const element = document.getElementById(id);
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function refreshButtonStateOff() {
-        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "catGif"];
+        const elementIds = ["buttonRefreshSellerList", "buttonNewPrice", "buttonOnline", "buttonOffline", "catGif"];
 
         elementIds.forEach(id => {
             const element = document.getElementById(id);
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Function to send a custom event to the server
     function buttonRefreshSellerList() {
-        socket.emit('refresh_sellerList');
+        socket.emit('buttonRefresh_sellerList');
         socket.emit('checkStateOf_sellerList');
         refreshButtonStateOff();
         socket.emit('waitFor_ButtonRefreshSellerList');
@@ -69,15 +69,39 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("buttonRefreshSellerList").addEventListener("click", buttonRefreshSellerList);
 
 
-    function buttonNewPrice(){
-        let newPrice = prompt("Enter new price");
-        if (newPrice !== null) {
-            console.log(newPrice);
-            socket.emit('buttonNewPrice', parseFloat(newPrice));
+    function handleButtonClick(eventType, data = 0) {
+        const buttonBlockName = 'buttonSellerList'
+        switch (eventType) {
+            case 'change_price':
+                let newPrice = prompt("Enter new price");
+                if (newPrice !== null) {
+                    console.log(newPrice);
+                    socket.emit(buttonBlockName, eventType, parseFloat(newPrice));
+                }
+                break;
+            case 'change_to_online':
+                socket.emit(buttonBlockName, eventType, data);
+                break;
+            case 'change_to_offline':
+                socket.emit(buttonBlockName, eventType, data);
+                break;
+            default:
+                console.error("Unknown event type:", eventType);
+                break;
         }
     }
-
-    document.getElementById("buttonNewPrice").addEventListener("click", buttonNewPrice);
+    
+    document.getElementById("buttonNewPrice").addEventListener("click", function() {
+        handleButtonClick('change_price');
+    });
+    
+    document.getElementById("buttonOnline").addEventListener("click", function() {
+        handleButtonClick('change_to_online');
+    });
+    
+    document.getElementById("buttonOffline").addEventListener("click", function() {
+        handleButtonClick('change_to_offline');
+    });
 
     // Handle the update_sellerList event
     socket.on('update_sellerList', function(data) {

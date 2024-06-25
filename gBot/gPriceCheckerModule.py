@@ -318,10 +318,12 @@ def PriceChecker():
     with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
             clear_signal_file.write("prep")
 
-
     if testingPhase:
         testimeStart = save.controlPanel.testimeStart
         time.sleep(testimeStart)
+    elif CPJ.get('GPC_testV2'):
+        time_testV2 = CPJ['PriceChecker_loop_start_time'] / 100
+        time.sleep(time_testV2)
     else:
         time.sleep(CPJ['PriceChecker_loop_start_time'])
 
@@ -464,7 +466,11 @@ def PriceChecker():
             with open("temp/interrupt_signal.txt", "w") as clear_signal_file:
                 clear_signal_file.write("working")
             
-            if testingPhase is False:
+            if testingPhase or CPJ.get('GPC_testV2'):
+                time.sleep(2)
+                with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:
+                    html_content = html.read()
+            elif testingPhase is False:
                 url = save.controlPanel.gPriceCheckerURL_sellerList
                 max_retries = 5
                 backoff_factor = 1
@@ -479,11 +485,6 @@ def PriceChecker():
                         time.sleep(2)
                         break
                 html_content = response.text
-            elif testingPhase is True:
-                time.sleep(2)
-                with open('gbot/Test_HTML.txt', 'r', encoding='utf-8') as html:
-                    html_content = html.read()
-
             soup = BeautifulSoup(html_content, 'html.parser')
 
             pre_checkout_sls_offer_div = soup.find('div', {'id': 'pre_checkout_sls_offer', 'class': 'hide'})
@@ -603,24 +604,25 @@ def PriceChecker():
             current_month = current_datetime.month
             current_day = current_datetime.day
 
-            LowestPrice = {}
-            LowestPrice[OutOfRangePosition] = Seller[1].copy()
-            LowestPrice[OutOfRangePosition]['name'] = '$LowestPrice$'
-            # Join the folder name and file name to create the complete file path
-            folder_name = r"C:\Users\Kufu\PythonProjects\Mchecker\gBot"
-            #folder_name = "gBot"
-            file_path = os.path.join(folder_name, f'Gdata{current_year}.csv')
-            
-            # Write data to the CSV file
-            with open(file_path, 'a', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                for i in dict_range:
-                    try:
-                        writer.writerow([Seller[i]['date'], Seller[i]['time'], Seller[i]['price'], Seller[i]['name'], Seller[i]['stock'], Seller[i]['level']])
-                    except KeyError:
-                        # Write lowest price when loop reaches not existent seller
-                        writer.writerow([LowestPrice[i]['date'], LowestPrice[i]['time'], LowestPrice[i]['price'], LowestPrice[i]['name'], LowestPrice[i]['stock'], LowestPrice[i]['level']])
-                        break
+            if testingPhase != True or CPJ.get('GPC_testV2') != True:
+                LowestPrice = {}
+                LowestPrice[OutOfRangePosition] = Seller[1].copy()
+                LowestPrice[OutOfRangePosition]['name'] = '$LowestPrice$'
+                # Join the folder name and file name to create the complete file path
+                folder_name = r"C:\Users\Kufu\PythonProjects\Mchecker\gBot"
+                #folder_name = "gBot"
+                file_path = os.path.join(folder_name, f'Gdata{current_year}.csv')
+                
+                # Write data to the CSV file
+                with open(file_path, 'a', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    for i in dict_range:
+                        try:
+                            writer.writerow([Seller[i]['date'], Seller[i]['time'], Seller[i]['price'], Seller[i]['name'], Seller[i]['stock'], Seller[i]['level']])
+                        except KeyError:
+                            # Write lowest price when loop reaches not existent seller
+                            writer.writerow([LowestPrice[i]['date'], LowestPrice[i]['time'], LowestPrice[i]['price'], LowestPrice[i]['name'], LowestPrice[i]['stock'], LowestPrice[i]['level']])
+                            break
 
 
             NewName = Seller[1]['name']

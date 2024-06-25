@@ -144,10 +144,10 @@ def checkStateOf_sellerList():
 
 
 ### Seller List buttons 
-
 @socketio.on('buttonRefresh_sellerList')
 def handle_custom_event():
     try:
+        socketio.emit('refreshButtonState', "off")
         prep_found = False
         with open("temp/interrupt_signal.txt", "r") as file:
             for line in file:
@@ -162,8 +162,8 @@ def handle_custom_event():
 
 @socketio.on('buttonSellerList')
 def ButtonsSellerList(option , newPrice):
-    CPJ = Refresh_ControlPanel_json()
     socketio.emit('refreshButtonState', "off")
+    CPJ = Refresh_ControlPanel_json()
     socketio.sleep(0.1)
     SeleniumChrome(newPrice, CPJ, option)
     socketio.sleep(0.1)
@@ -174,5 +174,4 @@ def ButtonsSellerList(option , newPrice):
 
 # Get the local IPv4 address
 ip_address = socket.gethostbyname(socket.gethostname())
-# Run the Flask-SocketIO server on the local IPv4 address and port 8080
 socketio.run(app, host=ip_address, port=8080, debug=True)

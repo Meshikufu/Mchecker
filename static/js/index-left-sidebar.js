@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (element) {
                 if (id.startsWith("button")) {
+                    // console.log('buttonON')
                     element.disabled = false;
                     element.classList.add(`${id}-hover`, `${id}-active`, `${id}-focus`);
                     element.style.cursor = "pointer";
@@ -36,6 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (element) {
                 if (id.startsWith("button")) {
+                    // console.log('buttonOFF')
                     element.disabled = true;
                     element.classList.remove(`${id}-hover`, `${id}-active`, `${id}-focus`);
                     element.style.cursor = "not-allowed";

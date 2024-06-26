@@ -8,7 +8,8 @@ from importlib import reload
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
-from modules.SocketClientTTS import SchatTTS
+#from modules.SocketClientTTS import SchatTTS
+from modules.GoogleTTSv2 import TTSv2
 
 
 import save.controlPanel
@@ -231,8 +232,8 @@ class GmailChecker():
 				print(message2)
 				message2 = message2.replace("!", "")
 				message2 = message2.replace(".", "    !")
-				message2 = "$tts " + message2
-				SchatTTS(message2)
+				#message2 = "$tts " + message2
+				TTSv2(message2)
 
 
 				message = message.snippet

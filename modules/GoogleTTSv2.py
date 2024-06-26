@@ -1,5 +1,4 @@
 import os
-import random
 import hashlib
 import sqlite3
 from google.cloud import texttospeech

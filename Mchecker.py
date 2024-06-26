@@ -11,6 +11,16 @@ from tkinter import Tk, PhotoImage
 import psutil, socket
 
 
+import os
+
+conda_prefix = os.getenv("CONDA_PREFIX")
+
+if conda_prefix:
+    print(f"Running in Conda environment: {conda_prefix}")
+else:
+    print("Not running in a Conda environment.")
+
+
 
 #todo4 this one below doesnt hide message in console
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
@@ -141,78 +151,6 @@ class ttkgui():
 
 		self.left_subframe_buttonsMainDown = ttk.Frame(self.top_frame_buttonsMainDown)#, bootstyle="info")
 		self.left_subframe_buttonsMainDown.pack(side=RIGHT, fill=tk.X, expand=True)
-
-		########
-		method_ytsubs = 'old'
-		if method_ytsubs == 'old':
-			def yt_whisper_setup(url, model, task, language):
-				desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-				command = f'yt_whisper {url} --model {model} --task {task} --language {language}'
-				subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE)
-				#subprocess.Popen(command, cwd=desktop_path, creationflags=subprocess.CREATE_NEW_CONSOLE | win32con.SW_MINIMIZE)
-
-			def YT_whisper_medium():
-				copytext = pyperclip.paste()
-				if "https://www.youtube.com/watch" in copytext:
-					yt_whisper_setup(copytext, "medium", "translate", "Japanese")
-					root.withdraw()
-				else:
-					print("Not a YouTube URL.")
-
-			if TopRowButtons_Activation is True:
-				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_whisper_medium)
-				self.subs.pack(side=LEFT, padx=5, pady=5)
-
-		if method_ytsubs == 'new':
-			def YT_faster_whisper():
-				if "youtube.com/watch" not in pyperclip.paste():
-					print("Not a YouTube URL.")
-					return
-
-				current_directory = os.getcwd()
-
-				# Specify the path to the script
-				script_path = os.path.join(current_directory, "yt_subs", "yt_subs_faster_whisper.py")
-
-				# Execute the command to run the script in a new console window
-				subprocess.Popen(["python", script_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-
-		
-			if TopRowButtons_Activation is True:
-				self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="YTsubs", bootstyle=DANGER, command=YT_faster_whisper)
-				self.subs.pack(side=LEFT, padx=5, pady=5)
-
-		########
-		#def YT_whisper_large():
-		#	copytext = pyperclip.paste()
-		#	if "https://www.youtube.com/watch" in copytext:
-		#		yt_whisper_setup(copytext, "large", "translate", "Japanese")
-		#		root.withdraw()
-		#	else:
-		#		print("Not a YouTube UR_l.")
-		#
-		#self.subs = ttk.Button(self.right_subframe_buttonsMainUp, text="yt_wisperL", bootstyle=DANGER, command=YT_whisper_large)
-		#self.subs.pack(side=LEFT, padx=5, pady=5)
-
-		########
-		import ctypes		
-		def launch_translation():
-			copytext = pyperclip.paste()
-			if "youtube.com/watch" in copytext or "twitch.tv/" in copytext:
-				translation_command = f'python translator.py {copytext} --model medium --task translate --language Japanese'
-				cmd_command = f'cd /d "C:\\Users\\Kufu\\stream-translator" & {translation_command}'
-				subprocess.Popen(f'start cmd /K "{cmd_command}"', shell=True)
-
-				hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-				if hwnd != 0:
-					ctypes.windll.user32.ShowWindow(hwnd, 0)  # Hide the console window
-				root.withdraw()
-			else:
-				print("Not a Stream URL.")
-
-		if TopRowButtons_Activation is True:
-			self.streamTranslator = ttk.Button(self.right_subframe_buttonsMainUp, text="translation.py", bootstyle=DANGER, command=launch_translation)
-			self.streamTranslator.pack(side=LEFT, padx=5, pady=5)
 
 		########
 		def append_clipboard_to_file():
@@ -535,8 +473,6 @@ class ttkgui():
 
 #########################################################################################################
 #########################################################################################################
-#from modules.ttkgui import ttkgui
-
 
 
 def tts_thread(message):

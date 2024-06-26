@@ -383,3 +383,4 @@ selenium/
 seleniumPath.py
 temp/SellerList.json
 temp/interrupt_signal.txt
+venv

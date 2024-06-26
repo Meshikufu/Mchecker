@@ -61,10 +61,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Function to send a custom event to the server
     function buttonRefreshSellerList() {
-        socket.emit('buttonRefresh_sellerList');
-        socket.emit('checkStateOf_sellerList');
         refreshButtonStateOff();
-        socket.emit('waitFor_ButtonRefreshSellerList');
+        socket.emit('buttonRefresh_sellerList');
+        //socket.emit('checkStateOf_sellerList');
+        //socket.emit('waitFor_ButtonRefreshSellerList');
     }
 
     // Add event listener to the button to send a custom event when clicked

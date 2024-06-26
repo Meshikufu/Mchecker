@@ -147,7 +147,7 @@ def checkStateOf_sellerList():
 @socketio.on('buttonRefresh_sellerList')
 def handle_custom_event():
     try:
-        socketio.emit('refreshButtonState', "off")
+        #socketio.emit('refreshButtonState', "off")
         prep_found = False
         with open("temp/interrupt_signal.txt", "r") as file:
             for line in file:

@@ -5,6 +5,7 @@ from simplegmail.query import construct_query
 import http.client
 import socket
 from importlib import reload
+import win32gui, pygame
 
 #from modules.GoogleTTS import tts
 from modules.SocketClient import Schat
@@ -73,7 +74,6 @@ class GmailChecker():
 #			self.query_params = self.query_params_refresh()
 #			# Use the refreshed query_params to get messages
 #		refresh_and_get_messages()
-
 		self.query_params = {
 			"labels": ["Twitch"],
 			"exact_phrase": subject_list_twitchJson + snippet_list_twitchJson + positives_list_twitchJson,
@@ -233,8 +233,39 @@ class GmailChecker():
 				message2 = message2.replace("!", "")
 				message2 = message2.replace(".", "    !")
 				#message2 = "$tts " + message2
-				TTSv2(message2)
 
+				def play_sound():
+					sound_folder = "sounds"
+					sound_file = "gun.mp3"
+					sound_path = os.path.join(sound_folder, sound_file)
+
+					pygame.mixer.music.load(sound_path)
+					pygame.mixer.music.play()
+
+					while pygame.mixer.music.get_busy():
+						pygame.time.Clock().tick(10)
+
+				def find_chrome_window(window_title):
+					chrome_handle = None
+					top_windows = []
+					win32gui.EnumWindows(lambda hwnd, top_windows: top_windows.append((hwnd, win32gui.GetWindowText(hwnd))), top_windows)
+					for hwnd, window_text in top_windows:
+						if window_title in window_text:
+							chrome_handle = hwnd
+							break
+					return chrome_handle
+				
+				if find_chrome_window(stream_username) is None:
+					if change_icon == False: 
+						time.sleep(1)
+					elif change_icon == True:
+						Schat("change_icon_alert")
+						time.sleep(1)
+					TTSv2(message2)
+				else:
+					play_sound()
+					time.sleep(1)
+					continue
 
 				message = message.snippet
 				start_keyword = "is live!"
@@ -263,20 +294,6 @@ class GmailChecker():
 						print("message.snipper to text box error!")
 				else:
 					print("Start keyword not found.")
-				if change_icon == False: 
-					time.sleep(1)
-
-				elif change_icon == True:
-					#dynamic_icon = threading.Thread(target=.dynamic_icon_alert)
-					#dynamic_icon.start()
-
-					#print(threading.active_count())
-					#print(threading.enumerate())
-					#message = "change_icon_alert"
-					Schat("change_icon_alert")
-					time.sleep(1)
-		
-
 
 
 			# unread_eraser logic

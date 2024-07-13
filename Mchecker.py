@@ -35,6 +35,7 @@ from modules.SocketClient import Schat
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
 from gBot.gPriceCheckerModule import PriceChecker
+from modules.GmailChecker import twitch_live_announcer
 from bot.ss import SS_OfferChecker
 from modules.GoogleTTSv2 import TTSv2
 
@@ -207,9 +208,9 @@ class ttkgui():
 #
 #
 		def exit_app():
-			global Gmailprocess  # Use the global process variable
-			if Gmailprocess is not None:  # Check if the subprocess was started
-				Gmailprocess.terminate()
+			#global Gmailprocess  # Use the global process variable
+			#if Gmailprocess is not None:  # Check if the subprocess was started
+			#	Gmailprocess.terminate()
 
 			def list_all_subprocesses():
 				# Get the process ID of the current Python process
@@ -638,6 +639,10 @@ def start_threads():
 	ssBot.daemon = True
 	ssBot.start()
 
+	twitch_live_announcerThread = threading.Thread(target=twitch_live_announcer)
+	twitch_live_announcerThread.daemon = True
+	twitch_live_announcerThread.start()
+
 #	from bot.pingRouter import PingMonitor
 #	ping_monitor_instance = PingMonitor()
 #	PingRouter = threading.Thread(target=ping_monitor_instance.ping_router)
@@ -669,7 +674,7 @@ if __name__ == "__main__":
 
 	start_threads()
 	start_threads_tts()
-	Gmail_Checker()
+	#Gmail_Checker()
 	Flask_app()
 
 	root.mainloop()

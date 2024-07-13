@@ -121,6 +121,7 @@ def quota_db(date_voicetype, bytes_sum, char_len_sum, path_tts_db):
 def check_if_sentence_exists(text, path_tts_db):
     # Check if the sentence already exists in the database
     unique_id = create_unique_id(text)
+    print(f"hash:{unique_id}")
 
     # Create TTSdb folder if it doesn't exist
     os.makedirs(rf'{path_tts_db}', exist_ok=True)
@@ -260,6 +261,7 @@ def TTSv2(text, path=None):
             print(f"Deleted file: {filename}\n")
             output_file_path = None
 
+    pygame.mixer.quit()
     return abs_path
 
 

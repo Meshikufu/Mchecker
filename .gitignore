@@ -364,10 +364,7 @@ FodyWeavers.xsd
 client_secret.json
 gmail_token.json
 variables/TwtichVariables.py
-temp/lastName.txt
-temp/lastLink.txt
-temp/Mdata.json
-temp/Mdata.txt
+temp/
 gBot/gdata2023.csv
 gBot/graph.py
 modules/gPriceChecker.py
@@ -381,6 +378,5 @@ gBot/Gdata2024.csv
 temp_audio/
 selenium/
 seleniumPath.py
-temp/SellerList.json
-temp/interrupt_signal.txt
 venv
+sounds/

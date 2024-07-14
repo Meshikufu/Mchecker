@@ -3,8 +3,8 @@ import os
 import time
 from datetime import datetime
 import sqlite3
-from playsound import playsound
 from modules.SocketClient import Schat
+from modules.AudioModules import playAudio
 import save.controlPanel
 
 class PingMonitor:
@@ -18,17 +18,6 @@ class PingMonitor:
         self.youtube_result = None
         self.reddit_result = None
         self.sleepTimer = None
-
-    def play_bell_sound(self):
-        sound_folder = "sounds"
-        sound_file = "bell.wav"  # playsound supports MP3 files
-        sound_path = os.path.join(sound_folder, sound_file)
-        abs_sound_path = os.path.abspath(sound_path)  # Get the absolute path
-        abs_sound_path = abs_sound_path.replace("\\", "\\\\") # Ensure the path is correctly formatted for Windows MCI commands
-        try:
-            playsound(abs_sound_path)
-        except Exception as e:
-            print(f"An error occurred while trying to play sound: {e}")
 
     def record_ping_result(self, success, error_message, ping_result, success_google, success_youtube, success_reddit, ethernetDown):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -96,12 +85,12 @@ class PingMonitor:
                         self.success = 0
                         error_message = "Destination host unreachable"
                         ping_result_line = result.stdout
-                        self.play_bell_sound()
+                        playAudio('bell.wav')
                     else:
                         self.success = 0
                         error_message = "No valid reply line found"
                         ping_result_line = result.stdout
-                        self.play_bell_sound()
+                        playAudio('bell.wav')
 
                     # Check the success of pinging Google, YouTube, and Reddit
                     self.success_google = 1 if "Reply from" in self.google_result.stdout else 0
@@ -124,7 +113,6 @@ class PingMonitor:
 
                 except subprocess.CalledProcessError as e:
                     self.counting = 0
-                    #self.play_bell_sound() 
                     # Access attributes that are guaranteed to be defined
                     
                     try:
@@ -157,16 +145,15 @@ class PingMonitor:
                         Schat(f"FAKE Router ping problems (date: {current_time})")
                     elif self.counting == 0:
                         ethernetDown = True
-                        self.play_bell_sound()
+                        playAudio('bell.wav')
                         Schat(f"Router ping problems (date: {current_time})")
                         Schat("change_icon_alert")
                     else:
                         ethernetDown = True
-                        self.play_bell_sound()
+                        playAudio('bell.wav')
                         Schat(f"Router ping problems (date: {current_time})")
                         Schat("change_icon_alert")
 
-                    # self.play_bell_sound()
                     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                     #Schat(f"Router ping problems (date: {current_time})")

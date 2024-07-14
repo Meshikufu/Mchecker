@@ -7,8 +7,8 @@ import http.client
 import socket
 import time, os, json, ssl
 import win32gui
-from playsound import playsound
 
+from modules.AudioModules import playAudio
 from modules.SocketClient import Schat
 from modules.GoogleTTSv2 import TTSv2
 
@@ -134,17 +134,6 @@ def twitch_live_announcer():
             body={'removeLabelIds': ['UNREAD']}
         ).execute()
 
-    def play_sound():
-        sound_folder = "sounds"
-        sound_file = "gun.mp3"  # playsound supports MP3 files
-        sound_path = os.path.join(sound_folder, sound_file)
-        abs_sound_path = os.path.abspath(sound_path)  # Get the absolute path
-        abs_sound_path = abs_sound_path.replace("\\", "\\\\") # Ensure the path is correctly formatted for Windows MCI commands
-        try:
-            playsound(abs_sound_path)
-        except Exception as e:
-            print(f"An error occurred while trying to play sound: {e}")
-
     def find_chrome_window(window_title):
         chrome_handle = None
         top_windows = []
@@ -247,7 +236,7 @@ def twitch_live_announcer():
                     Schat(snippet)
                     TTSv2(subjectTTS)
                 else:
-                    play_sound()
+                    playAudio('gun.mp3')
                     time.sleep(1)
                     continue
 

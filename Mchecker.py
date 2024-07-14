@@ -1,5 +1,3 @@
-#from flask import Flask
-#from playsound import playsound
 import time, datetime, os, threading, webbrowser, keyboard, subprocess, json
 import win32gui, win32con, win32api, win32console
 import ttkbootstrap as ttk

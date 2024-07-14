@@ -1,6 +1,6 @@
 #from flask import Flask
 #from playsound import playsound
-import time, datetime, os, threading, webbrowser, pygame, keyboard, subprocess, json
+import time, datetime, os, threading, webbrowser, keyboard, subprocess, json
 import win32gui, win32con, win32api, win32console
 import ttkbootstrap as ttk
 from ttkbootstrap import Style
@@ -25,12 +25,10 @@ else:
 #todo4 this one below doesnt hide message in console
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 print("")
-pygame.mixer.init()
 
 clipboardtext = pyperclip.paste()
 current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-from modules.GoogleTTS import TTS
 from modules.SocketClient import Schat
 from modules.IconTray import IconTray
 from modules.urlScalping import urlScalping
@@ -54,7 +52,7 @@ TopRowButtons_Activation = save.controlPanel.top_row_buttons
 
 def on_hotkey():
 	copytext = pyperclip.paste()
-	TTS.tts(copytext)
+	TTSv2(copytext)
 
 
 def hotkey_listener():
@@ -86,8 +84,7 @@ class buttons_actions():
 ############################################################################################################
 ############################################################################################################
 class ttkgui():
-	def __init__(self, master, tray, chatMain, TTS):
-		self.TTS = TTS
+	def __init__(self, master, tray, chatMain):
 		self.chatMain = chatMain
 		self.tray = tray
 		self.master = master
@@ -163,7 +160,7 @@ class ttkgui():
 			with open("temp/Mdata.txt", "a") as f:
 				f.write(new_url + "\n")
 
-			my_scalper = urlScalping(tray, chatMain, TTS)
+			my_scalper = urlScalping(tray, chatMain)
 			my_scalper.update_data_json()
 
 			self.create_menu()
@@ -174,7 +171,6 @@ class ttkgui():
 			#chatMain.add_log_message("")
 			message = "Added!"
 			Schat(message) # tts signal
-			#self.TTS.tts("added!")
 
 			#refresh open url menu
 			self.open_manga_list.config(menu="")
@@ -196,7 +192,7 @@ class ttkgui():
 			self.b1.pack(side=LEFT, padx=5, pady=5)
 
 		####
-		self.us = urlScalping(tray, chatMain, TTS)
+		self.us = urlScalping(tray, chatMain)
 
 		if TopRowButtons_Activation is True:
 			self.menub = ttk.Menubutton(self.right_subframe_buttonsMainUp, text="Delete", bootstyle=DANGER)
@@ -385,7 +381,7 @@ class ttkgui():
 					f.write(line)
 		self.create_menu()
 
-		my_scalper = urlScalping(tray, chatMain, TTS)
+		my_scalper = urlScalping(tray, chatMain)
 		my_scalper.update_data_json()
 
 		print(f"{selected_option} is deleted.")
@@ -393,7 +389,6 @@ class ttkgui():
 		chatMain.add_log_message("")
 		message = "Deleted!"
 		Schat(message)
-		#self.TTS.tts("Deleted!")
 
 		####
 		#refresh open url menu
@@ -477,9 +472,9 @@ class ttkgui():
 
 
 def tts_thread(message):
-    TTS.tts(message)
+    TTSv2(message)
 
-def socketServer(tray, chatMain, TTS):
+def socketServer(tray, chatMain):
 	global Gmailprocess 
 	chatMain = chatMain
 	tray = tray
@@ -507,7 +502,7 @@ def socketServer(tray, chatMain, TTS):
 		elif message == "start_sleep_bar2":
 			chatMain.start_sleep_bar2()	
 		elif message == "Added!" or message == "Deleted!":
-			TTS.tts(message)
+			TTSv2(message)
 		elif message == "GmailprocessNone":
 			Gmailprocess = None
 		elif message == "KillSubprocessGmail":
@@ -530,11 +525,10 @@ def socketServer(tray, chatMain, TTS):
 		elif "#tts" in message:
 			message = message.replace("#tts ", "")
 			message = message.replace(".", " point ")
-			TTS.tts(message)	
+			TTSv2(message)	
 			chatMain.add_log_message(message)
 			chatMain.add_log_message("")
 		else:
-			#TTS.tts(message)
 			chatMain.add_log_message(message)
 			chatMain.add_log_message("")
 
@@ -567,7 +561,7 @@ def socketServerTTS():
 
 
 
-def socketServerAndroid(tray, chatMain, TTS):
+def socketServerAndroid(tray, chatMain):
 	chatMain = chatMain
 	tray = tray
 	local_ip = socket.gethostbyname(socket.gethostname())
@@ -591,7 +585,7 @@ def socketServerAndroid(tray, chatMain, TTS):
 		print(message)
 
 		if message == "AndroidSignal":
-			TTS.tts("Android signal recieved!")
+			TTSv2("Android signal recieved!")
 		# $tts Package is ready for pickup!
 		elif message is not None and message.strip() != "":
 			if "$tts" in message:
@@ -613,12 +607,12 @@ def start_threads():
 	t1.daemon = True
 	t1.start()
 
-	url_scalping = urlScalping(tray, chatMain, TTS)  # mandagex scalping
+	url_scalping = urlScalping(tray, chatMain)  # mandagex scalping
 	t3 = threading.Thread(target=url_scalping.manga_checker)
 	t3.daemon = True
 	t3.start()
 
-	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain, TTS,))
+	tSocketServer = threading.Thread(target=socketServer, args=(tray, chatMain,))
 	tSocketServer.daemon = True
 	tSocketServer.start()
 
@@ -626,7 +620,7 @@ def start_threads():
 	tSocketServerTTS.daemon = True
 	tSocketServerTTS.start()
 
-	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain, TTS,))
+	tSocketServerAndroid = threading.Thread(target=socketServerAndroid, args=(tray, chatMain,))
 	tSocketServerAndroid.daemon = True
 	tSocketServerAndroid.start()
 
@@ -667,10 +661,9 @@ def Flask_app():
 
 someValue = True
 if __name__ == "__main__":
-	TTS = TTS()
 	root = ttk.Window()
 	tray = IconTray(root)
-	chatMain = ttkgui(root, tray, TTS, someValue) 
+	chatMain = ttkgui(root, tray, someValue) 
 
 	start_threads()
 	start_threads_tts()

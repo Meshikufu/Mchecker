@@ -226,9 +226,6 @@ class GmailChecker():
 
 				elif not matched_keywords_filter:
 					message2 = message2.replace(".", "")
-				#self.TTS.tts(message2)
-				#TTSgmail = threading.Thread(target=self.TTS.tts, args=(message2,))
-				#TTSgmail.start()
 				print(message2)
 				message2 = message2.replace("!", "")
 				message2 = message2.replace(".", "    !")

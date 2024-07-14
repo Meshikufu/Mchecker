@@ -2,26 +2,15 @@ import os
 import hashlib
 import sqlite3
 from google.cloud import texttospeech
-import pygame
+from playsound import playsound
 from datetime import datetime
 import tempfile
 from gtts import gTTS
 from google.api_core.exceptions import ResourceExhausted
 
 
-pygame.mixer.init()
 
 
-def play_bell():
-    sound_folder = "sounds"
-    sound_file = "bell.wav"
-    sound_path = os.path.join(sound_folder, sound_file)
-
-    pygame.mixer.music.load(sound_path)
-    pygame.mixer.music.play()
-
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
 
 # Function to create a unique ID based on text content
 def create_unique_id(text):
@@ -137,13 +126,12 @@ def check_if_sentence_exists(text, path_tts_db):
 
 # Function to play audio files
 def playAudio(filenameID, path_tts_db):
-    # Construct the absolute path for the audio file
-    abs_path = os.path.abspath(os.path.join(rf'{path_tts_db}/AudioFiles', filenameID))
-    # Load the audio file using pygame mixer
-    sound = pygame.mixer.Sound(abs_path)
-    sound.play()
-    # Wait until the audio finishes playing
-    pygame.time.wait(int(sound.get_length() * 1000))
+    try:
+        abs_path = os.path.abspath(os.path.join(path_tts_db, 'AudioFiles', filenameID))
+        abs_path = abs_path.replace("\\", "\\\\")
+        playsound(abs_path)
+    except Exception as e:
+        print(f"An error occurred while trying to play sound: {e}")
 
 ### Main function to run
 def TTSv2(text, path=None):
@@ -182,7 +170,6 @@ def TTSv2(text, path=None):
             TTS_type = "Basic"
         elif char_len_sum > char_len_quota:
             print("Quota exceeded for", date_voicetype)
-            #play_bell()
             voicetype = "en-US-Wavenet-H"
             date_voicetype = datetime.now().strftime("%Y-%m") + voicetype
             char_len_sum = get_char_len_sum_from_quota_db(date_voicetype, path_tts_db)
@@ -252,16 +239,12 @@ def TTSv2(text, path=None):
         with tempfile.NamedTemporaryFile(suffix='.mp3', dir="ttsvoice", delete=False) as fp:
             speech.write_to_fp(fp)
             filename = fp.name
+            filename_playsound = filename.replace("\\", "\\\\")
             print(f"created with {TTS_type}: {filename}")
-            fp.close()
-            sound = pygame.mixer.Sound(filename)
-            sound.play()
-            pygame.time.wait(int(sound.get_length() * 1000))
+            playsound(filename_playsound)
             os.remove(filename)
             print(f"Deleted file: {filename}\n")
             output_file_path = None
-
-    pygame.mixer.quit()
     return abs_path
 
 

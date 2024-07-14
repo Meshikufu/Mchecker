@@ -6,7 +6,8 @@ from google.oauth2.credentials import Credentials
 import http.client
 import socket
 import time, os, json, ssl
-import win32gui, pygame
+import win32gui
+from playsound import playsound
 
 from modules.SocketClient import Schat
 from modules.GoogleTTSv2 import TTSv2
@@ -135,14 +136,14 @@ def twitch_live_announcer():
 
     def play_sound():
         sound_folder = "sounds"
-        sound_file = "gun.mp3"
+        sound_file = "gun.mp3"  # playsound supports MP3 files
         sound_path = os.path.join(sound_folder, sound_file)
-
-        pygame.mixer.music.load(sound_path)
-        pygame.mixer.music.play()
-
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+        abs_sound_path = os.path.abspath(sound_path)  # Get the absolute path
+        abs_sound_path = abs_sound_path.replace("\\", "\\\\") # Ensure the path is correctly formatted for Windows MCI commands
+        try:
+            playsound(abs_sound_path)
+        except Exception as e:
+            print(f"An error occurred while trying to play sound: {e}")
 
     def find_chrome_window(window_title):
         chrome_handle = None
@@ -199,7 +200,7 @@ def twitch_live_announcer():
 
                 mark_as_read(service, 'me', message['id'])
 
-                stream_username = extract_first_word(snippet)
+                stream_username = extract_first_word(subject)
                 stream_link = f"https://www.twitch.tv/{stream_username}"
                 if stream_link in open("temp/lastLink.txt").read():
                     pass
@@ -236,6 +237,7 @@ def twitch_live_announcer():
                     subjectTTS = subjectTTS[:-1]
                     subjectTTS += " stream"
 
+                print(stream_username)
                 if find_chrome_window(stream_username) is None:
                     if change_icon == False: 
                         time.sleep(1)

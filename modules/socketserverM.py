@@ -1,9 +1,10 @@
 import socket
 from modules.SocketClient import Schat
+from modules.GoogleTTSv2 import TTSv2
 #from modules.GoogleTTS import tts
 
 
-def socketServer(tray, chatMain, TTS):
+def socketServer(tray, chatMain):
 	chatMain = chatMain
 	tray = tray
 	HOST = socket.gethostname()
@@ -30,13 +31,12 @@ def socketServer(tray, chatMain, TTS):
 		elif message == "start_sleep_bar2":
 			chatMain.start_sleep_bar2()	
 		elif message == "Added!" or message == "Deleted!":
-			TTS.tts(message)
+			TTSv2(message)
 		if "$tts" in message:
 			message = message.replace("$tts ", "")
 			message = message.replace(".", " point ")
-			TTS.tts(message)
+			TTSv2(message)
 		else:
-			#TTS.tts(message)
 			chatMain.add_log_message(message)
 			chatMain.add_log_message("")
 
@@ -44,7 +44,7 @@ def socketServer(tray, chatMain, TTS):
 		clientsocket.close()
 
 
-def socketServerAndroid(tray, chatMain, TTS):
+def socketServerAndroid(tray, chatMain):
 	chatMain = chatMain
 	tray = tray
 	local_ip = socket.gethostbyname(socket.gethostname())
@@ -68,7 +68,7 @@ def socketServerAndroid(tray, chatMain, TTS):
 		print(message)
 
 		if message == "AndroidSignal":
-			TTS.tts("Android signal recieved!")
+			TTSv2("Android signal recieved!")
 		
 
 		# Process the received message as needed

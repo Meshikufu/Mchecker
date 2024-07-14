@@ -3,11 +3,9 @@ import os
 import time
 from datetime import datetime
 import sqlite3
-import pygame
+from playsound import playsound
 from modules.SocketClient import Schat
 import save.controlPanel
-
-pygame.mixer.init()
 
 class PingMonitor:
     def __init__(self):
@@ -23,14 +21,14 @@ class PingMonitor:
 
     def play_bell_sound(self):
         sound_folder = "sounds"
-        sound_file = "bell.wav"
+        sound_file = "bell.wav"  # playsound supports MP3 files
         sound_path = os.path.join(sound_folder, sound_file)
-
-        pygame.mixer.music.load(sound_path)
-        pygame.mixer.music.play()
-
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+        abs_sound_path = os.path.abspath(sound_path)  # Get the absolute path
+        abs_sound_path = abs_sound_path.replace("\\", "\\\\") # Ensure the path is correctly formatted for Windows MCI commands
+        try:
+            playsound(abs_sound_path)
+        except Exception as e:
+            print(f"An error occurred while trying to play sound: {e}")
 
     def record_ping_result(self, success, error_message, ping_result, success_google, success_youtube, success_reddit, ethernetDown):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

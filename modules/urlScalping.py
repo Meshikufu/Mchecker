@@ -10,11 +10,11 @@ import save.controlPanel
 ProgressBarSleepDuration = save.controlPanel.ProgressBarSleepDuration
 ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
+from modules.GoogleTTSv2 import TTSv2
 
 
 class urlScalping():
-	def __init__(self, tray, chatMain, TTS):
-		self.TTS = TTS
+	def __init__(self, tray, chatMain):
 		self.chatMain = chatMain
 		self.tray = tray
 		# initialize manga dictionary with data from Mdata.txt
@@ -92,7 +92,7 @@ class urlScalping():
 					print(log_message)
 					self.chatMain.add_log_message(log_message)
 					self.chatMain.add_log_message("")
-					self.TTS.tts(log_messagetts)
+					TTSv2(log_messagetts)
 					self.manga_dict[key]['chapter_number'] += 1  # increment the current chapter number by 1
 
 
@@ -128,7 +128,7 @@ class urlScalping():
 
 			#print(debug)
 			if debug == 4:
-				self.TTS.tts("mangareader is downn")
+				TTSv2("mangareader is downn")
 				print("mangareader is downn")
 				self.chatMain.add_log_message("")
 				time.sleep(60)

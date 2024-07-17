@@ -13,7 +13,6 @@ from modules.SocketClient import Schat
 from modules.GoogleTTSv2 import TTSv2
 
 import save.controlPanel
-ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 MAX_LINES = save.controlPanel.MAX_LINES
 
 
@@ -148,6 +147,7 @@ def twitch_live_announcer():
     # Build the Gmail service
     service = build('gmail', 'v1', credentials=creds)
 
+    ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 
     while True:
         refresh_twitchJson_variables()
@@ -159,20 +159,20 @@ def twitch_live_announcer():
             messages = search_emails(service, query)
         except ssl.SSLEOFError as e:
             print("SSL EOF Error occurred. Retrying...")
-            time.sleep(10)
+            time.sleep(5)
             continue
         except http.client.RemoteDisconnected as remote_disconnected_error:
             print("Remote Disconnected Error occurred. Retrying...")
-            time.sleep(10)
+            time.sleep(5)
             continue
         except socket.gaierror as gai_error:
             print("getaddrinfo failed. Retrying...")
-            time.sleep(10)
+            time.sleep(5)
             continue
         except Exception as e:
             if str(e).startswith("Exception in Thread (twitch_live_announcer)"):
                 print("Exception occurred in Thread (twitch_live_announcer)")
-                time.sleep(10)
+                time.sleep(5)
                 continue
 
         if messages:
@@ -226,7 +226,6 @@ def twitch_live_announcer():
                     subjectTTS = subjectTTS[:-1]
                     subjectTTS += " stream"
 
-                print(stream_username)
                 if find_chrome_window(stream_username) is None:
                     if change_icon == False: 
                         time.sleep(1)
@@ -242,4 +241,6 @@ def twitch_live_announcer():
 
         message = "StartSleepBar2"
         Schat(message)
+        if ProgressBarSleepDuration2 <= 5:
+            ProgressBarSleepDuration2 = 5
         time.sleep(ProgressBarSleepDuration2 + 0.1)

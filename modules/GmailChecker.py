@@ -5,7 +5,7 @@ from google.oauth2.credentials import Credentials
 
 import http.client
 import socket
-import time, os, json, ssl
+import time, os, json, ssl, re, html
 import win32gui
 
 from modules.AudioModules import playAudio
@@ -143,6 +143,40 @@ def twitch_live_announcer():
                 break
         return chrome_handle
 
+    def removeEmojiFromText(text):
+        # Emoji ranges taken from https://unicode.org/Public/emoji/13.1/emoji-sequences.txt
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F700-\U0001F77F"  # alchemical symbols
+            "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+            "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+            "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+            "\U0001FA00-\U0001FA6F"  # Chess Symbols
+            "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+            "\U00002702-\U000027B0"  # Dingbats
+            "\U000024C2-\U0001F251" 
+            "]+"
+        )
+        return emoji_pattern.sub(r' ', text)
+    
+    def cleanSnippet(message):
+        start_keyword = "is live!"
+        end_keyword = "streaming"
+
+        start_indices = [i for i in range(len(message)) if message.startswith(start_keyword, i)]
+        if len(start_indices) >= 2:
+            second_occurrence = start_indices[1] + len(start_keyword)
+            message = message[second_occurrence:].strip()
+        end_index = message.rfind(end_keyword)
+        if end_index != -1:
+            message = message[:end_index].strip()
+
+        return message
+
 
     # Build the Gmail service
     service = build('gmail', 'v1', credentials=creds)
@@ -179,6 +213,7 @@ def twitch_live_announcer():
             for message in messages:
                 msg_details = service.users().messages().get(userId="me", id=message["id"], format="full", metadataHeaders=None).execute()
                 snippet = msg_details.get('snippet', '')
+                snippet = html.unescape(snippet)
                 headers=msg_details["payload"]["headers"]
                 subject= [i['value'] for i in headers if i["name"]=="Subject"] 
                 subject = subject[0]
@@ -197,34 +232,24 @@ def twitch_live_announcer():
                     append_to_file("temp/lastLink.txt", stream_link)
                     append_to_file("temp/lastName.txt", stream_username)
 
-                # clean up snippet
-                start_keyword = "is live!"
-                end_keyword = "streaming"
-                start_index = snippet.find(start_keyword)
-                if start_index != -1:
-                    snippet = snippet[start_index:]
-                    second_index = snippet.find(start_keyword, start_index + 1)
-                    if start_index != -1:
-                        snippet = snippet[second_index:]
-                    snippet = stream_username + " " + snippet
-                    end_index = snippet.find(end_keyword)
-                    if end_index != -1:
-                        snippet = snippet[:end_index]
+                snippet = cleanSnippet(snippet)
 
                 # filter block / adding words
                 change_icon = True
-                subjectTTS = subject.replace("_", "")
                 matched_keywords_filter = []
+                negatives = []
+                positives = []
                 if any(keyword.lower() in snippet for keyword in negatives_list_twitchJson):
-                    subjectTTS = "Potentially shit. " + subjectTTS
+                    negatives.append("Potentially shit. ")
                     change_icon = False
                 for keyword in positives_list_twitchJson:
                     if keyword.lower() in snippet:
-                        matched_keywords_filter.append(keyword.capitalize() + ".")
+                        matched_keywords_filter.append(keyword.capitalize())
                 if matched_keywords_filter:
-                    subjectTTS += " ".join(matched_keywords_filter)
-                    subjectTTS = subjectTTS[:-1]
-                    subjectTTS += " stream"
+                    positives += matched_keywords_filter
+                
+                print(positives)
+                print(negatives)
 
                 if find_chrome_window(stream_username) is None:
                     if change_icon == False: 
@@ -232,8 +257,29 @@ def twitch_live_announcer():
                     elif change_icon == True:
                         Schat("change_icon_alert")
                         time.sleep(1)
+
+                    snippet = snippet.replace("_", " ")
+                    snippet = removeEmojiFromText(snippet)
+                    snippetCleanupPatterns = [r'\s*!\w+', r'\s*#\w+', r'\s*\|+\s*', r'\s*\-+\s*', r'[^\x00-\x7F]', r'\b\d+bits\b', r'\s+'] # '!word' '#word' '|' '-' 'any non english' 'num+bits' 'only single space'
+                    for pattern in snippetCleanupPatterns:
+                        snippet = re.sub(pattern, ' ', snippet)
+
+                    if positives:
+                        if snippet.endswith(" "):
+                            snippet = snippet[:-1]
+                        if snippet.endswith("!"):
+                            pass
+                        else:
+                            snippet += '. '
+                        for word in positives:
+                            snippet += " " + word
+                        snippet += " stream!"
+                    if negatives:
+                        snippet = negatives + snippet
+
+                    snippet = f'{stream_username} is live! ' + snippet
                     Schat(snippet)
-                    TTSv2(subjectTTS)
+                    TTSv2(snippet)
                 else:
                     playAudio('gun.mp3')
                     time.sleep(1)

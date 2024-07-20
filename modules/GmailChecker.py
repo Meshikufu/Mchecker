@@ -165,13 +165,15 @@ def twitch_live_announcer():
     
     def cleanSnippet(message):
         start_keyword = "is live!"
-        end_keyword = "streaming"
 
         start_indices = [i for i in range(len(message)) if message.startswith(start_keyword, i)]
         if len(start_indices) >= 2:
             second_occurrence = start_indices[1] + len(start_keyword)
             message = message[second_occurrence:].strip()
-        end_index = message.rfind(end_keyword)
+        end_index = message.rfind("streaming")
+        if end_index == -1:
+            end_index = message.rfind("watch now or click this link:")
+        print(f'end_index is:{end_index}')
         if end_index != -1:
             message = message[:end_index].strip()
 

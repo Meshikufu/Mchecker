@@ -9,6 +9,7 @@ from modules.SocketClientTTS import SchatTTS
 import save.controlPanel
 from modules.GoogleTTSv2 import TTSv2
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
+from modules.logger import error_logger
 import threading
 from requests.exceptions import ConnectionError, Timeout, RequestException
 
@@ -282,6 +283,7 @@ def SeleniumChrome(new_decreased_price, CPJ):
                 remove_chrome_alert()
                 #time.sleep(10)
     except Exception as e:
+        error_logger()
         print("An error occurred:", e)
         if CPjson['tts_ON'] and CPjson['tts_RetringIn60']:
             TTSv2("Retrying after 60 seconds...")
@@ -446,12 +448,23 @@ def PriceChecker():
                 ip_address = socket.gethostbyname(socket.gethostname())
                 sio.connect(f'http://{ip_address}:8080')
             except Exception as e:
+                error_logger()
                 print("MSG_socketIO has failed")
                 print(e)
 
 
         while True:
             CPJ = Refresh_ControlPanel_json()
+            
+            if CPJ.get('gPriceCheckerState') != True:
+                print('gPriceCheckerState is false, entering sleeping loop.')
+                
+                while CPJ.get('gPriceCheckerState') != True:
+                    time.sleep(5)
+                    CPJ = Refresh_ControlPanel_json()
+
+                print("gPriceCheckerState is True, updating data...")
+
             testingPhase = CPJ['testingPhase']
             IterationSleepTime = CPJ['IterationSleepTime']
 
@@ -490,82 +503,86 @@ def PriceChecker():
             pre_checkout_sls_offer_div = soup.find('div', {'id': 'pre_checkout_sls_offer', 'class': 'hide'})
 
 
-            if pre_checkout_sls_offer_div is not None:
-                other_seller_offer_mainboxes = pre_checkout_sls_offer_div.find_all('div', {'class': 'other-seller-offeer_mainbox'})
-                other_seller_offer_mainboxes = other_seller_offer_mainboxes[0]
+            try:
+                if pre_checkout_sls_offer_div is not None:
+                    other_seller_offer_mainboxes = pre_checkout_sls_offer_div.find_all('div', {'class': 'other-seller-offeer_mainbox'})
+                    other_seller_offer_mainboxes = other_seller_offer_mainboxes[0]
 
 
-                seller1LowLevel = False
-                CurrentlySellingFlag = False
-                if CurrentlySelling is False and dict_filled is True:
-                    CurrentlySellingTTS = True
-                Seller = {}
-                for i in dict_range:
-                    n = 1
-                    if seller1LowLevel is True:
-                        i -= 1
-                        n = 0
-                    try:
-                        Seller[i] = process_sellerInfo(other_seller_offer_mainboxes.find_all('div', {'class': 'other_offer-desk-main-box other_offer-div-box'})[i-n])
-                        print(f"S[{i}]: {Seller[i]}")
+                    seller1LowLevel = False
+                    CurrentlySellingFlag = False
+                    if CurrentlySelling is False and dict_filled is True:
+                        CurrentlySellingTTS = True
+                    Seller = {}
+                    for i in dict_range:
+                        n = 1
+                        if seller1LowLevel is True:
+                            i -= 1
+                            n = 0
+                        try:
+                            Seller[i] = process_sellerInfo(other_seller_offer_mainboxes.find_all('div', {'class': 'other_offer-desk-main-box other_offer-div-box'})[i-n])
+                            print(f"S[{i}]: {Seller[i]}")
 
-                        if testingPhase is True:
-                            testingPhase_first_sellers_price_change = save.controlPanel.testingPhase_first_sellers_price_change
-                            if testingPhase_first_sellers_price_change is True:
-                                if i == 1:
-                                    Seller[i]['price'] = save.controlPanel.tsp1
-                                elif i == 2:
-                                    Seller[i]['price'] = save.controlPanel.tsp2
-                                elif i == 3:
-                                    Seller[i]['price'] = save.controlPanel.tsp3
-                                elif i == 4:
-                                    Seller[i]['price'] = save.controlPanel.tsp4
-                                print("modded verison below")
-                                print(f"S[{i}]: {Seller[i]}")
-                            my_name_positon = save.controlPanel.my_name_positon
-                            if i == my_name_positon:
-                                Seller[i]['name'] = my_name
-                                print("modded verison below")
-                                print(f"S[{i}]: {Seller[i]}")
+                            if testingPhase is True:
+                                testingPhase_first_sellers_price_change = save.controlPanel.testingPhase_first_sellers_price_change
+                                if testingPhase_first_sellers_price_change is True:
+                                    if i == 1:
+                                        Seller[i]['price'] = save.controlPanel.tsp1
+                                    elif i == 2:
+                                        Seller[i]['price'] = save.controlPanel.tsp2
+                                    elif i == 3:
+                                        Seller[i]['price'] = save.controlPanel.tsp3
+                                    elif i == 4:
+                                        Seller[i]['price'] = save.controlPanel.tsp4
+                                    print("modded verison below")
+                                    print(f"S[{i}]: {Seller[i]}")
+                                my_name_positon = save.controlPanel.my_name_positon
+                                if i == my_name_positon:
+                                    Seller[i]['name'] = my_name
+                                    print("modded verison below")
+                                    print(f"S[{i}]: {Seller[i]}")
 
-                        if CurrentlySellingFlag is False:
-                            if Seller[i]['name'] == my_name:
-                                CurrentlySelling = True
-                                CurrentlySellingFlag = True
-                                if CurrentlySellingTTS is True:
-                                    CurrentlySellingTTS = False
-                                    TTSv2("Back online!")
+                            if CurrentlySellingFlag is False:
+                                if Seller[i]['name'] == my_name:
+                                    CurrentlySelling = True
+                                    CurrentlySellingFlag = True
+                                    if CurrentlySellingTTS is True:
+                                        CurrentlySellingTTS = False
+                                        TTSv2("Back online!")
+                                else:
+                                    CurrentlySellingFlag = False
+                                    CurrentlySelling = False
+
+                            if seller1LowLevel is False:
+                                if Seller[1]['level'] < 5 :
+                                    seller1LowLevel = True
+                                    #Schat("changing sellers low level structure because of low level seller")
+                                    #Schat("changing sellers low level structure because of low level seller")
+                                    print("changing sellers low level structure because of low level seller")
+
+                                elif Seller[1]['stock'] <= 15 and Seller[1]['price'] < 1:
+                                    seller1LowLevel = True
+                                    #Schat("changing sellers low level structure because of low level seller")
+                                    #Schat("changing sellers low level structure because of low level seller")
+                                    print("changing sellers low level structure because of low stock seller")
                             else:
-                                CurrentlySellingFlag = False
-                                CurrentlySelling = False
+                                seller1LowLevel == True
+                            
+                            OutOfRangePosition = i
 
-                        if seller1LowLevel is False:
-                            if Seller[1]['level'] < 5 :
-                                seller1LowLevel = True
-                                #Schat("changing sellers low level structure because of low level seller")
-                                #Schat("changing sellers low level structure because of low level seller")
-                                print("changing sellers low level structure because of low level seller")
+                        except IndexError:
+                            # Handle the case where the index is out of range
+                            print(f"Seller in position {i} doesn't exist.")
+                            print(f"Seller number: {i-1}")
+                            OutOfRangePosition = i
+                            break
+                    
 
-                            elif Seller[1]['stock'] <= 15 and Seller[1]['price'] < 1:
-                                seller1LowLevel = True
-                                #Schat("changing sellers low level structure because of low level seller")
-                                #Schat("changing sellers low level structure because of low level seller")
-                                print("changing sellers low level structure because of low stock seller")
-                        else:
-                            seller1LowLevel == True
-                        
-                        OutOfRangePosition = i
-
-                    except IndexError:
-                        # Handle the case where the index is out of range
-                        print(f"Seller in position {i} doesn't exist.")
-                        print(f"Seller number: {i-1}")
-                        OutOfRangePosition = i
-                        break
-                
-
-                #if CurrentlySellingFlag is False:
-
+                    #if CurrentlySellingFlag is False:
+            except IndexError:
+                print("No elements found in other_seller_offer_mainboxes. Restarting loop in 30 sec...")
+                time.sleep(30)
+                continue  # Restart the loop when IndexError occurs
 
 
             #here!
@@ -719,50 +736,12 @@ def PriceChecker():
                                 TTSv2(message)
 
                             ### main price change fucntion
-                            from decimal import Decimal
-                            def reduce_price(price):
-                                print("### Price is below ###")
-                                print(price)
-                                price = Decimal(str(price))  # Convert the price to a Decimal
-
-                                price_str = str(price)
-                                int_part, decimal_part = price_str.split('.')
-
-                                # Calculate the minimum reduction based on the length of the decimal part
-                                min_reduction = Decimal('1e-{0}'.format(len(decimal_part)))
-                                
-                                # Calculate the reduced price
-                                reduced_price = price - min_reduction
-                                
-                                # Check if the price is less than or equal to 3 and the decimal part has only one decimal place
-                                rand1 = str(random.randint(8, 9))
-                                rand2 = str(random.randint(97, 99))
-                                rand3 = str(random.randint(9, 9))
-                                if price <= 2 and len(decimal_part) == 1:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand2}")
-                                elif price <= 2 and len(decimal_part) == 2:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-
-                                elif price <= 3 and len(decimal_part) == 1:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-                                elif price <= 3 and len(decimal_part) == 2:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand1}")
-                                else:
-                                    decimal_part = str(int(decimal_part) - 1)
-                                    reduced_price = float(f"{int_part}.{decimal_part}{rand3}")
-                                    #reduced_price = str(reduced_price)
-                                
-                                
-                                return reduced_price
-
                             new_decreased_price = PriceMath(NewPrice, CPJ.get('tts_ON'), CPJ.get('tts_NewPrice'))
-                            import pyperclip
-                            pyperclip.copy(str(new_decreased_price))
-                            Schat(f"New price is {new_decreased_price}")
+
+                            if CPJ['tts_ON'] and CPJ['tts_NewSeller']:
+                                import pyperclip
+                                pyperclip.copy(str(new_decreased_price))
+                                Schat(f"New price is {new_decreased_price}")
 
 
                             medianPrice = (Seller[2]['price'] + Seller[3]['price'] + Seller[4]['price']) / 3
@@ -781,8 +760,8 @@ def PriceChecker():
                                 if CPJ['tts_ON'] and CPJ['tts_ChangingPrice']:
                                     TTSv2(f"changing price")
                                     TTSv2(f"{new_decreased_price}")
-                                Schat(f"changing price")
-                                Schat(f"Time: {Seller[1]['time']}")
+                                    Schat(f"changing price")
+                                    Schat(f"Time: {Seller[1]['time']}")
                             
 
                                 SeleniumChrome(new_decreased_price, CPJ)
@@ -808,10 +787,10 @@ def PriceChecker():
                                     price_matched = True
                                     matchSellers = save.controlPanel.matchSellers
                                     
-                                    new_decreased_price = PriceMath(NewPrice)
+                                    new_decreased_price = PriceMath(NewPrice, CPJ.get('tts_ON'), CPJ.get('tts_NewPrice'))
 
                                     if matchSellers == False:
-                                        SeleniumChrome(new_decreased_price)
+                                        SeleniumChrome(new_decreased_price, CPJ)
 
                                     Schat(f"Price to copy: {new_decreased_price}")
                                     import pyperclip
@@ -1044,6 +1023,7 @@ def PriceChecker():
             
             # interupt_sleep_priceChecker.set() to interupt sleep
     except Exception as e:
+        error_logger()
         import traceback
         traceback.print_exc()  # Print the traceback to see the error details
         TTSv2("Error in Price checker!")

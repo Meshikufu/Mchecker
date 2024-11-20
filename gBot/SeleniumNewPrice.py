@@ -175,7 +175,7 @@ def SeleniumChrome(new_decreased_price, CPJ, option):
                 elif change_to_offline:
                     locator = (By.XPATH, change_to_offline1)
                 if change_price or change_to_online or change_to_offline:
-                    element = WebDriverWait(driver, 1).until(EC.presence_of_element_located(locator))
+                    element = WebDriverWait(driver, 5).until(EC.presence_of_element_located(locator))
                     desktop_check()
                     element.click()
 
@@ -197,7 +197,7 @@ def SeleniumChrome(new_decreased_price, CPJ, option):
                 elif change_to_offline:
                     locator = (By.XPATH, change_to_offline2)
                 if change_price or change_to_online or change_to_offline:
-                    final_confirm_button = WebDriverWait(driver, 2).until(EC.presence_of_element_located(locator))
+                    final_confirm_button = WebDriverWait(driver, 5).until(EC.presence_of_element_located(locator))
                     desktop_check()
                     final_confirm_button.click()
 
@@ -227,7 +227,7 @@ def SeleniumChrome(new_decreased_price, CPJ, option):
         #pyautogui.hotkey('ctrl', 'win', 'left')
         remove_chrome_alert(errorCondition)
         time.sleep(60)
-        SeleniumChrome(new_decreased_price, CPJ)
+        SeleniumChrome(new_decreased_price, CPJ, option)
 
 
 #new_price = 5

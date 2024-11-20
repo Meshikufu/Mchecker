@@ -380,3 +380,5 @@ selenium/
 seleniumPath.py
 venv
 sounds/
+error_log.txt
+.env

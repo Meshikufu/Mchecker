@@ -7,6 +7,7 @@ import tkinter as tk
 import pyperclip, re
 from tkinter import Tk, PhotoImage
 import psutil, socket
+import signal
 
 
 import os
@@ -34,6 +35,7 @@ from gBot.gPriceCheckerModule import PriceChecker
 from modules.GmailChecker import twitch_live_announcer
 from bot.ss import SS_OfferChecker
 from modules.GoogleTTSv2 import TTSv2
+from modules.logger import error_logger
 
 
 import save.controlPanel
@@ -55,7 +57,7 @@ def on_hotkey():
 
 def hotkey_listener():
 	# register the hotkey
-	keyboard.add_hotkey('alt+t', on_hotkey)
+	keyboard.add_hotkey('alt+y', on_hotkey)
 
 	# start the listener loop
 	keyboard.wait()
@@ -201,38 +203,31 @@ class ttkgui():
 #		self.br.pack(side=LEFT, padx=5, pady=5)
 #
 #
-		def exit_app():
-			#global Gmailprocess  # Use the global process variable
-			#if Gmailprocess is not None:  # Check if the subprocess was started
-			#	Gmailprocess.terminate()
 
+		def exit_app():
 			def list_all_subprocesses():
-				# Get the process ID of the current Python process
+				"""List all subprocesses of the current process."""
 				parent_pid = psutil.Process().pid
 
-				# Create a recursive function to traverse all child processes
 				def traverse_process_tree(pid):
-					for child in psutil.Process(pid).children(recursive=True):
-						print(f"Subprocess PID: {child.pid}, Name: {child.name()}")
-						traverse_process_tree(child.pid)
+					try:
+						for child in psutil.Process(pid).children(recursive=True):
+							print(f"Subprocess PID: {child.pid}, Name: {child.name()}")
+							traverse_process_tree(child.pid)
+					except psutil.NoSuchProcess:
+						print(f"Process {pid} no longer exists.")
 
-				# Start traversing from the parent process
 				traverse_process_tree(parent_pid)
 
-			# Call the function to list all subprocesses
 			list_all_subprocesses()
 
-			try:	
+			try:
 				if Flaskprocess is not None:
-						print("Starting to murder flask's children and also every one else")	
-						import signal
-						def kill_process_tree(pid, sig=signal.SIGTERM, include_parent=True, timeout=None, on_terminate=None):
-							"""Kill a process tree (including grandchildren) with signal
-							"sig" and return a (gone, still_alive) tuple.
-							"on_terminate", if specified, is a callback function which is
-							called as soon as a child terminates.
-							"""
-							assert pid != os.getpid(), "Won't kill myself"
+					print("Starting to terminate Flask's child processes and others")
+					
+					def kill_process_tree(pid, sig=signal.SIGTERM, include_parent=True, timeout=None, on_terminate=None):
+						"""Kill a process tree (including grandchildren) with signal 'sig'."""
+						try:
 							parent = psutil.Process(pid)
 							children = parent.children(recursive=True)
 							if include_parent:
@@ -241,36 +236,52 @@ class ttkgui():
 								try:
 									p.send_signal(sig)
 								except psutil.NoSuchProcess:
-									pass
-							gone, alive = psutil.wait_procs(children, timeout=timeout, callback=on_terminate)
-							return (gone, alive)
+									print(f"Process {p.pid} already terminated.")
+							psutil.wait_procs(children, timeout=timeout, callback=on_terminate)
+						except psutil.NoSuchProcess:
+							print(f"Parent process {pid} no longer exists.")
 
-						def kill_unique_child_processes():
-							current_process = psutil.Process(os.getpid())
-							unique_pids = set()
-							
-							for proc in current_process.children(recursive=True):
+					def kill_unique_child_processes():
+						"""Kill unique child processes of the current process."""
+						current_process = psutil.Process(os.getpid())
+						unique_pids = set()
+
+						for proc in current_process.children(recursive=True):
+							try:
 								if proc.pid not in unique_pids:
 									print(f"Killing child process {proc.pid} (Name: {proc.name()})")
 									kill_process_tree(proc.pid)
 									unique_pids.add(proc.pid)
+							except psutil.NoSuchProcess:
+								print(f"Process {proc.pid} no longer exists.")
+							except psutil.AccessDenied:
+								print(f"Access denied to process {proc.pid}.")
+							except Exception as e:
+								print(f"Error killing process {proc.pid}: {e}")
 
-						def kill_all_subprocesses():
-							current_process = psutil.Process(os.getpid())
-							for proc in current_process.children(recursive=True):
+					def kill_all_subprocesses():
+						"""Kill all subprocesses of the current process."""
+						current_process = psutil.Process(os.getpid())
+						for proc in current_process.children(recursive=True):
+							try:
 								print(f"Killing subprocess {proc.pid} (Name: {proc.name()})")
 								kill_process_tree(proc.pid)
+							except psutil.NoSuchProcess:
+								print(f"Process {proc.pid} no longer exists.")
+							except psutil.AccessDenied:
+								print(f"Access denied to process {proc.pid}.")
+							except Exception as e:
+								print(f"Error killing subprocess {proc.pid}: {e}")
 
+					kill_unique_child_processes()
+					kill_all_subprocesses()
 
-						# First kill unique child processes
-						kill_unique_child_processes()
-						
-						# Then kill all subprocesses
-						kill_all_subprocesses()
 			except Exception as e:
-				print(e)
+				error_logger()  # Assuming you have a function to log errors
+				print(f"An error occurred: {e}")
 
-			root.destroy()
+			root.destroy()  # Assuming you are using a GUI framework with root
+
 
 		self.exit = ttk.Button(self.right_subframe_buttonsMainDown, text="Exit", bootstyle=(DANGER, OUTLINE), command=exit_app)
 		self.exit.pack(side=LEFT, padx=5, pady=5)
@@ -664,7 +675,7 @@ if __name__ == "__main__":
 	chatMain = ttkgui(root, tray, someValue) 
 
 	start_threads()
-	start_threads_tts()
+	#start_threads_tts()
 	#Gmail_Checker()
 	Flask_app()
 

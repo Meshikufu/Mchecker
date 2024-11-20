@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time, datetime
 import json
+from modules.logger import error_logger
 
 
 #from modules.GoogleTTS import tts
@@ -66,6 +67,7 @@ class urlScalping():
 					time.sleep(10)
 					continue  # Skip to the next iteration
 				except Exception as e:
+					error_logger()
 					if str(e).startswith("Exception in thread Thread-3 (manga_checker)"):
 						print("Exception occurred in thread Thread-3 (manga_checker)")
 						time.sleep(10)

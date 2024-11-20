@@ -5,6 +5,7 @@ from datetime import datetime
 import json, os
 from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 from gBot.SeleniumNewPrice import SeleniumChrome
+from modules.logger import error_logger
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
@@ -27,8 +28,14 @@ def handle_connect():
         onConnect_start_timer_SellerList()
         create_buttons_ControlPanelJson()
     except Exception as e:
+        error_logger()
         print(f'Error during connect: {e}')
-    SellerList_CheckRefreshButtonState()
+    
+    CPJ = Refresh_ControlPanel_json()
+    if CPJ.get('gPriceCheckerState') is False:
+        socketio.emit('refreshButtonState', "off")
+    else:
+        SellerList_CheckRefreshButtonState()
 
 def onConnect_start_timer_SellerList():
     try:
@@ -38,6 +45,7 @@ def onConnect_start_timer_SellerList():
     except FileNotFoundError:
         print("File not found")
     except Exception as e:
+        error_logger()
         print(f"An error occurred: {e}")
 
 def create_buttons_ControlPanelJson():
@@ -46,6 +54,7 @@ def create_buttons_ControlPanelJson():
             json_data = json.load(json_file)
         socketio.emit('create_buttons_CPJ', json_data)
     except Exception as e:
+        error_logger()
         print(f'Error reading control_panel.json: {e}')
 
 def SellerList_CheckRefreshButtonState():
@@ -57,6 +66,7 @@ def SellerList_CheckRefreshButtonState():
             elif signal == "sleep":
                 socketio.emit('refreshButtonState', "on")
     except Exception as e:
+        error_logger()
         print(f'Error checking refresh button state: {e}')
 
 @socketio.on('message') # receiving
@@ -88,6 +98,7 @@ def handle_message(msg):
                             break
                         socketio.sleep(0.1)
                 except Exception as e:
+                    error_logger()
                     print(f'Error checking refresh button state: {e}')
 
             socketio.emit('refreshButtonState', "on")
@@ -99,6 +110,7 @@ def handle_message(msg):
             print('Disconnecting client!')
             disconnect()
     except Exception as e:
+        error_logger()
         print(f'Error handling message: {e}')
         disconnect()
 
@@ -120,6 +132,7 @@ def waitForButtonEnable():
                 break
             socketio.sleep(0.5)
     except Exception as e:
+        error_logger()
         print(f'Error in waitForButtonEnable: {e}')
 
 @socketio.on('update_CPJ_value')
@@ -136,6 +149,7 @@ def handle_update_value(data):
         # Emit updated data to all clients
         create_buttons_ControlPanelJson()
     except Exception as e:
+        error_logger()
         print(f'Error updating control_panel.json: {e}')
 
 @socketio.on('checkStateOf_sellerList')
@@ -158,6 +172,7 @@ def handle_custom_event():
             with open("temp/interrupt_signal.txt", "w") as signal_file:
                 signal_file.write("interrupt")
     except Exception as e:
+        error_logger()
         print(f'Error handling refresh_sellerList: {e}')
 
 @socketio.on('buttonSellerList')

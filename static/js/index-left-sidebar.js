@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         data.forEach(item => {
             const listItem = document.createElement('li');
-            listItem.textContent = `${item.name} - $${item.price}`;
+            listItem.textContent = `${item.name} - $${item.price} | stock - ${item.stock}`;
             productList.appendChild(listItem);
         });
     });

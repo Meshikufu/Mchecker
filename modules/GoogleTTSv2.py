@@ -7,6 +7,8 @@ from datetime import datetime
 import tempfile
 from gtts import gTTS
 from google.api_core.exceptions import ResourceExhausted
+import threading
+import inspect
 
 
 
@@ -135,6 +137,17 @@ def playAudio(filenameID, path_tts_db):
 
 ### Main function to run
 def TTSv2(text, path=None):
+
+    # Get current thread name
+    thread_name = threading.current_thread().name
+
+    # Get the caller function name
+    caller_function = inspect.stack()[1].function
+
+    # Print thread and function information
+    print(f"TTSv2 called by {caller_function} in thread {thread_name}")
+
+
     TTS_type = None
     output_file_path = None
 

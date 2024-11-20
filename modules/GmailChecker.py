@@ -11,6 +11,7 @@ import win32gui
 from modules.AudioModules import playAudio
 from modules.SocketClient import Schat
 from modules.GoogleTTSv2 import TTSv2
+from modules.logger import error_logger
 
 import save.controlPanel
 MAX_LINES = save.controlPanel.MAX_LINES
@@ -108,22 +109,19 @@ def twitch_live_announcer():
             else:
                 append = False
 
-        # Read the existing lines from the file
-        lines = []
-        if append and os.path.exists(file_path):
-            with open(file_path, "r") as file:
-                lines = file.readlines()
+            lines = []
+            if append and os.path.exists(file_path):
+                with open(file_path, "r") as file:
+                    lines = file.readlines()
 
-        # Append the new data to the lines
-        lines.append(data + "\n")
+            lines = [line for line in lines if line.strip() != data] # remove match if exists
+            lines.append(data + "\n")
 
-        # If the number of lines exceeds the maximum, remove the first line
-        if len(lines) > MAX_LINES:
-            lines = lines[1:]
+            if len(lines) > MAX_LINES: # Number of maximum links
+                lines = lines[1:]
 
-        # Write the updated lines to the file
-        with open(file_path, "w") as file:
-            file.writelines(lines)
+            with open(file_path, "w") as file:
+                file.writelines(lines)
 
     def mark_as_read(service, user_id, msg_id):
         """Mark a message as read."""
@@ -164,12 +162,20 @@ def twitch_live_announcer():
         return emoji_pattern.sub(r' ', text)
     
     def cleanSnippet(message):
+        #if "is live as a guest on" in message:
         start_keyword = "is live!"
 
         start_indices = [i for i in range(len(message)) if message.startswith(start_keyword, i)]
         if len(start_indices) >= 2:
             second_occurrence = start_indices[1] + len(start_keyword)
             message = message[second_occurrence:].strip()
+
+        if not start_indices: ### guest 
+            start_keyword = "stream!"
+            index = message.find("stream!")
+            message = message[index + len("stream!"):]
+            print(start_indices)
+
         end_index = message.rfind("streaming")
         if end_index == -1:
             end_index = message.rfind("watch now or click this link:")
@@ -186,109 +192,116 @@ def twitch_live_announcer():
     ProgressBarSleepDuration2 = save.controlPanel.ProgressBarSleepDuration2
 
     while True:
-        refresh_twitchJson_variables()
-        query_words = subject_list_twitchJson + snippet_list_twitchJson + positives_list_twitchJson
-        query_words = [f'"{word}"' if " " in word else word for word in query_words]
-        query = f'label:Twitch is:unread newer_than:1d {" OR ".join(query_words)}'
-
         try:
-            messages = search_emails(service, query)
-        except ssl.SSLEOFError as e:
-            print("SSL EOF Error occurred. Retrying...")
-            time.sleep(5)
-            continue
-        except http.client.RemoteDisconnected as remote_disconnected_error:
-            print("Remote Disconnected Error occurred. Retrying...")
-            time.sleep(5)
-            continue
-        except socket.gaierror as gai_error:
-            print("getaddrinfo failed. Retrying...")
-            time.sleep(5)
-            continue
-        except Exception as e:
-            if str(e).startswith("Exception in Thread (twitch_live_announcer)"):
-                print("Exception occurred in Thread (twitch_live_announcer)")
-                time.sleep(5)
+            refresh_twitchJson_variables()
+            query_words = subject_list_twitchJson + snippet_list_twitchJson + positives_list_twitchJson
+            query_words = [f'"{word}"' if " " in word else word for word in query_words]
+            query = f'label:Twitch is:unread newer_than:1d {" OR ".join(query_words)}'
+
+            try:
+                messages = search_emails(service, query)
+            except ssl.SSLEOFError as e:
+                print("SSL EOF Error occurred. Retrying...")
+                time.sleep(3)
                 continue
+            except http.client.RemoteDisconnected as remote_disconnected_error:
+                print("Remote Disconnected Error occurred. Retrying...")
+                time.sleep(3)
+                continue
+            except socket.gaierror as gai_error:
+                print("getaddrinfo failed. Retrying...")
+                time.sleep(3)
+                continue
+            except Exception as e:
+                if str(e).startswith("Exception in Thread (twitch_live_announcer)"):
+                    print("Exception occurred in Thread (twitch_live_announcer)")
+                    time.sleep(3)
+                    continue
 
-        if messages:
-            for message in messages:
-                msg_details = service.users().messages().get(userId="me", id=message["id"], format="full", metadataHeaders=None).execute()
-                snippet = msg_details.get('snippet', '')
-                snippet = html.unescape(snippet)
-                headers=msg_details["payload"]["headers"]
-                subject= [i['value'] for i in headers if i["name"]=="Subject"] 
-                subject = subject[0]
+            if messages:
+                for message in messages:
+                    msg_details = service.users().messages().get(userId="me", id=message["id"], format="full", metadataHeaders=None).execute()
+                    snippet = msg_details.get('snippet', '')
+                    snippet = html.unescape(snippet)
+                    headers=msg_details["payload"]["headers"]
+                    subject= [i['value'] for i in headers if i["name"]=="Subject"] 
+                    subject = subject[0]
 
-                print(subject)
-                print(snippet)
-                snippet = snippet.lower()
+                    print(subject)
+                    print(snippet)
+                    snippet = snippet.lower()
 
-                mark_as_read(service, 'me', message['id'])
+                    mark_as_read(service, 'me', message['id'])
 
-                stream_username = extract_first_word(subject)
-                stream_link = f"https://www.twitch.tv/{stream_username}"
-                if stream_link in open("temp/lastLink.txt").read():
-                    pass
-                else:
+                    stream_username = extract_first_word(subject)
+                    stream_link = f"https://www.twitch.tv/{stream_username}"
+
                     append_to_file("temp/lastLink.txt", stream_link)
                     append_to_file("temp/lastName.txt", stream_username)
 
-                snippet = cleanSnippet(snippet)
+                    snippet = cleanSnippet(snippet)
 
-                # filter block / adding words
-                change_icon = True
-                matched_keywords_filter = []
-                negatives = []
-                positives = []
-                if any(keyword.lower() in snippet for keyword in negatives_list_twitchJson):
-                    negatives.append("Potentially shit. ")
-                    change_icon = False
-                for keyword in positives_list_twitchJson:
-                    if keyword.lower() in snippet:
-                        matched_keywords_filter.append(keyword.capitalize())
-                if matched_keywords_filter:
-                    positives += matched_keywords_filter
-                
-                print(positives)
-                print(negatives)
+                    # filter block / adding words
+                    change_icon = True
+                    matched_keywords_filter = []
+                    negatives = []
+                    positives = []
+                    if any(keyword.lower() in snippet for keyword in negatives_list_twitchJson):
+                        negatives.append("Potentially shit. ")
+                        change_icon = False
+                    for keyword in positives_list_twitchJson:
+                        if keyword.lower() in snippet:
+                            matched_keywords_filter.append(keyword.capitalize())
+                    if matched_keywords_filter:
+                        positives += matched_keywords_filter
+                    
+                    print(positives)
+                    print(negatives)
 
-                if find_chrome_window(stream_username) is None:
-                    if change_icon == False: 
+                    if find_chrome_window(stream_username) is None:
+                        if change_icon == False: 
+                            time.sleep(1)
+                        elif change_icon == True:
+                            Schat("change_icon_alert")
+                            time.sleep(1)
+
+                        snippet = snippet.replace("_", " ")
+                        snippet = removeEmojiFromText(snippet)
+                        snippetCleanupPatterns = [r'\s*!\w+', r'\s*#\w+', r'\s*\|+\s*', r'\s*\-+\s*', r'[^\x00-\x7F]', r'\btts\b', r'\b\d+bits\b', r'\s+'] # '!word' '#word' '|' '-' 'any non english' 'num+bits' 'remove word "bits"' 'only single space'
+                        for pattern in snippetCleanupPatterns:
+                            snippet = re.sub(pattern, ' ', snippet)
+
+                        if positives:
+                            if snippet.endswith(" "):
+                                snippet = snippet[:-1]
+                            if snippet.endswith("!"):
+                                pass
+                            else:
+                                snippet += '. '
+                            for word in positives:
+                                snippet += " " + word
+                            snippet += " stream!"
+                        if negatives:
+                            print("test")
+                            print(snippet)
+                            print(negatives)
+                            snippet = str(negatives) + str(snippet)
+
+                        snippet = f'{stream_username} is live! ' + snippet
+                        Schat(snippet)
+                        TTSv2(snippet)
+                    else:
+                        playAudio('gun.mp3')
                         time.sleep(1)
-                    elif change_icon == True:
-                        Schat("change_icon_alert")
-                        time.sleep(1)
+                        continue
 
-                    snippet = snippet.replace("_", " ")
-                    snippet = removeEmojiFromText(snippet)
-                    snippetCleanupPatterns = [r'\s*!\w+', r'\s*#\w+', r'\s*\|+\s*', r'\s*\-+\s*', r'[^\x00-\x7F]', r'\b\d+bits\b', r'\s+'] # '!word' '#word' '|' '-' 'any non english' 'num+bits' 'only single space'
-                    for pattern in snippetCleanupPatterns:
-                        snippet = re.sub(pattern, ' ', snippet)
+            message = "StartSleepBar2"
+            Schat(message)
+            if ProgressBarSleepDuration2 <= 5:
+                ProgressBarSleepDuration2 = 5
+            time.sleep(ProgressBarSleepDuration2 + 0.1)
+        except Exception as e:
+            print(e)
+            TTSv2("Gmail broke!")
 
-                    if positives:
-                        if snippet.endswith(" "):
-                            snippet = snippet[:-1]
-                        if snippet.endswith("!"):
-                            pass
-                        else:
-                            snippet += '. '
-                        for word in positives:
-                            snippet += " " + word
-                        snippet += " stream!"
-                    if negatives:
-                        snippet = negatives + snippet
-
-                    snippet = f'{stream_username} is live! ' + snippet
-                    Schat(snippet)
-                    TTSv2(snippet)
-                else:
-                    playAudio('gun.mp3')
-                    time.sleep(1)
-                    continue
-
-        message = "StartSleepBar2"
-        Schat(message)
-        if ProgressBarSleepDuration2 <= 5:
-            ProgressBarSleepDuration2 = 5
-        time.sleep(ProgressBarSleepDuration2 + 0.1)
+            error_logger()

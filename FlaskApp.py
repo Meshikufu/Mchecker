@@ -7,7 +7,21 @@ from modules.Refresh_ControlPanel_json import Refresh_ControlPanel_json
 from gBot.SeleniumNewPrice import SeleniumChrome
 from modules.logger import error_logger
 
+from flask import Flask, render_template
+
 app = Flask(__name__)
+
+@app.after_request
+def add_csp_headers(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "connect-src 'self'; "
+        "img-src 'self' https://cdn.7tv.app;"
+    )
+    return response
+
 app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management and security
 
 # Increase the ping timeout and interval
